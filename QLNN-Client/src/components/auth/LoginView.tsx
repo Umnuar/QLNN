@@ -22,13 +22,16 @@ export const LoginView: React.FC = () => {
     setError(null);
 
     try {
-      const data = await authApi.login({ username, password });
+      const data = await authApi.login({ username: username.trim(), password });
+      if (!data?.accessToken || !data?.user) {
+        throw new Error('Phản hồi đăng nhập không hợp lệ từ máy chủ SSO.');
+      }
       await secureStorage.setItem('accessToken', data.accessToken);
       await secureStorage.setItem('refreshToken', data.refreshToken);
       setUser(data.user);
     } catch (err: any) {
       console.error('Login error:', err);
-      const msg = err.response?.data?.error || 'Đăng nhập không thành công. Vui lòng kiểm tra lại tài khoản.';
+      const msg = err.response?.data?.error || err.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại tài khoản.';
       setError(msg);
     } finally {
       setLoading(false);

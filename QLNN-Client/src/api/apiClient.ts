@@ -35,7 +35,7 @@ apiClient.interceptors.response.use(
         const refreshToken = await secureStorage.getItem('refreshToken');
         if (refreshToken) {
           const res = await axios.post(`${AUTH_BASE_URL}/refresh`, { refreshToken });
-          const newAccessToken = res.data.accessToken;
+          const newAccessToken = res.data.data?.accessToken || res.data.accessToken;
           await secureStorage.setItem('accessToken', newAccessToken);
 
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
