@@ -8,9 +8,10 @@ import { useModal } from '../hooks/useModal';
 import { useDebounce } from '../hooks/useDebounce';
 import { HouseholdTable } from '../components/households/HouseholdTable';
 import { HouseholdModal } from '../components/households/HouseholdModal';
+import { ExcelImportModal } from '../components/excel/ExcelImportModal';
 
 export const HouseholdsPage: React.FC = () => {
-  const { user, selectedVillageId, setSelectedVillageId, villages, setActiveTab } = useApp();
+  const { user, selectedVillageId, setSelectedVillageId, villages } = useApp();
   const { showModal } = useModal();
 
   const [households, setHouseholds] = useState<HouseholdFlat[]>([]);
@@ -24,6 +25,7 @@ export const HouseholdsPage: React.FC = () => {
 
   // Modal State
   const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [importModalOpen, setImportModalOpen] = useState<boolean>(false);
   const [editingHousehold, setEditingHousehold] = useState<HouseholdFlat | null>(null);
   const [exporting, setExporting] = useState<boolean>(false);
 
@@ -157,7 +159,7 @@ export const HouseholdsPage: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setActiveTab('excel')}
+            onClick={() => setImportModalOpen(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold transition-colors"
           >
             <Upload className="w-4 h-4 text-emerald-600" />
@@ -220,6 +222,15 @@ export const HouseholdsPage: React.FC = () => {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         household={editingHousehold}
+        onSuccess={() => {
+          fetchHouseholds();
+        }}
+      />
+
+      {/* Modal Nhập Excel (Preview & Smart Upsert) */}
+      <ExcelImportModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
         onSuccess={() => {
           fetchHouseholds();
         }}

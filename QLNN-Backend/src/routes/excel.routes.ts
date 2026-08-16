@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { importExcel, exportExcel } from '../controllers/excel.controller';
+import { importExcel, exportExcel, previewExcel } from '../controllers/excel.controller';
 import { authenticateToken, authorizeVillageScope } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -10,6 +10,9 @@ const upload = multer({
 });
 
 router.use(authenticateToken, authorizeVillageScope);
+
+// POST /api/excel/preview
+router.post('/preview', upload.single('file'), previewExcel);
 
 // POST /api/excel/import
 router.post('/import', upload.single('file'), importExcel);

@@ -187,7 +187,10 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                       <div className="flex items-center justify-end gap-1">
                         <button
                           type="button"
-                          onClick={() => onEdit(h)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(h);
+                          }}
                           title="Sửa thông tin hộ"
                           className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                         >
@@ -195,7 +198,10 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                         </button>
                         <button
                           type="button"
-                          onClick={() => onDelete(h)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(h);
+                          }}
                           title="Xóa hộ này"
                           className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                         >

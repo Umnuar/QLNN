@@ -116,17 +116,91 @@ export const importExcel = async (req: AuthRequest, res: Response) => {
 
     res.json({
       status: 'ok',
-      message: `Đã nhập dữ liệu thành công cho ${village.name}!`,
-      data: {
-        village_name: village.name,
-        totalRowsParsed: parsedRows.length,
-        createdCount,
-        updatedCount,
-      },
+      message: `Nhập dữ liệu thành công cho ${village.name}`,
+      totalRowsParsed: parsedRows.length,
+      createdCount,
+      updatedCount,
     });
   } catch (error: any) {
     console.error('importExcel error:', error);
-    res.status(500).json({ error: error.message || 'Lỗi nhập file Excel' });
+    res.status(500).json({ error: error.message || 'Lỗi nhập dữ liệu Excel' });
+  }
+};
+
+/**
+ * POST /api/excel/preview
+ * Xem trước kết quả parse và đối chiếu Smart Upsert (không lưu DB)
+ */
+export const previewExcel = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'Vui lòng tải lên file Excel (.xls, .xlsx)' });
+      return;
+    }
+
+    const targetVillageId = req.user?.role === 'user' ? req.user.village_id : req.body.village_id;
+    if (!targetVillageId) {
+      res.status(400).json({ error: 'Vui lòng chọn Thôn cần nhập dữ liệu' });
+      return;
+    }
+
+    const village = await prisma.villages.findUnique({
+      where: { id: targetVillageId },
+    });
+
+    if (!village) {
+      res.status(404).json({ error: 'Thôn không tồn tại trong hệ thống' });
+      return;
+    }
+
+    // Parse file Excel
+    const parseResult = parseDakHaExcel(req.file.buffer);
+    const parsedRows = parseResult.rows;
+
+    if (parsedRows.length === 0) {
+      res.status(400).json({ error: 'Không tìm thấy dòng dữ liệu hộ nào hợp lệ trong file Excel (Các dòng trống đã bị loại trừ)' });
+      return;
+    }
+
+    // Lấy các hộ hiện tại của thôn để đối chiếu Smart Upsert
+    const existingHouseholds = await prisma.households.findMany({
+      where: { village_id: targetVillageId, is_deleted: false },
+    });
+
+    const householdMapByName = new Map<string, any>();
+    for (const h of existingHouseholds) {
+      householdMapByName.set(normalizeFullName(h.full_name), h);
+    }
+
+    const previewList = parsedRows.map((row) => {
+      const normalizedName = normalizeFullName(row.full_name);
+      const existing = householdMapByName.get(normalizedName);
+      return {
+        stt: row.stt,
+        full_name: row.full_name,
+        action: (existing ? 'update' : 'create') as 'create' | 'update',
+        existingId: existing?.id || null,
+        cropCount: row.crop_items.length,
+        livestockCount: row.livestock_items.length,
+        aquaCount: row.aquaculture_items.length,
+        notes: row.notes,
+      };
+    });
+
+    const createCount = previewList.filter((item) => item.action === 'create').length;
+    const updateCount = previewList.filter((item) => item.action === 'update').length;
+
+    res.json({
+      status: 'ok',
+      villageName: village.name,
+      totalRowsParsed: parsedRows.length,
+      createCount,
+      updateCount,
+      previewList,
+    });
+  } catch (error: any) {
+    console.error('previewExcel error:', error);
+    res.status(500).json({ error: error.message || 'Lỗi đọc trước file Excel' });
   }
 };
 
