@@ -231,6 +231,25 @@ export const createHousehold = async (req: AuthRequest, res: Response) => {
       return;
     }
 
+    // Kiểm tra trùng tên trong cùng thôn
+    const trimmedName = full_name.trim();
+    const existing = await prisma.households.findFirst({
+      where: {
+        village_id,
+        full_name: trimmedName,
+        is_deleted: false,
+      },
+    });
+
+    if (existing) {
+      res.status(409).json({
+        error: `Hộ "${trimmedName}" đã tồn tại trong thôn này.`,
+        duplicate: true,
+        existing_household_id: existing.id,
+      });
+      return;
+    }
+
     const { crop_items, livestock_items, aquaculture_items } = buildItemsFromPayload(req.body);
 
     const newHh = await prisma.$transaction(async (tx) => {
@@ -238,8 +257,8 @@ export const createHousehold = async (req: AuthRequest, res: Response) => {
         data: {
           village_id,
           stt: stt ? parseInt(stt, 10) : null,
-          full_name: full_name.trim(),
-          name_unaccented: removeAccents(full_name),
+          full_name: trimmedName,
+          name_unaccented: removeAccents(trimmedName),
           phone: phone ? String(phone).trim() : null,
           address: address ? String(address).trim() : null,
           notes: notes ? String(notes).trim() : '',

@@ -231,9 +231,9 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
     } catch (err: any) {
       console.error('Submit household error:', err);
       const serverMsg = err.response?.data?.error || 'Không thể lưu thông tin hộ. Vui lòng thử lại.';
-
       // Nếu lỗi trùng tên trong thôn -> Gợi ý Smart Upsert
-      if (serverMsg.includes('đã tồn tại') || serverMsg.includes('trùng tên')) {
+      const existingId = err.response?.data?.existing_household_id;
+      if (existingId || serverMsg.includes('đã tồn tại') || serverMsg.includes('trùng tên')) {
         showModal({
           title: 'Hộ Dân Đã Tồn Tại',
           message: `Hộ "${fullName.trim()}" đã tồn tại trong thôn này. Bạn có muốn cập nhật lại toàn bộ số liệu cây trồng/vật nuôi cho hộ này không?`,
@@ -241,8 +241,22 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
           confirmText: 'Đồng ý Cập Nhật',
           cancelText: 'Hủy bỏ',
           onConfirm: async () => {
-            // Có thể thực hiện gọi cập nhật hoặc lưu lại
-            onClose();
+            if (!existingId) {
+              setErrorMessage('Không xác định được ID của hộ cũ để cập nhật.');
+              return;
+            }
+            try {
+              setLoading(true);
+              const updatedResult = await householdApi.update(existingId, payload);
+              onSuccess(updatedResult);
+              onClose();
+            } catch (updateErr: any) {
+              console.error('Update duplicate household error:', updateErr);
+              const updateMsg = updateErr.response?.data?.error || 'Không thể cập nhật đè lên hộ cũ.';
+              setErrorMessage(updateMsg);
+            } finally {
+              setLoading(false);
+            }
           },
         });
       } else {
