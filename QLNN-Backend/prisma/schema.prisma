@@ -1,0 +1,95 @@
+generator client {
+  provider        = "prisma-client-js"
+  engineType      = "library"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [pg_trgm, uuid_ossp(map: "uuid-ossp")]
+}
+
+model villages {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String       @db.VarChar(255)
+  created_at DateTime?    @default(now()) @db.Timestamptz
+  households households[]
+}
+
+model households {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  village_id      String    @db.Uuid
+  stt             Int?
+  full_name       String    @db.VarChar(255)
+  name_unaccented String?   @db.VarChar(255)
+  phone           String?   @db.VarChar(20)
+  address         String?   @db.VarChar(255)
+  notes           String?   @default("")
+  
+  is_deleted      Boolean?  @default(false)
+  deleted_at      DateTime? @db.Timestamptz
+  created_at      DateTime? @default(now()) @db.Timestamptz
+  updated_at      DateTime? @default(now()) @db.Timestamptz
+  version         Int?      @default(1)
+
+  village           villages            @relation(fields: [village_id], references: [id])
+  crop_items        crop_items[]
+  livestock_items   livestock_items[]
+  aquaculture_items aquaculture_items[]
+
+  @@index([village_id], map: "idx_households_village_id")
+  @@index([village_id, full_name], map: "idx_households_village_name")
+  @@index([is_deleted], map: "idx_households_is_deleted")
+  @@index([name_unaccented], map: "idx_households_name_unaccented")
+}
+
+model crop_items {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  household_id    String      @db.Uuid
+  crop_type       String      @db.VarChar(50) // "Cà phê", "Cao su", "Cây ăn quả", "Cây Mắc Ca", "Cây dược liệu", "Lúa nước", "Cây hàng năm khác"
+  crop_subtype    String?     @db.VarChar(50) // "Đinh lăng", "Gừng", "Nghệ", "Sả" (chỉ cho Cây dược liệu)
+  ownership_type  String?     @db.VarChar(20) // "household" (Hộ gia đình), "contracted" (Nhận khoán) - chỉ cho Cà phê & Cao su
+  area            Decimal     @default(0) @db.Decimal(10, 3) // Đơn vị: ha
+
+  household       households  @relation(fields: [household_id], references: [id], onDelete: Cascade)
+
+  @@index([household_id], map: "idx_crops_household_id")
+  @@index([crop_type], map: "idx_crops_type")
+}
+
+model livestock_items {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  household_id    String      @db.Uuid
+  animal_type     String      @db.VarChar(50) // "Trâu", "Bò", "Heo", "Gia cầm"
+  quantity        Int         @default(0)     // Đơn vị: con
+
+  household       households  @relation(fields: [household_id], references: [id], onDelete: Cascade)
+
+  @@index([household_id], map: "idx_livestock_household_id")
+  @@index([animal_type], map: "idx_livestock_type")
+}
+
+model aquaculture_items {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  household_id      String      @db.Uuid
+  aquaculture_type  String      @db.VarChar(50) // "Nuôi cá ao", "Nuôi cá lồng bè"
+  value             Decimal     @default(0) @db.Decimal(10, 3) // Diện tích ao (ha) hoặc số lồng bè (lồng)
+  unit              String      @db.VarChar(20) // "ha" hoặc "lồng"
+
+  household         households  @relation(fields: [household_id], references: [id], onDelete: Cascade)
+
+  @@index([household_id], map: "idx_aqua_household_id")
+  @@index([aquaculture_type], map: "idx_aqua_type")
+}
+
+model audit_logs {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String?   @db.Uuid
+  village_id String?   @db.Uuid
+  action     String
+  details    String?
+  ip_address String?   @db.VarChar(45)
+  created_at DateTime? @default(now()) @db.Timestamptz
+}

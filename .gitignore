@@ -1,0 +1,9 @@
+node_modules/
+dist/
+dist-electron/
+release/
+.env
+*.log
+uploads/
+backups/
+test-fixtures/*.xlsx
