@@ -1,9 +1,80 @@
 import { Response } from 'express';
 import { prisma } from '../config/prisma';
 import { AuthRequest } from '../middlewares/auth.middleware';
-import { parseDakHaExcel } from '../utils/excelParser';
+import { parseDakHaExcel, ParsedHouseholdRow } from '../utils/excelParser';
 import { buildDakHaExcel } from '../utils/excelBuilder';
 import { normalizeFullName, removeAccents } from '../utils/textUtils';
+
+export interface AnalyzedRow {
+  row: ParsedHouseholdRow;
+  action: 'create' | 'update';
+  existingHousehold: any | null;
+}
+
+export interface SmartUpsertAnalysis {
+  analyzedRows: AnalyzedRow[];
+  createCount: number;
+  updateCount: number;
+  totalCount: number;
+}
+
+/**
+ * HÀM DÙNG CHUNG DUY NHẤT: Phân tích danh sách dòng Excel để xác định Create vs Update
+ * Dùng chung 100% cho cả Preview (/api/excel/preview) và Import thật (/api/excel/import)
+ * Đảm bảo:
+ * 1. Cùng quy tắc chuẩn hóa tên (normalizeFullName)
+ * 2. Cùng cơ chế phát hiện trùng lặp nội bộ trong cùng 1 file Excel (intra-file duplicate)
+ * 3. Kết quả preview và import thật luôn khớp nhau tuyệt đối
+ */
+export function analyzeParsedRowsForUpsert(
+  parsedRows: ParsedHouseholdRow[],
+  existingHouseholds: any[]
+): SmartUpsertAnalysis {
+  const householdMapByName = new Map<string, any>();
+  for (const h of existingHouseholds) {
+    householdMapByName.set(normalizeFullName(h.full_name), h);
+  }
+
+  let createCount = 0;
+  let updateCount = 0;
+  const analyzedRows: AnalyzedRow[] = [];
+
+  for (const row of parsedRows) {
+    const normalizedName = normalizeFullName(row.full_name);
+    const existing = householdMapByName.get(normalizedName);
+
+    if (existing) {
+      updateCount++;
+      analyzedRows.push({
+        row,
+        action: 'update',
+        existingHousehold: existing,
+      });
+    } else {
+      createCount++;
+      // Đánh dấu hộ này đã xuất hiện trong batch để nếu có dòng trùng bên dưới trong cùng file, nó sẽ trở thành update
+      const placeholderNewHh = {
+        id: null,
+        full_name: row.full_name,
+        stt: row.stt,
+        notes: row.notes,
+      };
+      householdMapByName.set(normalizedName, placeholderNewHh);
+      analyzedRows.push({
+        row,
+        action: 'create',
+        existingHousehold: null,
+      });
+    }
+  }
+
+  return {
+    analyzedRows,
+    createCount,
+    updateCount,
+    totalCount: parsedRows.length,
+  };
+}
 
 /**
  * POST /api/excel/import
@@ -45,81 +116,77 @@ export const importExcel = async (req: AuthRequest, res: Response) => {
       where: { village_id: targetVillageId, is_deleted: false },
     });
 
-    const householdMapByName = new Map<string, any>();
-    for (const h of existingHouseholds) {
-      householdMapByName.set(normalizeFullName(h.full_name), h);
-    }
+    // DÙNG HÀM PHÂN TÍCH CHUNG
+    const analysis = analyzeParsedRowsForUpsert(parsedRows, existingHouseholds);
 
-    let createdCount = 0;
-    let updatedCount = 0;
+    await prisma.$transaction(
+      async (tx) => {
+        const createdIdMap = new Map<string, string>();
 
-    await prisma.$transaction(async (tx) => {
-      for (const row of parsedRows) {
-        const normalizedName = normalizeFullName(row.full_name);
-        const existing = householdMapByName.get(normalizedName);
+        for (const item of analysis.analyzedRows) {
+          const { row, action, existingHousehold } = item;
+          const normalizedName = normalizeFullName(row.full_name);
 
-        if (existing) {
-          // 1. SMART UPSERT: Đã tồn tại hộ trong thôn -> Cập nhật lại số liệu
-          await tx.crop_items.deleteMany({ where: { household_id: existing.id } });
-          await tx.livestock_items.deleteMany({ where: { household_id: existing.id } });
-          await tx.aquaculture_items.deleteMany({ where: { household_id: existing.id } });
+          if (action === 'update') {
+            const targetId = existingHousehold?.id || createdIdMap.get(normalizedName);
+            if (targetId) {
+              await tx.crop_items.deleteMany({ where: { household_id: targetId } });
+              await tx.livestock_items.deleteMany({ where: { household_id: targetId } });
+              await tx.aquaculture_items.deleteMany({ where: { household_id: targetId } });
 
-          await tx.households.update({
-            where: { id: existing.id },
-            data: {
-              stt: row.stt || existing.stt,
-              notes: row.notes || existing.notes,
-              version: { increment: 1 },
-              crop_items: { create: row.crop_items },
-              livestock_items: { create: row.livestock_items },
-              aquaculture_items: { create: row.aquaculture_items },
-            },
-          });
-
-          updatedCount++;
-        } else {
-          // 2. CREATE MỚI: Hộ chưa có trong thôn -> Tạo mới
-          const newHh = await tx.households.create({
-            data: {
-              village_id: targetVillageId,
-              stt: row.stt,
-              full_name: row.full_name,
-              name_unaccented: removeAccents(row.full_name),
-              notes: row.notes || '',
-              crop_items: { create: row.crop_items },
-              livestock_items: { create: row.livestock_items },
-              aquaculture_items: { create: row.aquaculture_items },
-            },
-          });
-
-          // Cập nhật vào map để nếu trong cùng file có dòng trùng thì không tạo lại
-          householdMapByName.set(normalizedName, newHh);
-          createdCount++;
+              await tx.households.update({
+                where: { id: targetId },
+                data: {
+                  stt: row.stt || undefined,
+                  notes: row.notes || undefined,
+                  version: { increment: 1 },
+                  crop_items: { create: row.crop_items },
+                  livestock_items: { create: row.livestock_items },
+                  aquaculture_items: { create: row.aquaculture_items },
+                },
+              });
+            }
+          } else {
+            const newHh = await tx.households.create({
+              data: {
+                village_id: targetVillageId,
+                stt: row.stt,
+                full_name: row.full_name,
+                name_unaccented: removeAccents(row.full_name),
+                notes: row.notes || '',
+                crop_items: { create: row.crop_items },
+                livestock_items: { create: row.livestock_items },
+                aquaculture_items: { create: row.aquaculture_items },
+              },
+            });
+            createdIdMap.set(normalizedName, newHh.id);
+          }
         }
-      }
 
-      // Ghi audit log
-      await tx.audit_logs.create({
-        data: {
-          user_id: req.user?.id || null,
-          village_id: targetVillageId,
-          action: 'IMPORT_EXCEL',
-          details: JSON.stringify({
-            village_name: village.name,
-            totalRowsParsed: parsedRows.length,
-            createdCount,
-            updatedCount,
-          }),
-        },
-      });
-    }, { timeout: 60000, maxWait: 15000 });
+        // Ghi audit log
+        await tx.audit_logs.create({
+          data: {
+            user_id: req.user?.id || null,
+            village_id: targetVillageId,
+            action: 'IMPORT_EXCEL',
+            details: JSON.stringify({
+              village_name: village.name,
+              totalRowsParsed: analysis.totalCount,
+              createdCount: analysis.createCount,
+              updatedCount: analysis.updateCount,
+            }),
+          },
+        });
+      },
+      { timeout: 60000, maxWait: 15000 }
+    );
 
     res.json({
       status: 'ok',
       message: `Nhập dữ liệu thành công cho ${village.name}`,
-      totalRowsParsed: parsedRows.length,
-      createdCount,
-      updatedCount,
+      totalRowsParsed: analysis.totalCount,
+      createdCount: analysis.createCount,
+      updatedCount: analysis.updateCount,
     });
   } catch (error: any) {
     console.error('importExcel error:', error);
@@ -158,7 +225,10 @@ export const previewExcel = async (req: AuthRequest, res: Response) => {
     const parsedRows = parseResult.rows;
 
     if (parsedRows.length === 0) {
-      res.status(400).json({ error: 'Không tìm thấy dòng dữ liệu hộ nào hợp lệ trong file Excel (Các dòng trống đã bị loại trừ)' });
+      res.status(400).json({
+        error:
+          'Không tìm thấy dòng dữ liệu hộ nào hợp lệ trong file Excel (Các dòng trống tên đã bị loại trừ)',
+      });
       return;
     }
 
@@ -167,35 +237,26 @@ export const previewExcel = async (req: AuthRequest, res: Response) => {
       where: { village_id: targetVillageId, is_deleted: false },
     });
 
-    const householdMapByName = new Map<string, any>();
-    for (const h of existingHouseholds) {
-      householdMapByName.set(normalizeFullName(h.full_name), h);
-    }
+    // DÙNG HÀM PHÂN TÍCH CHUNG
+    const analysis = analyzeParsedRowsForUpsert(parsedRows, existingHouseholds);
 
-    const previewList = parsedRows.map((row) => {
-      const normalizedName = normalizeFullName(row.full_name);
-      const existing = householdMapByName.get(normalizedName);
-      return {
-        stt: row.stt,
-        full_name: row.full_name,
-        action: (existing ? 'update' : 'create') as 'create' | 'update',
-        existingId: existing?.id || null,
-        cropCount: row.crop_items.length,
-        livestockCount: row.livestock_items.length,
-        aquaCount: row.aquaculture_items.length,
-        notes: row.notes,
-      };
-    });
-
-    const createCount = previewList.filter((item) => item.action === 'create').length;
-    const updateCount = previewList.filter((item) => item.action === 'update').length;
+    const previewList = analysis.analyzedRows.map(({ row, action, existingHousehold }) => ({
+      stt: row.stt,
+      full_name: row.full_name,
+      action,
+      existingId: existingHousehold?.id || null,
+      cropCount: row.crop_items.length,
+      livestockCount: row.livestock_items.length,
+      aquaCount: row.aquaculture_items.length,
+      notes: row.notes,
+    }));
 
     res.json({
       status: 'ok',
       villageName: village.name,
-      totalRowsParsed: parsedRows.length,
-      createCount,
-      updateCount,
+      totalRowsParsed: analysis.totalCount,
+      createCount: analysis.createCount,
+      updateCount: analysis.updateCount,
       previewList,
     });
   } catch (error: any) {
@@ -206,20 +267,21 @@ export const previewExcel = async (req: AuthRequest, res: Response) => {
 
 /**
  * GET /api/excel/export
- * Xuất dữ liệu ra file Excel 21 cột
+ * Xuất file Excel 21 cột
  */
 export const exportExcel = async (req: AuthRequest, res: Response) => {
   try {
-    const targetVillageId = req.user?.role === 'user' ? req.user.village_id : req.query.villageId;
+    const { villageId } = req.query;
+    const targetVillageId = req.user?.role === 'user' ? req.user.village_id : villageId ? String(villageId) : undefined;
+
+    const where: any = { is_deleted: false };
+    if (targetVillageId) {
+      where.village_id = targetVillageId;
+    }
 
     let villageName = 'Toàn xã Đăk Hà';
-    const where: any = { is_deleted: false };
-
     if (targetVillageId) {
-      where.village_id = String(targetVillageId);
-      const village = await prisma.villages.findUnique({
-        where: { id: String(targetVillageId) },
-      });
+      const village = await prisma.villages.findUnique({ where: { id: targetVillageId } });
       if (village) villageName = village.name;
     }
 
@@ -234,16 +296,11 @@ export const exportExcel = async (req: AuthRequest, res: Response) => {
       orderBy: [{ village_id: 'asc' }, { stt: 'asc' }, { created_at: 'asc' }],
     });
 
-    const buffer = await buildDakHaExcel({
-      villageName,
-      reportingPeriod: 'thời điểm tháng 8 năm 2026',
-      households,
-    });
+    const buffer = await buildDakHaExcel({ households, villageName });
 
-    const safeFilename = encodeURIComponent(`Bieu_mau_thong_ke_nong_nghiep_${removeAccents(villageName).replace(/\s+/g, '_')}.xlsx`);
-
+    const filename = encodeURIComponent(`Bieu_mau_thong_ke_${villageName.replace(/\s+/g, '_')}.xlsx`);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(buffer);
   } catch (error: any) {
     console.error('exportExcel error:', error);
