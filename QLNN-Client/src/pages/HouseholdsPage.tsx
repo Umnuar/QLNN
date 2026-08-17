@@ -130,14 +130,14 @@ export const HouseholdsPage: React.FC = () => {
       {/* Top Banner & Main Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-emerald-100/80 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
-              <Users className="w-5 h-5" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100/80 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
+              <Users className="w-5.5 h-5.5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
                 Danh Sách Hộ Nông Nghiệp
-                <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-mono font-bold border border-emerald-200 dark:border-emerald-800">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-mono font-bold border border-emerald-200 dark:border-emerald-800">
                   {total} hộ
                 </span>
               </h2>
@@ -169,7 +169,7 @@ export const HouseholdsPage: React.FC = () => {
             type="button"
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all disabled:opacity-50 active:scale-98 cursor-pointer border border-transparent dark:border-slate-700"
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all disabled:opacity-50 active:scale-98 cursor-pointer border border-transparent dark:border-slate-700"
           >
             <Download className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             <span>{exporting ? 'Đang xuất...' : 'Xuất Excel'}</span>
@@ -187,7 +187,7 @@ export const HouseholdsPage: React.FC = () => {
           <button
             type="button"
             onClick={handleAdd}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-2xl text-xs font-bold shadow-md shadow-emerald-950/20 transition-all active:scale-98 cursor-pointer"
+            className="flex items-center gap-1.5 px-4.5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-2xl text-xs font-bold shadow-md shadow-emerald-950/20 transition-all active:scale-98 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Thêm Hộ Dân</span>
@@ -196,7 +196,7 @@ export const HouseholdsPage: React.FC = () => {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="flex items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors duration-200">
+      <div className="flex items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors duration-200">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <input
@@ -204,7 +204,7 @@ export const HouseholdsPage: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm theo họ tên chủ hộ (gõ có dấu hoặc không dấu)..."
-            className="w-full pl-10 pr-9 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-medium transition-all"
+            className="w-full pl-10 pr-9 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-medium transition-all"
           />
           {search && (
             <button
@@ -221,7 +221,7 @@ export const HouseholdsPage: React.FC = () => {
             type="button"
             onClick={() => fetchHouseholds()}
             title="Làm mới danh sách"
-            className="p-2 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+            className="p-2.5 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-600 dark:text-emerald-400' : ''}`} />
           </button>

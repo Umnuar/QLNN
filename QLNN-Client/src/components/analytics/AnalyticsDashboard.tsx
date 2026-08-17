@@ -44,7 +44,7 @@ const MiniDonut: React.FC<{
   return (
     <div className="flex items-center gap-5">
       {/* SVG Donut */}
-      <div className="relative w-24 h-24 shrink-0">
+      <div className="relative w-26 h-26 shrink-0">
         <svg className="w-full h-full -rotate-90 drop-shadow-xs" viewBox="0 0 100 100">
           {/* Background circle */}
           <circle
@@ -55,7 +55,7 @@ const MiniDonut: React.FC<{
             strokeWidth="14"
             fill="transparent"
           />
-          {/* Segment 2 (background of fill) */}
+          {/* Segment 2 */}
           <circle
             cx="50"
             cy="50"
@@ -80,40 +80,40 @@ const MiniDonut: React.FC<{
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider leading-none">
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider leading-none">
             Tổng
           </span>
-          <span className="text-xs font-black text-slate-900 dark:text-white leading-tight font-mono">
+          <span className="text-sm font-black text-slate-900 dark:text-white leading-tight font-mono mt-0.5">
             {cryptoHelper.formatArea(total, false)}
           </span>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 leading-none">{unit}</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 leading-none">{unit}</span>
         </div>
       </div>
 
       {/* Legend */}
       <div className="flex-1 space-y-2.5 text-xs">
-        <div className="p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
-          <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full shadow-xs" style={{ backgroundColor: color1 }} />
+        <div className="p-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+          <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full shadow-xs shrink-0" style={{ backgroundColor: color1 }} />
               <span>{label1}</span>
             </div>
-            <span className="font-mono text-emerald-700 dark:text-emerald-400">{p1}%</span>
+            <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold text-xs">{p1}%</span>
           </div>
-          <div className="text-slate-500 dark:text-slate-400 font-bold font-mono text-[11px] pl-4 mt-0.5">
+          <div className="text-slate-600 dark:text-slate-300 font-bold font-mono text-xs pl-4.5 mt-0.5">
             {cryptoHelper.formatArea(val1)}
           </div>
         </div>
 
-        <div className="p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
-          <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full shadow-xs" style={{ backgroundColor: color2 }} />
+        <div className="p-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+          <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full shadow-xs shrink-0" style={{ backgroundColor: color2 }} />
               <span>{label2}</span>
             </div>
-            <span className="font-mono text-emerald-700 dark:text-emerald-400">{p2}%</span>
+            <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold text-xs">{p2}%</span>
           </div>
-          <div className="text-slate-500 dark:text-slate-400 font-bold font-mono text-[11px] pl-4 mt-0.5">
+          <div className="text-slate-600 dark:text-slate-300 font-bold font-mono text-xs pl-4.5 mt-0.5">
             {cryptoHelper.formatArea(val2)}
           </div>
         </div>
@@ -132,14 +132,14 @@ const ProgressBar: React.FC<{
 }> = ({ label, value, max, colorClass, unit }) => {
   const percent = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
-    <div className="space-y-1.5 p-2 rounded-xl bg-slate-50/50 dark:bg-slate-800/50">
+    <div className="space-y-1.5 p-2.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/50">
       <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
         <span>{label}</span>
-        <span className="font-mono text-slate-900 dark:text-slate-100">
+        <span className="font-mono text-sm text-slate-900 dark:text-slate-100 font-bold">
           {unit === 'ha' ? cryptoHelper.formatArea(value) : cryptoHelper.formatCount(value, unit)}
         </span>
       </div>
-      <div className="w-full h-2.5 bg-slate-200/70 dark:bg-slate-700/70 rounded-full overflow-hidden">
+      <div className="w-full h-3 bg-slate-200/70 dark:bg-slate-700/70 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 shadow-xs ${colorClass}`}
           style={{ width: `${percent}%` }}
@@ -193,7 +193,7 @@ export const AnalyticsDashboard: React.FC = () => {
     return (
       <div className="py-24 text-center text-slate-400 dark:text-slate-500">
         <div className="w-10 h-10 border-3 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mx-auto mb-3" />
-        <div className="text-sm font-bold text-slate-700 dark:text-slate-200">Đang tổng hợp 25 chỉ số Nông thôn mới...</div>
+        <div className="text-base font-bold text-slate-700 dark:text-slate-200">Đang tổng hợp 25 chỉ số Nông thôn mới...</div>
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Đồng bộ số liệu diện tích và đàn vật nuôi xã Đăk Hà</p>
       </div>
     );
@@ -201,7 +201,7 @@ export const AnalyticsDashboard: React.FC = () => {
 
   if (!overview) {
     return (
-      <div className="py-16 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="py-16 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-sm">
         Chưa có số liệu thống kê. Vui lòng nhập dữ liệu hộ nông nghiệp.
       </div>
     );
@@ -216,11 +216,11 @@ export const AnalyticsDashboard: React.FC = () => {
       {/* Top Banner & Filter */}
       <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-200">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <span className="px-3 py-1 rounded-xl text-xs font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 uppercase tracking-wider">
               {scopeName}
             </span>
-            <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               Tổng Hợp Chỉ Tiêu Nông Thôn Mới
             </h2>
@@ -265,33 +265,33 @@ export const AnalyticsDashboard: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Hộ Nông Nghiệp */}
         <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center gap-4 relative overflow-hidden group hover:border-indigo-300 dark:hover:border-indigo-700 transition-all">
-          <div className="w-13 h-13 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 shadow-xs">
-            <Users className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 shadow-xs">
+            <Users className="w-7 h-7" />
           </div>
           <div>
-            <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            <div className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Tổng số hộ
             </div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white font-mono mt-0.5">
+            <div className="text-3xl font-black text-slate-900 dark:text-white font-mono mt-0.5">
               {cryptoHelper.formatCount(overview.household_count, 'hộ')}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">Đã kê khai trong CSDL</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Đã kê khai trong CSDL</div>
           </div>
         </div>
 
         {/* Card 2: Tổng Diện Tích Cây Trồng */}
         <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center gap-4 relative overflow-hidden group hover:border-emerald-300 dark:hover:border-emerald-700 transition-all">
-          <div className="w-13 h-13 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
-            <Trees className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
+            <Trees className="w-7 h-7" />
           </div>
           <div>
-            <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            <div className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Tổng cây trồng
             </div>
-            <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400 font-mono mt-0.5">
+            <div className="text-3xl font-black text-emerald-700 dark:text-emerald-400 font-mono mt-0.5">
               {cryptoHelper.formatArea(crops.total_crops_area)}
             </div>
-            <div className="text-[11px] text-emerald-800/80 dark:text-emerald-300/80 font-bold mt-0.5">
+            <div className="text-xs text-emerald-800/90 dark:text-emerald-300/90 font-bold mt-0.5">
               12 chỉ tiêu diện tích
             </div>
           </div>
@@ -299,17 +299,17 @@ export const AnalyticsDashboard: React.FC = () => {
 
         {/* Card 3: Tổng Đàn Vật Nuôi */}
         <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center gap-4 relative overflow-hidden group hover:border-amber-300 dark:hover:border-amber-700 transition-all">
-          <div className="w-13 h-13 rounded-2xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
-            <Dog className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
+            <Dog className="w-7 h-7" />
           </div>
           <div>
-            <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            <div className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Tổng đàn vật nuôi
             </div>
-            <div className="text-2xl font-black text-amber-700 dark:text-amber-400 font-mono mt-0.5">
+            <div className="text-3xl font-black text-amber-700 dark:text-amber-400 font-mono mt-0.5">
               {cryptoHelper.formatCount(livestock.total_animals, 'con')}
             </div>
-            <div className="text-[11px] text-amber-800/80 dark:text-amber-300/80 font-bold mt-0.5">
+            <div className="text-xs text-amber-800/90 dark:text-amber-300/90 font-bold mt-0.5">
               4 loại gia súc, gia cầm
             </div>
           </div>
@@ -317,17 +317,17 @@ export const AnalyticsDashboard: React.FC = () => {
 
         {/* Card 4: Thủy Sản */}
         <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center gap-4 relative overflow-hidden group hover:border-sky-300 dark:hover:border-sky-700 transition-all">
-          <div className="w-13 h-13 rounded-2xl bg-sky-50 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 shadow-xs">
-            <Fish className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-2xl bg-sky-50 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 shadow-xs">
+            <Fish className="w-7 h-7" />
           </div>
           <div>
-            <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            <div className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Thủy sản
             </div>
-            <div className="text-2xl font-black text-sky-700 dark:text-sky-400 font-mono mt-0.5">
+            <div className="text-3xl font-black text-sky-700 dark:text-sky-400 font-mono mt-0.5">
               {cryptoHelper.formatArea(aqua.fish_pond)}
             </div>
-            <div className="text-[11px] text-sky-800/80 dark:text-sky-300/80 font-bold mt-0.5">
+            <div className="text-xs text-sky-800/90 dark:text-sky-300/90 font-bold mt-0.5">
               + {cryptoHelper.formatCount(aqua.fish_cage, 'lồng')}
             </div>
           </div>
@@ -336,11 +336,11 @@ export const AnalyticsDashboard: React.FC = () => {
 
       {/* SECTION 1: CÂY TRỒNG (12 Chỉ Số) */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-            <Trees className="w-4 h-4" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+            <Trees className="w-5 h-5" />
           </div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+          <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
             1. Cơ Cấu Cây Trồng (Tổng: {cryptoHelper.formatArea(crops.total_crops_area)})
           </h3>
         </div>
@@ -350,10 +350,10 @@ export const AnalyticsDashboard: React.FC = () => {
           <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4 transition-colors duration-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-600 shadow-xs" />
+                <span className="w-3 h-3 rounded-full bg-amber-600 shadow-xs" />
                 <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">Cà Phê (Tổng Diện Tích)</h4>
               </div>
-              <span className="text-xs font-black font-mono px-3 py-1 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 rounded-xl border border-amber-200 dark:border-amber-800">
+              <span className="text-sm font-black font-mono px-3.5 py-1 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 rounded-xl border border-amber-200 dark:border-amber-800">
                 {cryptoHelper.formatArea(crops.total_cafe)}
               </span>
             </div>
@@ -373,10 +373,10 @@ export const AnalyticsDashboard: React.FC = () => {
           <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4 transition-colors duration-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-xs" />
+                <span className="w-3 h-3 rounded-full bg-emerald-600 shadow-xs" />
                 <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">Cao Su (Tổng Diện Tích)</h4>
               </div>
-              <span className="text-xs font-black font-mono px-3 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 rounded-xl border border-emerald-200 dark:border-emerald-800">
+              <span className="text-sm font-black font-mono px-3.5 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 rounded-xl border border-emerald-200 dark:border-emerald-800">
                 {cryptoHelper.formatArea(crops.total_rubber)}
               </span>
             </div>
@@ -395,98 +395,98 @@ export const AnalyticsDashboard: React.FC = () => {
 
         {/* 4 Cards: Cây Ăn Quả, Mắc Ca, Lúa Nước, Cây Hàng Năm Khác */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
-            <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
+          <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
+            <div className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
               Cây ăn quả
             </div>
-            <div className="text-xl font-black text-slate-900 dark:text-white font-mono">
+            <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
               {cryptoHelper.formatArea(crops.fruit_tree)}
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Sầu riêng, mít, bơ, cam...</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Sầu riêng, mít, bơ, cam...</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
-            <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
+          <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
+            <div className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
               Cây Mắc Ca
             </div>
-            <div className="text-xl font-black text-slate-900 dark:text-white font-mono">
+            <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
               {cryptoHelper.formatArea(crops.macadamia)}
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Cây công nghiệp giá trị cao</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Cây công nghiệp giá trị cao</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
-            <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
+          <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
+            <div className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
               Lúa nước
             </div>
-            <div className="text-xl font-black text-slate-900 dark:text-white font-mono">
+            <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
               {cryptoHelper.formatArea(crops.wet_rice)}
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Lúa 2 vụ / 1 vụ</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Lúa 2 vụ / 1 vụ</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
-            <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
+          <div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
+            <div className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
               Cây hàng năm khác
             </div>
-            <div className="text-xl font-black text-slate-900 dark:text-white font-mono">
+            <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
               {cryptoHelper.formatArea(crops.other_annual_crops)}
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Ngô, sắn, khoai, hoa màu</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Ngô, sắn, khoai, hoa màu</p>
           </div>
         </div>
 
         {/* Dược Liệu Breakdown Box (Forest Theme) */}
         <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-emerald-950 text-white p-6 rounded-3xl shadow-lg border border-emerald-800/40 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-800/60 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                <Sparkles className="w-5 h-5" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <Sparkles className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="font-black text-sm text-white">
+                <h4 className="font-black text-base text-white">
                   Cây Dược Liệu Đăk Hà (4 Loại Con)
                 </h4>
-                <p className="text-[11px] text-emerald-300">
+                <p className="text-xs text-emerald-300">
                   Cây trồng bản địa dược liệu thuộc đề án phát triển NTM xã Đăk Hà
                 </p>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-[10px] text-emerald-300 uppercase font-black tracking-wider block">
+              <span className="text-xs text-emerald-300 uppercase font-black tracking-wider block">
                 Tổng diện tích dược liệu
               </span>
-              <span className="text-2xl font-black text-emerald-200 font-mono">
+              <span className="text-3xl font-black text-emerald-200 font-mono">
                 {cryptoHelper.formatArea(crops.total_herb_area)}
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-emerald-900/60 p-3.5 rounded-2xl border border-emerald-700/50">
-              <div className="text-[11px] font-bold text-emerald-300">Đinh lăng</div>
-              <div className="text-lg font-black font-mono mt-1 text-white">
+            <div className="bg-emerald-900/60 p-4 rounded-2xl border border-emerald-700/50">
+              <div className="text-xs font-bold text-emerald-300">Đinh lăng</div>
+              <div className="text-xl font-black font-mono mt-1 text-white">
                 {cryptoHelper.formatArea(crops.herb_dinh_lang)}
               </div>
             </div>
 
-            <div className="bg-emerald-900/60 p-3.5 rounded-2xl border border-emerald-700/50">
-              <div className="text-[11px] font-bold text-emerald-300">Gừng</div>
-              <div className="text-lg font-black font-mono mt-1 text-white">
+            <div className="bg-emerald-900/60 p-4 rounded-2xl border border-emerald-700/50">
+              <div className="text-xs font-bold text-emerald-300">Gừng</div>
+              <div className="text-xl font-black font-mono mt-1 text-white">
                 {cryptoHelper.formatArea(crops.herb_gung)}
               </div>
             </div>
 
-            <div className="bg-emerald-900/60 p-3.5 rounded-2xl border border-emerald-700/50">
-              <div className="text-[11px] font-bold text-emerald-300">Nghệ</div>
-              <div className="text-lg font-black font-mono mt-1 text-white">
+            <div className="bg-emerald-900/60 p-4 rounded-2xl border border-emerald-700/50">
+              <div className="text-xs font-bold text-emerald-300">Nghệ</div>
+              <div className="text-xl font-black font-mono mt-1 text-white">
                 {cryptoHelper.formatArea(crops.herb_nghe)}
               </div>
             </div>
 
-            <div className="bg-emerald-900/60 p-3.5 rounded-2xl border border-emerald-700/50">
-              <div className="text-[11px] font-bold text-emerald-300">Sả</div>
-              <div className="text-lg font-black font-mono mt-1 text-white">
+            <div className="bg-emerald-900/60 p-4 rounded-2xl border border-emerald-700/50">
+              <div className="text-xs font-bold text-emerald-300">Sả</div>
+              <div className="text-xl font-black font-mono mt-1 text-white">
                 {cryptoHelper.formatArea(crops.herb_sa)}
               </div>
             </div>
@@ -499,28 +499,28 @@ export const AnalyticsDashboard: React.FC = () => {
         {/* Vật nuôi (7 cols) */}
         <div className="lg:col-span-7 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4 transition-colors duration-200">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-xs">
-                <Dog className="w-4 h-4" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-amber-600 text-white flex items-center justify-center shadow-xs">
+                <Dog className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
                 2. Tổng Đàn Vật Nuôi ({cryptoHelper.formatCount(livestock.total_animals, 'con')})
               </h3>
             </div>
           </div>
 
           {/* Cattle Summary Box */}
-          <div className="bg-amber-50/80 dark:bg-amber-950/50 p-3.5 rounded-2xl border border-amber-200 dark:border-amber-800 flex items-center justify-between">
+          <div className="bg-amber-50/80 dark:bg-amber-950/50 p-4 rounded-2xl border border-amber-200 dark:border-amber-800 flex items-center justify-between">
             <div>
               <span className="text-xs font-black text-amber-900 dark:text-amber-200">Tổng Đàn Trâu Bò (Gia súc lớn):</span>
-              <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium">Trâu: {livestock.buffalo} con • Bò: {livestock.cow} con</p>
+              <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">Trâu: {livestock.buffalo} con • Bò: {livestock.cow} con</p>
             </div>
-            <span className="text-base font-black font-mono text-amber-900 dark:text-amber-200">
+            <span className="text-lg font-black font-mono text-amber-900 dark:text-amber-200">
               {cryptoHelper.formatCount(livestock.total_cattle, 'con')}
             </span>
           </div>
 
-          <div className="space-y-2 pt-1">
+          <div className="space-y-2.5 pt-1">
             <ProgressBar
               label="Đàn Gia Cầm (Gà, Vịt, Ngan)"
               value={livestock.poultry}
@@ -555,11 +555,11 @@ export const AnalyticsDashboard: React.FC = () => {
         {/* Thủy sản (5 cols) */}
         <div className="lg:col-span-5 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between transition-colors duration-200">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-xl bg-sky-600 text-white flex items-center justify-center shadow-xs">
-                <Fish className="w-4 h-4" />
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-9 h-9 rounded-2xl bg-sky-600 text-white flex items-center justify-center shadow-xs">
+                <Fish className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">3. Nuôi Trồng Thủy Sản</h3>
+              <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">3. Nuôi Trồng Thủy Sản</h3>
             </div>
 
             <div className="space-y-3">
@@ -568,7 +568,7 @@ export const AnalyticsDashboard: React.FC = () => {
                 <div className="text-2xl font-black font-mono text-sky-800 dark:text-sky-300 mt-1">
                   {cryptoHelper.formatArea(aqua.fish_pond)}
                 </div>
-                <p className="text-[11px] text-sky-700 dark:text-sky-400 mt-1">Mặt nước nuôi thả cá truyền thống</p>
+                <p className="text-xs text-sky-700 dark:text-sky-400 mt-1">Mặt nước nuôi thả cá truyền thống</p>
               </div>
 
               <div className="p-4 bg-slate-50 dark:bg-slate-800/70 rounded-2xl border border-slate-200 dark:border-slate-700">
@@ -576,18 +576,18 @@ export const AnalyticsDashboard: React.FC = () => {
                 <div className="text-2xl font-black font-mono text-slate-900 dark:text-white mt-1">
                   {cryptoHelper.formatCount(aqua.fish_cage, 'lồng')}
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Lồng nuôi cá trên lòng hồ thủy điện</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Lồng nuôi cá trên lòng hồ thủy điện</p>
               </div>
             </div>
           </div>
 
-          <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl text-[11px] text-slate-500 dark:text-slate-400 italic border border-slate-200 dark:border-slate-700">
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl text-xs text-slate-500 dark:text-slate-400 italic border border-slate-200 dark:border-slate-700">
             * Số liệu được cập nhật theo thời gian thực từ CSDL hộ nông nghiệp xã Đăk Hà.
           </div>
         </div>
       </div>
 
-      {/* SECTION 4: BẢNG SO SÁNH GIỮA CÁC THÔN (Chỉ hiển thị cho Admin) */}
+      {/* SECTION 4: BẢNG SO SÁNH GIỮA CÁC THÔN (Admin) */}
       {user?.role === 'admin' && villageData.length > 0 && (
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden space-y-3 p-5 transition-colors duration-200">
           <div className="flex items-center justify-between">
@@ -607,7 +607,7 @@ export const AnalyticsDashboard: React.FC = () => {
           <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+                <tr className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-black uppercase text-[11px] tracking-wider border-b border-slate-200 dark:border-slate-800">
                   <th className="py-3.5 px-3">Tên Thôn</th>
                   <th className="py-3.5 px-3 text-center">Số Hộ</th>
                   <th className="py-3.5 px-3 text-right">Cà Phê (ha)</th>
@@ -622,16 +622,16 @@ export const AnalyticsDashboard: React.FC = () => {
                   <th className="py-3.5 px-3 text-right">Cá Lồng</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 font-semibold text-slate-700 dark:text-slate-300">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 font-semibold text-slate-700 dark:text-slate-300 text-xs">
                 {villageData.map((v) => (
                   <tr key={v.village_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="py-3 px-3 font-bold text-slate-900 dark:text-slate-100">{v.village_name}</td>
-                    <td className="py-3 px-3 text-center font-mono font-bold text-indigo-700 dark:text-indigo-400">{v.household_count}</td>
+                    <td className="py-3 px-3 font-bold text-slate-900 dark:text-slate-100 text-[13.5px]">{v.village_name}</td>
+                    <td className="py-3 px-3 text-center font-mono font-bold text-indigo-700 dark:text-indigo-400 text-sm">{v.household_count}</td>
                     <td className="py-3 px-3 text-right font-mono tabular-nums">{cryptoHelper.formatArea(v.crops.total_cafe)}</td>
                     <td className="py-3 px-3 text-right font-mono tabular-nums">{cryptoHelper.formatArea(v.crops.total_rubber)}</td>
                     <td className="py-3 px-3 text-right font-mono tabular-nums">{cryptoHelper.formatArea(v.crops.fruit_tree)}</td>
                     <td className="py-3 px-3 text-right font-mono tabular-nums">{cryptoHelper.formatArea(v.crops.total_herb_area)}</td>
-                    <td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-400">
+                    <td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-400 text-sm">
                       {cryptoHelper.formatArea(v.crops.total_crops_area)}
                     </td>
                     <td className="py-3 px-3 text-right font-mono tabular-nums">{v.livestock.total_cattle}</td>

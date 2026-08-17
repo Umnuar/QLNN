@@ -57,15 +57,15 @@ export const Sidebar: React.FC = () => {
       <div className="p-3 flex items-center justify-between border-b border-slate-900 min-h-[52px] overflow-hidden">
         {!isSidebarCollapsed ? (
           <>
-            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2 flex items-center gap-1.5 whitespace-nowrap overflow-hidden">
-              <Database className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+            <div className="text-xs font-black text-slate-400 uppercase tracking-widest px-2 flex items-center gap-2 whitespace-nowrap overflow-hidden">
+              <Database className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>DANH MỤC NGHIỆP VỤ</span>
             </div>
             <button
               type="button"
               onClick={toggleSidebar}
               title="Thu gọn thanh bên"
-              className="p-1.5 text-slate-500 hover:text-slate-200 hover:bg-slate-900 rounded-xl transition-all cursor-pointer shrink-0"
+              className="p-1.5 text-slate-400 hover:text-slate-100 hover:bg-slate-900 rounded-xl transition-all cursor-pointer shrink-0"
             >
               <PanelLeftClose className="w-4 h-4" />
             </button>
@@ -94,10 +94,10 @@ export const Sidebar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-2xl transition-colors duration-200 relative cursor-pointer overflow-hidden ${
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl transition-colors duration-200 relative cursor-pointer overflow-hidden ${
                     isActive
                       ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/90 font-medium'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-900/90 font-medium'
                   }`}
                 >
                   {/* Active Indicator bar */}
@@ -113,10 +113,10 @@ export const Sidebar: React.FC = () => {
                         : 'bg-slate-900 text-slate-400 group-hover:text-emerald-400 group-hover:bg-slate-800'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-4.5 h-4.5" />
                   </div>
 
-                  {/* Smooth Sliding Text Container (Never wraps onto multiple lines) */}
+                  {/* Smooth Sliding Text Container */}
                   <div
                     className={`overflow-hidden whitespace-nowrap transition-all duration-250 ease-out text-left ${
                       isSidebarCollapsed
@@ -125,13 +125,13 @@ export const Sidebar: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs tracking-tight font-black">{item.label}</span>
+                      <span className="text-[13.5px] tracking-tight font-bold">{item.label}</span>
                       {item.badge && (
                         <span
-                          className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider ml-1.5 ${
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ml-1.5 ${
                             isActive
                               ? 'bg-emerald-800/80 text-emerald-100'
-                              : 'bg-slate-800 text-slate-400'
+                              : 'bg-slate-800 text-slate-300'
                           }`}
                         >
                           {item.badge}
@@ -139,8 +139,8 @@ export const Sidebar: React.FC = () => {
                       )}
                     </div>
                     <div
-                      className={`text-[10px] truncate mt-0.5 ${
-                        isActive ? 'text-emerald-100/80 font-normal' : 'text-slate-500 group-hover:text-slate-400'
+                      className={`text-xs truncate mt-0.5 ${
+                        isActive ? 'text-emerald-100/90 font-medium' : 'text-slate-400 group-hover:text-slate-300'
                       }`}
                     >
                       {item.desc}
@@ -150,16 +150,16 @@ export const Sidebar: React.FC = () => {
 
                 {/* Floating Tooltip when Collapsed */}
                 {isSidebarCollapsed && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 px-3 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-2xl border border-slate-700 whitespace-nowrap pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 px-3.5 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-2xl border border-slate-700 whitespace-nowrap pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
                     <div className="flex items-center gap-1.5">
-                      <span>{item.label}</span>
+                      <span className="text-sm">{item.label}</span>
                       {item.badge && (
-                        <span className="text-[9px] bg-emerald-700 text-white px-1.5 py-0.2 rounded-md font-mono">
+                        <span className="text-[10px] bg-emerald-700 text-white px-1.5 py-0.5 rounded-md font-mono">
                           {item.badge}
                         </span>
                       )}
                     </div>
-                    <div className="text-[10px] text-slate-400 font-normal mt-0.5">{item.desc}</div>
+                    <div className="text-xs text-slate-400 font-medium mt-0.5">{item.desc}</div>
                   </div>
                 )}
               </div>
@@ -169,14 +169,14 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Footer Info Card */}
-      <div className="p-3 border-t border-slate-900 bg-slate-950/60 text-[11px] text-slate-500 overflow-hidden">
+      <div className="p-3.5 border-t border-slate-900 bg-slate-950/60 text-xs text-slate-400 overflow-hidden">
         {!isSidebarCollapsed ? (
           <div className="space-y-1 whitespace-nowrap overflow-hidden">
-            <div className="flex items-center gap-1.5 text-slate-300 font-bold">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <div className="flex items-center gap-2 text-slate-200 font-bold text-xs">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>QLNN v1.0.0 (Bảo Mật SSO)</span>
             </div>
-            <p className="text-[10px] text-slate-500 truncate">Hệ sinh thái Số Đăk Hà • AES-256</p>
+            <p className="text-[11px] text-slate-400 truncate">Hệ sinh thái Số Đăk Hà • AES-256</p>
           </div>
         ) : (
           <div className="flex justify-center" title="Bảo mật SSO • AES-256">

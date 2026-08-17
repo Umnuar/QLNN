@@ -256,13 +256,13 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 text-slate-900 dark:text-slate-100 transition-colors duration-200">
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-slate-900 px-6 py-4 text-white flex items-center justify-between">
+        <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-slate-900 px-6 py-4.5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-emerald-200">
               <Trees className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-black text-base tracking-tight">
+              <h3 className="font-black text-lg tracking-tight">
                 {household ? 'Chỉnh Sửa Số Liệu Hộ Nông Nghiệp' : 'Thêm Mới Hộ Nông Nghiệp'}
               </h3>
               <p className="text-xs text-emerald-200 font-medium">
@@ -288,9 +288,9 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
           )}
 
           {/* General Information Box */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 dark:bg-slate-800/60 p-4.5 rounded-2xl border border-slate-200 dark:border-slate-700">
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Họ và tên chủ hộ <span className="text-rose-500">*</span>
               </label>
               <input
@@ -299,20 +299,20 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Ví dụ: A Đôi, Y Blui, Trần Văn Nam..."
                 required
-                className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
               />
             </div>
 
             {user?.role === 'admin' ? (
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                   Thôn quản lý <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={villageId}
                   onChange={(e) => setVillageId(e.target.value)}
                   required
-                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden cursor-pointer"
+                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden cursor-pointer"
                 >
                   {villages.map((v) => (
                     <option key={v.id} value={v.id}>
@@ -323,17 +323,17 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
               </div>
             ) : (
               <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                   Thôn quản lý
                 </label>
-                <div className="px-3.5 py-2.5 bg-slate-200/70 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300">
+                <div className="px-4 py-2.5 bg-slate-200/70 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300">
                   {villages.find((v) => v.id === villageId)?.name || 'Thôn hiện tại'}
                 </div>
               </div>
             )}
 
             <div className="md:col-span-3">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Ghi chú thêm (nếu có)
               </label>
               <input
@@ -341,7 +341,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Ghi chú về nhận khoán, diện tích chuyển đổi, đề án..."
-                className="w-full px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-medium"
+                className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-medium"
               />
             </div>
           </div>
@@ -354,7 +354,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
               className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'crops'
                   ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:white hover:bg-slate-200/60 dark:hover:bg-slate-700'
               }`}
             >
               <Trees className="w-4 h-4" />
@@ -367,7 +367,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
               className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'livestock'
                   ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:white hover:bg-slate-200/60 dark:hover:bg-slate-700'
               }`}
             >
               <Dog className="w-4 h-4" />
@@ -380,7 +380,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
               className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'aquaculture'
                   ? 'bg-sky-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:white hover:bg-slate-200/60 dark:hover:bg-slate-700'
               }`}
             >
               <Fish className="w-4 h-4" />
@@ -398,9 +398,9 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                     <span className="w-2 h-2 rounded-full bg-amber-600" />
                     CÀ PHÊ
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                         Hộ gia đình
                       </label>
                       <div className="relative">
@@ -410,15 +410,15 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                           min="0"
                           value={cafeHousehold}
                           onChange={(e) => setCafeHousehold(e.target.value)}
-                          className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500"
+                          className="w-full pl-3 pr-8 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                         />
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
                           ha
                         </span>
                       </div>
                     </div>
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                         Nhận khoán
                       </label>
                       <div className="relative">
@@ -428,9 +428,9 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                           min="0"
                           value={cafeContracted}
                           onChange={(e) => setCafeContracted(e.target.value)}
-                          className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500"
+                          className="w-full pl-3 pr-8 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                         />
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
                           ha
                         </span>
                       </div>
@@ -444,9 +444,9 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                     <span className="w-2 h-2 rounded-full bg-emerald-600" />
                     CAO SU
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                         Hộ gia đình
                       </label>
                       <div className="relative">
@@ -456,15 +456,15 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                           min="0"
                           value={rubberHousehold}
                           onChange={(e) => setRubberHousehold(e.target.value)}
-                          className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500"
+                          className="w-full pl-3 pr-8 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                         />
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
                           ha
                         </span>
                       </div>
                     </div>
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                         Nhận khoán
                       </label>
                       <div className="relative">
@@ -474,9 +474,9 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                           min="0"
                           value={rubberContracted}
                           onChange={(e) => setRubberContracted(e.target.value)}
-                          className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500"
+                          className="w-full pl-3 pr-8 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                         />
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
                           ha
                         </span>
                       </div>
@@ -487,8 +487,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
 
               {/* 4 Cây: Ăn Quả, Mắc Ca, Lúa Nước, Cây Hàng Năm Khác */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">
-                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1 truncate">
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1 truncate">
                     Cây ăn quả
                   </label>
                   <div className="relative">
@@ -498,16 +498,16 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       min="0"
                       value={fruitTree}
                       onChange={(e) => setFruitTree(e.target.value)}
-                      className="w-full pl-2.5 pr-7 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-slate-800 dark:text-slate-200"
+                      className="w-full pl-3 pr-7 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-mono font-bold text-slate-900 dark:text-white"
                     />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                       ha
                     </span>
                   </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">
-                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1 truncate">
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1 truncate">
                     Cây Mắc Ca
                   </label>
                   <div className="relative">
@@ -517,16 +517,16 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       min="0"
                       value={macadamia}
                       onChange={(e) => setMacadamia(e.target.value)}
-                      className="w-full pl-2.5 pr-7 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-slate-800 dark:text-slate-200"
+                      className="w-full pl-3 pr-7 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-mono font-bold text-slate-900 dark:text-white"
                     />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                       ha
                     </span>
                   </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">
-                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1 truncate">
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1 truncate">
                     Lúa nước
                   </label>
                   <div className="relative">
@@ -536,16 +536,16 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       min="0"
                       value={wetRice}
                       onChange={(e) => setWetRice(e.target.value)}
-                      className="w-full pl-2.5 pr-7 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-slate-800 dark:text-slate-200"
+                      className="w-full pl-3 pr-7 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-mono font-bold text-slate-900 dark:text-white"
                     />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                       ha
                     </span>
                   </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">
-                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1 truncate">
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1 truncate">
                     Hàng năm khác
                   </label>
                   <div className="relative">
@@ -555,9 +555,9 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       min="0"
                       value={otherAnnualCrops}
                       onChange={(e) => setOtherAnnualCrops(e.target.value)}
-                      className="w-full pl-2.5 pr-7 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-slate-800 dark:text-slate-200"
+                      className="w-full pl-3 pr-7 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-mono font-bold text-slate-900 dark:text-white"
                     />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                       ha
                     </span>
                   </div>
@@ -574,8 +574,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-slate-900">
-                  <div className="p-2.5 bg-white/95 rounded-xl">
-                    <label className="text-[11px] font-bold text-emerald-950 block mb-1">
+                  <div className="p-3 bg-white/95 rounded-xl">
+                    <label className="text-xs font-bold text-emerald-950 block mb-1">
                       Đinh lăng
                     </label>
                     <div className="relative">
@@ -585,16 +585,16 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                         min="0"
                         value={herbDinhLang}
                         onChange={(e) => setHerbDinhLang(e.target.value)}
-                        className="w-full pl-2 pr-7 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono font-bold"
+                        className="w-full pl-2.5 pr-7 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono font-bold"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                         ha
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-2.5 bg-white/95 rounded-xl">
-                    <label className="text-[11px] font-bold text-emerald-950 block mb-1">
+                  <div className="p-3 bg-white/95 rounded-xl">
+                    <label className="text-xs font-bold text-emerald-950 block mb-1">
                       Gừng
                     </label>
                     <div className="relative">
@@ -604,16 +604,16 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                         min="0"
                         value={herbGung}
                         onChange={(e) => setHerbGung(e.target.value)}
-                        className="w-full pl-2 pr-7 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono font-bold"
+                        className="w-full pl-2.5 pr-7 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono font-bold"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                         ha
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-2.5 bg-white/95 rounded-xl">
-                    <label className="text-[11px] font-bold text-emerald-950 block mb-1">
+                  <div className="p-3 bg-white/95 rounded-xl">
+                    <label className="text-xs font-bold text-emerald-950 block mb-1">
                       Nghệ
                     </label>
                     <div className="relative">
@@ -623,16 +623,16 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                         min="0"
                         value={herbNghe}
                         onChange={(e) => setHerbNghe(e.target.value)}
-                        className="w-full pl-2 pr-7 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono font-bold"
+                        className="w-full pl-2.5 pr-7 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono font-bold"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                         ha
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-2.5 bg-white/95 rounded-xl">
-                    <label className="text-[11px] font-bold text-emerald-950 block mb-1">
+                  <div className="p-3 bg-white/95 rounded-xl">
+                    <label className="text-xs font-bold text-emerald-950 block mb-1">
                       Sả
                     </label>
                     <div className="relative">
@@ -642,9 +642,9 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                         min="0"
                         value={herbSa}
                         onChange={(e) => setHerbSa(e.target.value)}
-                        className="w-full pl-2 pr-7 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono font-bold"
+                        className="w-full pl-2.5 pr-7 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono font-bold"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                         ha
                       </span>
                     </div>
@@ -653,9 +653,9 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
               </div>
 
               {/* Subtotal Banner */}
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center justify-between text-xs font-bold text-emerald-900 dark:text-emerald-200">
+              <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center justify-between text-xs font-bold text-emerald-900 dark:text-emerald-200">
                 <span>Tổng Diện Tích Cây Trồng Kê Khai:</span>
-                <span className="font-mono text-sm font-black text-emerald-700 dark:text-emerald-300">
+                <span className="font-mono text-base font-black text-emerald-700 dark:text-emerald-300">
                   {cryptoHelper.formatArea(totalCropsArea)}
                 </span>
               </div>
@@ -675,7 +675,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       min="0"
                       value={buffalo}
                       onChange={(e) => setBuffalo(e.target.value)}
-                      className="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono font-bold text-slate-800 dark:text-slate-200"
+                      className="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono font-bold text-slate-800 dark:text-slate-200"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
                       con
@@ -692,7 +692,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       min="0"
                       value={cow}
                       onChange={(e) => setCow(e.target.value)}
-                      className="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono font-bold text-slate-800 dark:text-slate-200"
+                      className="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono font-bold text-slate-800 dark:text-slate-200"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
                       con
@@ -709,7 +709,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       min="0"
                       value={pig}
                       onChange={(e) => setPig(e.target.value)}
-                      className="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono font-bold text-slate-800 dark:text-slate-200"
+                      className="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono font-bold text-slate-800 dark:text-slate-200"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
                       con
@@ -726,7 +726,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       min="0"
                       value={poultry}
                       onChange={(e) => setPoultry(e.target.value)}
-                      className="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono font-bold text-slate-800 dark:text-slate-200"
+                      className="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono font-bold text-slate-800 dark:text-slate-200"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
                       con
@@ -736,9 +736,9 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
               </div>
 
               {/* Subtotal Banner */}
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800 rounded-xl flex items-center justify-between text-xs font-bold text-amber-900 dark:text-amber-200">
+              <div className="p-3.5 bg-amber-50 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800 rounded-xl flex items-center justify-between text-xs font-bold text-amber-900 dark:text-amber-200">
                 <span>Tổng Đàn Vật Nuôi Kê Khai:</span>
-                <span className="font-mono text-sm font-black text-amber-700 dark:text-amber-300">
+                <span className="font-mono text-base font-black text-amber-700 dark:text-amber-300">
                   {cryptoHelper.formatCount(totalAnimalsCount, 'con')}
                 </span>
               </div>
@@ -758,13 +758,13 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       min="0"
                       value={fishPond}
                       onChange={(e) => setFishPond(e.target.value)}
-                      className="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono font-bold text-slate-800 dark:text-slate-200"
+                      className="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono font-bold text-slate-800 dark:text-slate-200"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
                       ha
                     </span>
                   </div>
-                  <p className="text-[11px] text-sky-700 dark:text-sky-400">Mặt nước thả cá truyền thống</p>
+                  <p className="text-xs text-sky-700 dark:text-sky-400">Mặt nước thả cá truyền thống</p>
                 </div>
 
                 <div className="p-4 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-2">
@@ -776,13 +776,13 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       min="0"
                       value={fishCage}
                       onChange={(e) => setFishCage(e.target.value)}
-                      className="w-full pl-3 pr-12 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono font-bold text-slate-800 dark:text-slate-200"
+                      className="w-full pl-3 pr-12 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono font-bold text-slate-800 dark:text-slate-200"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">
                       lồng
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Lồng nuôi cá lòng hồ thủy điện</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Lồng nuôi cá lòng hồ thủy điện</p>
                 </div>
               </div>
             </div>
