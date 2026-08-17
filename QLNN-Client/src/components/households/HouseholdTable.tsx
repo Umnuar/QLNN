@@ -1,5 +1,11 @@
 import React from 'react';
-import { Edit2, Trash2, Trees, Dog, Fish, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Edit2,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  SearchX,
+} from 'lucide-react';
 import { HouseholdFlat } from '../../types';
 import { useApp } from '../../AppContext';
 import { cryptoHelper } from '../../utils/cryptoHelper';
@@ -17,32 +23,31 @@ interface HouseholdTableProps {
   onDelete: (household: HouseholdFlat) => void;
 }
 
-export const getHouseholdCropTotal = (h: HouseholdFlat): number => {
-  const sum =
-    (h.cafe_household || 0) +
-    (h.cafe_contracted || 0) +
-    (h.rubber_household || 0) +
-    (h.rubber_contracted || 0) +
-    (h.fruit_tree || 0) +
-    (h.macadamia || 0) +
-    (h.herb_dinh_lang || 0) +
-    (h.herb_gung || 0) +
-    (h.herb_nghe || 0) +
-    (h.herb_sa || 0) +
-    (h.wet_rice || 0) +
-    (h.other_annual_crops || 0);
-  return Math.round(sum * 1000) / 1000;
-};
-
-export const getHouseholdLivestockTotal = (h: HouseholdFlat): number => {
-  return (h.buffalo || 0) + (h.cow || 0) + (h.pig || 0) + (h.poultry || 0);
-};
-
-export const getHouseholdAquaSummary = (h: HouseholdFlat): string => {
-  const parts: string[] = [];
-  if (h.fish_pond && h.fish_pond > 0) parts.push(`${h.fish_pond} ha`);
-  if (h.fish_cage && h.fish_cage > 0) parts.push(`${h.fish_cage} lồng`);
-  return parts.length > 0 ? parts.join(', ') : '-';
+// Function sinh màu riêng cho 7 thôn
+const getVillageBadgeStyle = (villageName?: string) => {
+  const name = (villageName || '').toLowerCase();
+  if (name.includes('thôn 1') || name.includes('thon 1')) {
+    return 'bg-blue-50 text-blue-700 border-blue-200';
+  }
+  if (name.includes('thôn 2') || name.includes('thon 2')) {
+    return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  }
+  if (name.includes('thôn 3') || name.includes('thon 3')) {
+    return 'bg-violet-50 text-violet-700 border-violet-200';
+  }
+  if (name.includes('thôn 4') || name.includes('thon 4')) {
+    return 'bg-amber-50 text-amber-700 border-amber-200';
+  }
+  if (name.includes('long loi') || name.includes('longloi')) {
+    return 'bg-teal-50 text-teal-700 border-teal-200';
+  }
+  if (name.includes('tu dô 1') || name.includes('tudo 1') || name.includes('tu do 1')) {
+    return 'bg-rose-50 text-rose-700 border-rose-200';
+  }
+  if (name.includes('tu dô 2') || name.includes('tudo 2') || name.includes('tu do 2')) {
+    return 'bg-purple-50 text-purple-700 border-purple-200';
+  }
+  return 'bg-slate-100 text-slate-700 border-slate-200';
 };
 
 export const HouseholdTable: React.FC<HouseholdTableProps> = ({
@@ -60,141 +65,163 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
   const { user } = useApp();
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
-      {/* Table responsive container */}
-      <div className="overflow-x-auto">
+    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden flex flex-col">
+      {/* Table Container */}
+      <div className="overflow-x-auto min-h-[360px] relative">
+        {loading && (
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center z-10 animate-in fade-in duration-150">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-9 h-9 border-3 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin" />
+              <span className="text-xs font-bold text-slate-600">Đang tải danh sách hộ nông nghiệp...</span>
+            </div>
+          </div>
+        )}
+
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
-              <th className="py-3.5 px-4 w-14 text-center">STT</th>
-              <th className="py-3.5 px-4">Họ và Tên Chủ Hộ</th>
-              {user?.role === 'admin' && <th className="py-3.5 px-4">Thôn</th>}
-              <th className="py-3.5 px-4">
-                <div className="flex items-center gap-1.5 text-emerald-700">
-                  <Trees className="w-3.5 h-3.5" />
-                  <span>Tổng Cây Trồng</span>
-                </div>
-              </th>
-              <th className="py-3.5 px-4">
-                <div className="flex items-center gap-1.5 text-amber-700">
-                  <Dog className="w-3.5 h-3.5" />
-                  <span>Tổng Vật Nuôi</span>
-                </div>
-              </th>
-              <th className="py-3.5 px-4">
-                <div className="flex items-center gap-1.5 text-sky-700">
-                  <Fish className="w-3.5 h-3.5" />
-                  <span>Thủy Sản</span>
-                </div>
-              </th>
-              <th className="py-3.5 px-4 max-w-xs">Ghi Chú</th>
-              <th className="py-3.5 px-4 w-24 text-right">Thao Tác</th>
+            <tr className="bg-slate-50/90 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
+              <th className="py-3.5 px-4 w-12 text-center">STT</th>
+              <th className="py-3.5 px-4 min-w-[180px]">Họ Và Tên Chủ Hộ</th>
+              {user?.role === 'admin' && (
+                <th className="py-3.5 px-4 min-w-[140px]">Thôn Quản Lý</th>
+              )}
+              <th className="py-3.5 px-4 min-w-[130px] text-right">Tổng Cây Trồng (ha)</th>
+              <th className="py-3.5 px-4 min-w-[130px] text-right">Tổng Vật Nuôi (con)</th>
+              <th className="py-3.5 px-4 min-w-[130px] text-right">Thủy Sản</th>
+              <th className="py-3.5 px-4 min-w-[120px]">Ghi Chú</th>
+              <th className="py-3.5 px-4 w-28 text-center">Thao Tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-            {loading ? (
+            {households.length === 0 && !loading ? (
               <tr>
-                <td
-                  colSpan={user?.role === 'admin' ? 8 : 7}
-                  className="py-12 text-center text-slate-400"
-                >
-                  <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-2" />
-                  <div>Đang tải dữ liệu hộ nông nghiệp...</div>
-                </td>
-              </tr>
-            ) : households.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={user?.role === 'admin' ? 8 : 7}
-                  className="py-12 text-center text-slate-400"
-                >
-                  Chưa có dữ liệu hộ nông nghiệp nào phù hợp với bộ lọc.
+                <td colSpan={user?.role === 'admin' ? 8 : 7} className="py-16 text-center text-slate-400">
+                  <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                    <div className="w-14 h-14 rounded-3xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                      <SearchX className="w-7 h-7" />
+                    </div>
+                    <div className="text-sm font-black text-slate-700">Không tìm thấy hộ nông nghiệp nào</div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Thử thay đổi từ khóa tìm kiếm hoặc bấm nút "Thêm Hộ Dân" / "Nhập Excel" để bổ sung số liệu.
+                    </p>
+                  </div>
                 </td>
               </tr>
             ) : (
               households.map((h, idx) => {
-                const cropTotal = getHouseholdCropTotal(h);
-                const animalTotal = getHouseholdLivestockTotal(h);
-                const aquaSummary = getHouseholdAquaSummary(h);
+                const stt = (page - 1) * limit + idx + 1;
+                const cropTotal =
+                  (h.cafe_household ?? 0) +
+                  (h.cafe_contracted ?? 0) +
+                  (h.rubber_household ?? 0) +
+                  (h.rubber_contracted ?? 0) +
+                  (h.fruit_tree ?? 0) +
+                  (h.macadamia ?? 0) +
+                  (h.herb_dinh_lang ?? 0) +
+                  (h.herb_gung ?? 0) +
+                  (h.herb_nghe ?? 0) +
+                  (h.herb_sa ?? 0) +
+                  (h.wet_rice ?? 0) +
+                  (h.other_annual_crops ?? 0);
+
+                const animalTotal =
+                  (h.buffalo ?? 0) +
+                  (h.cow ?? 0) +
+                  (h.pig ?? 0) +
+                  (h.poultry ?? 0);
+
+                const aquaParts: string[] = [];
+                if (h.fish_pond && h.fish_pond > 0) aquaParts.push(cryptoHelper.formatArea(h.fish_pond));
+                if (h.fish_cage && h.fish_cage > 0) aquaParts.push(cryptoHelper.formatCount(h.fish_cage, 'lồng'));
+                const aquaSummary = aquaParts.length > 0 ? aquaParts.join(' • ') : '-';
 
                 return (
                   <tr
                     key={h.id || idx}
                     onClick={() => onEdit(h)}
-                    className="hover:bg-emerald-50/40 cursor-pointer transition-colors group"
+                    className="hover:bg-emerald-50/40 transition-colors cursor-pointer group"
                   >
                     {/* STT */}
-                    <td className="py-3 px-4 text-center font-bold text-slate-500">
-                      {h.stt || (page - 1) * limit + idx + 1}
+                    <td className="py-3.5 px-4 text-center font-bold text-slate-400 font-mono text-[11px]">
+                      {stt}
                     </td>
 
                     {/* Họ và tên */}
-                    <td className="py-3 px-4">
-                      <span className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <div className="font-black text-slate-900 group-hover:text-emerald-700 transition-colors">
                         {h.full_name}
-                      </span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        Kê khai đầy đủ 18 chỉ số
+                      </div>
                     </td>
 
-                    {/* Thôn (Admin only) */}
+                    {/* Thôn (Chỉ hiện cho Admin) */}
                     {user?.role === 'admin' && (
-                      <td className="py-3 px-4">
-                        <span className="inline-flex px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                      <td className="py-3.5 px-4">
+                        <span
+                          className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-bold border ${getVillageBadgeStyle(
+                            h.village_name
+                          )}`}
+                        >
                           {h.village_name || 'Thôn'}
                         </span>
                       </td>
                     )}
 
                     {/* Tổng Cây Trồng */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4 text-right">
                       {cropTotal > 0 ? (
-                        <span className="font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        <span className="font-mono font-bold text-emerald-800 bg-emerald-50/90 px-2.5 py-1 rounded-lg border border-emerald-200 inline-block tabular-nums">
                           {cryptoHelper.formatArea(cropTotal)}
                         </span>
                       ) : (
-                        <span className="text-slate-400">-</span>
+                        <span className="text-slate-300">-</span>
                       )}
                     </td>
 
                     {/* Tổng Vật Nuôi */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4 text-right">
                       {animalTotal > 0 ? (
-                        <span className="font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        <span className="font-mono font-bold text-amber-800 bg-amber-50/90 px-2.5 py-1 rounded-lg border border-amber-200 inline-block tabular-nums">
                           {cryptoHelper.formatCount(animalTotal, 'con')}
                         </span>
                       ) : (
-                        <span className="text-slate-400">-</span>
+                        <span className="text-slate-300">-</span>
                       )}
                     </td>
 
                     {/* Thủy Sản */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4 text-right">
                       {aquaSummary !== '-' ? (
-                        <span className="font-semibold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200">
+                        <span className="font-mono font-bold text-sky-800 bg-sky-50/90 px-2.5 py-1 rounded-lg border border-sky-200 inline-block tabular-nums">
                           {aquaSummary}
                         </span>
                       ) : (
-                        <span className="text-slate-400">-</span>
+                        <span className="text-slate-300">-</span>
                       )}
                     </td>
 
                     {/* Ghi chú */}
-                    <td className="py-3 px-4 text-slate-500 truncate max-w-xs" title={h.notes || ''}>
-                      {h.notes || '-'}
+                    <td className="py-3.5 px-4">
+                      <span className="text-slate-500 text-[11px] line-clamp-1 italic">
+                        {h.notes || '-'}
+                      </span>
                     </td>
 
-                    {/* Thao tác */}
-                    <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1">
+                    {/* Actions */}
+                    <td className="py-3.5 px-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             onEdit(h);
                           }}
-                          title="Sửa thông tin hộ"
-                          className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          title="Sửa số liệu hộ này"
+                          className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all active:scale-95 cursor-pointer"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
@@ -202,10 +229,10 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                             e.stopPropagation();
                             onDelete(h);
                           }}
-                          title="Xóa hộ này"
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          title="Xóa hộ khỏi danh sách"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all active:scale-95 cursor-pointer"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
@@ -217,19 +244,19 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
         </table>
       </div>
 
-      {/* Pagination Bar */}
-      <div className="px-4 py-3 bg-slate-50/80 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
-        <div className="flex items-center gap-2">
+      {/* Pagination Footer */}
+      <div className="p-4 bg-slate-50/80 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-3 text-slate-500 font-medium">
           <span>
-            Hiển thị <b>{households.length}</b> / <b>{total}</b> hộ dân
+            Hiển thị <strong className="text-slate-800 font-mono">{households.length}</strong> / <strong className="text-slate-800 font-mono">{total}</strong> hộ nông nghiệp
           </span>
-          <span className="text-slate-300">|</span>
+
           <div className="flex items-center gap-1.5">
             <span>Dòng/trang:</span>
             <select
               value={limit}
               onChange={(e) => onLimitChange(Number(e.target.value))}
-              className="px-2 py-1 bg-white border border-slate-300 rounded-md font-semibold text-slate-700 focus:outline-hidden"
+              className="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -239,28 +266,31 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span>
-            Trang <b>{page}</b> / <b>{totalPages || 1}</b>
+        {/* Page Nav */}
+        <div className="flex items-center gap-1.5 self-end sm:self-auto">
+          <button
+            type="button"
+            onClick={() => onPageChange(page - 1)}
+            disabled={page <= 1}
+            className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 rounded-xl text-xs font-bold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>Trước</span>
+          </button>
+
+          <span className="px-3 py-1 text-xs font-black text-slate-700 font-mono">
+            {page} / {totalPages || 1}
           </span>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => onPageChange(page - 1)}
-              disabled={page <= 1 || loading}
-              className="p-1.5 border border-slate-300 rounded-lg bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onPageChange(page + 1)}
-              disabled={page >= totalPages || loading}
-              className="p-1.5 border border-slate-300 rounded-lg bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+
+          <button
+            type="button"
+            onClick={() => onPageChange(page + 1)}
+            disabled={page >= totalPages}
+            className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 rounded-xl text-xs font-bold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            <span>Sau</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </div>

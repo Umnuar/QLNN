@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Upload, Download, RefreshCw, Users } from 'lucide-react';
+import { Plus, Search, Upload, Download, RefreshCw, Users, X } from 'lucide-react';
 import { HouseholdFlat } from '../types';
 import { householdApi } from '../api/householdApi';
 import { excelApi } from '../api/excelApi';
@@ -11,7 +11,7 @@ import { HouseholdModal } from '../components/households/HouseholdModal';
 import { ExcelImportModal } from '../components/excel/ExcelImportModal';
 
 export const HouseholdsPage: React.FC = () => {
-  const { user, selectedVillageId, setSelectedVillageId, villages } = useApp();
+  const { user, selectedVillageId, setSelectedVillageId, villages, selectedVillageName } = useApp();
   const { showModal } = useModal();
 
   const [households, setHouseholds] = useState<HouseholdFlat[]>([]);
@@ -52,6 +52,15 @@ export const HouseholdsPage: React.FC = () => {
     fetchHouseholds();
   }, [fetchHouseholds]);
 
+  // Lắng nghe sự kiện kết nối lại để refetch tự động
+  useEffect(() => {
+    const handleReconnected = () => {
+      fetchHouseholds();
+    };
+    window.addEventListener('server:reconnected', handleReconnected);
+    return () => window.removeEventListener('server:reconnected', handleReconnected);
+  }, [fetchHouseholds]);
+
   // Reset về page 1 khi đổi search hoặc đổi thôn
   useEffect(() => {
     setPage(1);
@@ -70,7 +79,7 @@ export const HouseholdsPage: React.FC = () => {
   const handleDelete = (hh: HouseholdFlat) => {
     showModal({
       title: 'Xác Nhận Xóa Hộ Nông Nghiệp',
-      message: `Bạn có chắc chắn muốn xóa hộ "${hh.full_name}" khỏi danh sách? Toàn bộ số liệu cây trồng, vật nuôi của hộ này sẽ bị chuyển vào thùng rác.`,
+      message: `Bạn có chắc chắn muốn xóa hộ "${hh.full_name}" khỏi danh sách? Toàn bộ số liệu cây trồng, vật nuôi của hộ này sẽ bị xóa khỏi cơ sở dữ liệu.`,
       type: 'danger',
       confirmText: 'Xóa Hộ Này',
       cancelText: 'Hủy bỏ',
@@ -99,7 +108,7 @@ export const HouseholdsPage: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Thong_ke_nong_nghiep_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.download = `Thong_ke_nong_nghiep_Dak_Ha_${new Date().toISOString().slice(0, 10)}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -117,17 +126,26 @@ export const HouseholdsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Header & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+    <div className="space-y-5 animate-in fade-in duration-150">
+      {/* Top Banner & Main Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm">
         <div>
-          <h2 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-            <Users className="w-6 h-6 text-emerald-600" />
-            Danh Sách Hộ Nông Nghiệp
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Quản lý diện tích cây trồng (ha), đàn vật nuôi (con) và nuôi trồng thủy sản xã Đăk Hà
-          </p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center font-bold">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                Danh Sách Hộ Nông Nghiệp
+                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-mono font-bold border border-emerald-200">
+                  {total} hộ
+                </span>
+              </h2>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                Phạm vi: <strong className="text-slate-700">{selectedVillageName || 'Toàn xã Đăk Hà'}</strong> • Quản lý 18 chỉ số kê khai
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
@@ -136,7 +154,7 @@ export const HouseholdsPage: React.FC = () => {
             <select
               value={selectedVillageId}
               onChange={(e) => setSelectedVillageId(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+              className="px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden cursor-pointer"
             >
               <option value="">-- Toàn bộ các thôn --</option>
               {villages.map((v) => (
@@ -151,7 +169,7 @@ export const HouseholdsPage: React.FC = () => {
             type="button"
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition-all disabled:opacity-50 active:scale-98 cursor-pointer"
           >
             <Download className="w-4 h-4 text-slate-500" />
             <span>{exporting ? 'Đang xuất...' : 'Xuất Excel'}</span>
@@ -160,16 +178,16 @@ export const HouseholdsPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setImportModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 rounded-2xl text-xs font-bold transition-all active:scale-98 cursor-pointer shadow-xs"
           >
-            <Upload className="w-4 h-4 text-emerald-600" />
-            <span>Nhập Excel</span>
+            <Upload className="w-4 h-4 text-amber-600" />
+            <span>Nhập Excel (Smart)</span>
           </button>
 
           <button
             type="button"
             onClick={handleAdd}
-            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-950/20 transition-all active:scale-98"
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-2xl text-xs font-bold shadow-md shadow-emerald-950/20 transition-all active:scale-98 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Thêm Hộ Dân</span>
@@ -178,26 +196,36 @@ export const HouseholdsPage: React.FC = () => {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="flex items-center justify-between gap-4 bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
+      <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-xs">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm kiếm theo họ tên chủ hộ (gõ có dấu hoặc không dấu)..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+            placeholder="Tìm theo họ tên chủ hộ (gõ có dấu hoặc không dấu)..."
+            className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-medium transition-all"
           />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => fetchHouseholds()}
-          title="Tải lại danh sách"
-          className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-slate-50 rounded-lg transition-colors"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-600' : ''}`} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => fetchHouseholds()}
+            title="Làm mới danh sách"
+            className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-600' : ''}`} />
+          </button>
+        </div>
       </div>
 
       {/* Main Table */}
