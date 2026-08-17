@@ -82,7 +82,7 @@ const MiniDonut: React.FC<{
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Tổng</span>
           <span className="text-xs font-black text-slate-800 leading-tight">
-            {cryptoHelper.formatArea(total)}
+            {cryptoHelper.formatArea(total, false)}
           </span>
           <span className="text-[9px] text-slate-400 leading-none">{unit}</span>
         </div>
@@ -99,7 +99,7 @@ const MiniDonut: React.FC<{
             <span>{p1}%</span>
           </div>
           <div className="text-slate-500 font-medium text-[11px] pl-4">
-            {cryptoHelper.formatArea(val1)} {unit}
+            {cryptoHelper.formatArea(val1)}
           </div>
         </div>
 
@@ -112,7 +112,7 @@ const MiniDonut: React.FC<{
             <span>{p2}%</span>
           </div>
           <div className="text-slate-500 font-medium text-[11px] pl-4">
-            {cryptoHelper.formatArea(val2)} {unit}
+            {cryptoHelper.formatArea(val2)}
           </div>
         </div>
       </div>
@@ -277,7 +277,7 @@ export const AnalyticsDashboard: React.FC = () => {
               Tổng cây trồng
             </div>
             <div className="text-2xl font-black text-emerald-700">
-              {cryptoHelper.formatArea(crops.total_crops_area)} ha
+              {cryptoHelper.formatArea(crops.total_crops_area)}
             </div>
             <div className="text-[11px] text-emerald-800/80 font-semibold mt-0.5">
               12 chỉ tiêu diện tích
@@ -313,7 +313,7 @@ export const AnalyticsDashboard: React.FC = () => {
               Thủy sản
             </div>
             <div className="text-2xl font-black text-sky-700">
-              {cryptoHelper.formatArea(aqua.fish_pond)} ha
+              {cryptoHelper.formatArea(aqua.fish_pond)}
             </div>
             <div className="text-[11px] text-sky-800/80 font-semibold mt-0.5">
               + {cryptoHelper.formatCount(aqua.fish_cage, 'lồng bè')}
@@ -329,7 +329,7 @@ export const AnalyticsDashboard: React.FC = () => {
             <Trees className="w-4 h-4" />
           </div>
           <h3 className="text-base font-black text-slate-800">
-            1. Cơ Cấu Cây Trồng (Tổng: {cryptoHelper.formatArea(crops.total_crops_area)} ha)
+            1. Cơ Cấu Cây Trồng (Tổng: {cryptoHelper.formatArea(crops.total_crops_area)})
           </h3>
         </div>
 
@@ -342,7 +342,7 @@ export const AnalyticsDashboard: React.FC = () => {
                 <h4 className="font-bold text-sm text-slate-800">Cà Phê (Tổng Diện Tích)</h4>
               </div>
               <span className="text-xs font-black px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg border border-amber-200">
-                {cryptoHelper.formatArea(crops.total_cafe)} ha
+                {cryptoHelper.formatArea(crops.total_cafe)}
               </span>
             </div>
 
@@ -365,7 +365,7 @@ export const AnalyticsDashboard: React.FC = () => {
                 <h4 className="font-bold text-sm text-slate-800">Cao Su (Tổng Diện Tích)</h4>
               </div>
               <span className="text-xs font-black px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-200">
-                {cryptoHelper.formatArea(crops.total_rubber)} ha
+                {cryptoHelper.formatArea(crops.total_rubber)}
               </span>
             </div>
 
@@ -388,7 +388,7 @@ export const AnalyticsDashboard: React.FC = () => {
               Cây ăn quả
             </div>
             <div className="text-xl font-black text-slate-800">
-              {cryptoHelper.formatArea(crops.fruit_tree)} ha
+              {cryptoHelper.formatArea(crops.fruit_tree)}
             </div>
             <p className="text-[10px] text-slate-400 mt-1">Sầu riêng, mít, bơ, cam...</p>
           </div>
@@ -398,7 +398,7 @@ export const AnalyticsDashboard: React.FC = () => {
               Cây Mắc Ca
             </div>
             <div className="text-xl font-black text-slate-800">
-              {cryptoHelper.formatArea(crops.macadamia)} ha
+              {cryptoHelper.formatArea(crops.macadamia)}
             </div>
             <p className="text-[10px] text-slate-400 mt-1">Cây công nghiệp giá trị cao</p>
           </div>
@@ -408,7 +408,7 @@ export const AnalyticsDashboard: React.FC = () => {
               Lúa nước
             </div>
             <div className="text-xl font-black text-slate-800">
-              {cryptoHelper.formatArea(crops.wet_rice)} ha
+              {cryptoHelper.formatArea(crops.wet_rice)}
             </div>
             <p className="text-[10px] text-slate-400 mt-1">Lúa 2 vụ / 1 vụ</p>
           </div>
@@ -418,7 +418,7 @@ export const AnalyticsDashboard: React.FC = () => {
               Cây hàng năm khác
             </div>
             <div className="text-xl font-black text-slate-800">
-              {cryptoHelper.formatArea(crops.other_annual_crops)} ha
+              {cryptoHelper.formatArea(crops.other_annual_crops)}
             </div>
             <p className="text-[10px] text-slate-400 mt-1">Ngô, sắn, khoai, hoa màu</p>
           </div>
@@ -443,7 +443,7 @@ export const AnalyticsDashboard: React.FC = () => {
                 Tổng diện tích dược liệu
               </span>
               <span className="text-xl font-black text-emerald-200">
-                {cryptoHelper.formatArea(crops.total_herb_area)} ha
+                {cryptoHelper.formatArea(crops.total_herb_area)}
               </span>
             </div>
           </div>
@@ -452,28 +452,28 @@ export const AnalyticsDashboard: React.FC = () => {
             <div className="bg-emerald-800/60 p-3 rounded-xl border border-emerald-700/50">
               <div className="text-[11px] font-bold text-emerald-300">Đinh lăng</div>
               <div className="text-lg font-black mt-1">
-                {cryptoHelper.formatArea(crops.herb_dinh_lang)} ha
+                {cryptoHelper.formatArea(crops.herb_dinh_lang)}
               </div>
             </div>
 
             <div className="bg-emerald-800/60 p-3 rounded-xl border border-emerald-700/50">
               <div className="text-[11px] font-bold text-emerald-300">Gừng</div>
               <div className="text-lg font-black mt-1">
-                {cryptoHelper.formatArea(crops.herb_gung)} ha
+                {cryptoHelper.formatArea(crops.herb_gung)}
               </div>
             </div>
 
             <div className="bg-emerald-800/60 p-3 rounded-xl border border-emerald-700/50">
               <div className="text-[11px] font-bold text-emerald-300">Nghệ</div>
               <div className="text-lg font-black mt-1">
-                {cryptoHelper.formatArea(crops.herb_nghe)} ha
+                {cryptoHelper.formatArea(crops.herb_nghe)}
               </div>
             </div>
 
             <div className="bg-emerald-800/60 p-3 rounded-xl border border-emerald-700/50">
               <div className="text-[11px] font-bold text-emerald-300">Sả</div>
               <div className="text-lg font-black mt-1">
-                {cryptoHelper.formatArea(crops.herb_sa)} ha
+                {cryptoHelper.formatArea(crops.herb_sa)}
               </div>
             </div>
           </div>
@@ -552,7 +552,7 @@ export const AnalyticsDashboard: React.FC = () => {
               <div className="p-4 bg-sky-50 rounded-xl border border-sky-200">
                 <div className="text-xs font-bold text-sky-900">Nuôi Cá Ao Hồ (Diện tích)</div>
                 <div className="text-2xl font-black text-sky-800 mt-1">
-                  {cryptoHelper.formatArea(aqua.fish_pond)} ha
+                  {cryptoHelper.formatArea(aqua.fish_pond)}
                 </div>
                 <p className="text-[11px] text-sky-600 mt-1">Mặt nước nuôi thả cá truyền thống</p>
               </div>
