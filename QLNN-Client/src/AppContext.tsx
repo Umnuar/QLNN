@@ -22,6 +22,21 @@ interface AppContextType {
   logout: () => Promise<void>;
   refreshVillages: () => Promise<void>;
   checkServerHealth: () => Promise<boolean>;
+
+  // 1. Sidebar state
+  isSidebarCollapsed: boolean;
+  toggleSidebar: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+
+  // 2. Theme state (Dark / Light mode)
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+
+  // 3. Zoom state
+  zoomLevel: number;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetZoom: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -35,6 +50,118 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isBackendHealthy, setIsBackendHealthy] = useState<boolean>(true);
   const [latency, setLatency] = useState<number | null>(null);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
+
+  // 1. Sidebar Collapsed State
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('qlnn_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('qlnn_sidebar_collapsed', String(next));
+      } catch {
+        // Ignore
+      }
+      return next;
+    });
+  };
+
+  const setSidebarCollapsed = (collapsed: boolean) => {
+    setIsSidebarCollapsed(collapsed);
+    try {
+      localStorage.setItem('qlnn_sidebar_collapsed', String(collapsed));
+    } catch {
+      // Ignore
+    }
+  };
+
+  // 2. Theme State (Dark / Light)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      const saved = localStorage.getItem('qlnn_theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+      return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem('qlnn_theme', theme);
+    } catch {
+      // Ignore
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  // 3. Zoom State (80% to 140%, step 10%)
+  const [zoomLevel, setZoomLevel] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('qlnn_zoom');
+      const parsed = saved ? parseInt(saved, 10) : 100;
+      return parsed >= 80 && parsed <= 140 ? parsed : 100;
+    } catch {
+      return 100;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      (document.documentElement.style as any).zoom = `${zoomLevel}%`;
+      localStorage.setItem('qlnn_zoom', String(zoomLevel));
+    } catch {
+      // Ignore
+    }
+  }, [zoomLevel]);
+
+  const zoomIn = () => {
+    setZoomLevel((prev) => Math.min(140, prev + 10));
+  };
+
+  const zoomOut = () => {
+    setZoomLevel((prev) => Math.max(80, prev - 10));
+  };
+
+  const resetZoom = () => {
+    setZoomLevel(100);
+  };
+
+  // Keyboard Shortcuts for Zoom (Ctrl +, Ctrl -, Ctrl 0)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === '=' || e.key === '+') {
+          e.preventDefault();
+          zoomIn();
+        } else if (e.key === '-' || e.key === '_') {
+          e.preventDefault();
+          zoomOut();
+        } else if (e.key === '0') {
+          e.preventDefault();
+          resetZoom();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const logout = async () => {
     try {
@@ -177,6 +304,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         logout,
         refreshVillages,
         checkServerHealth,
+
+        // 1. Sidebar
+        isSidebarCollapsed,
+        toggleSidebar,
+        setSidebarCollapsed,
+
+        // 2. Theme
+        theme,
+        toggleTheme,
+
+        // 3. Zoom
+        zoomLevel,
+        zoomIn,
+        zoomOut,
+        resetZoom,
       }}
     >
       {children}

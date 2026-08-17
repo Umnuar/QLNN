@@ -124,7 +124,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 text-slate-900 dark:text-slate-100 transition-colors duration-200">
         {/* Header */}
         <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-slate-900 px-6 py-4 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -151,18 +151,18 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5 text-xs">
           {error && (
-            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-rose-800 animate-in fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+            <div className="p-3.5 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 rounded-2xl flex items-start gap-2.5 text-rose-800 dark:text-rose-200 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Admin Village Selector */}
           {user?.role === 'admin' && (
-            <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+            <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl">
               <div>
-                <span className="font-bold text-slate-800">Thôn tiếp nhận dữ liệu:</span>
-                <p className="text-[11px] text-slate-500">
+                <span className="font-bold text-slate-800 dark:text-slate-200">Thôn tiếp nhận dữ liệu:</span>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Chọn thôn sẽ gán các hộ mới được import vào
                 </p>
               </div>
@@ -172,7 +172,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
                   setVillageId(e.target.value);
                   if (selectedFile) handleFileSelected(selectedFile);
                 }}
-                className="px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden cursor-pointer"
+                className="px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden cursor-pointer"
               >
                 {villages.map((v) => (
                   <option key={v.id} value={v.id}>
@@ -191,8 +191,8 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-3xl p-8 text-center cursor-pointer transition-all ${
               isDragging
-                ? 'border-emerald-500 bg-emerald-50/70 scale-101'
-                : 'border-slate-300 hover:border-amber-500 bg-slate-50/60 hover:bg-amber-50/20'
+                ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 scale-101'
+                : 'border-slate-300 dark:border-slate-700 hover:border-amber-500 dark:hover:border-amber-500 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-amber-50/20 dark:hover:bg-amber-950/20'
             }`}
           >
             <input
@@ -206,21 +206,21 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
               }}
               className="hidden"
             />
-            <div className="w-14 h-14 rounded-3xl bg-amber-100 text-amber-800 mx-auto flex items-center justify-center mb-3 shadow-xs">
+            <div className="w-14 h-14 rounded-3xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 mx-auto flex items-center justify-center mb-3 shadow-xs">
               <UploadCloud className="w-7 h-7" />
             </div>
-            <div className="text-sm font-black text-slate-800 mb-1">
+            <div className="text-sm font-black text-slate-800 dark:text-slate-100 mb-1">
               {selectedFile ? selectedFile.name : 'Kéo thả file Excel vào đây hoặc bấm để chọn file'}
             </div>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto font-medium">
               Hỗ trợ định dạng .xls và .xlsx theo biểu mẫu thống kê cây trồng, vật nuôi, thủy sản xã Đăk Hà
             </p>
           </div>
 
           {/* Preview Loading */}
           {previewLoading && (
-            <div className="py-8 text-center text-slate-500 text-xs">
-              <RefreshCw className="w-7 h-7 animate-spin text-amber-600 mx-auto mb-2" />
+            <div className="py-8 text-center text-slate-500 dark:text-slate-400 text-xs">
+              <RefreshCw className="w-7 h-7 animate-spin text-amber-600 dark:text-amber-400 mx-auto mb-2" />
               <span className="font-bold">Đang phân tích cấu trúc file và đối chiếu Smart Upsert...</span>
             </div>
           )}
@@ -230,43 +230,43 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
             <div className="space-y-4 animate-in fade-in duration-150">
               {/* Stats Summary Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl">
+                  <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
                     Tổng hộ hợp lệ đọc được
                   </div>
-                  <div className="text-2xl font-black text-slate-800 font-mono">
+                  <div className="text-2xl font-black text-slate-800 dark:text-slate-100 font-mono">
                     {previewData.totalRowsParsed} hộ
                   </div>
                 </div>
 
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
-                  <div className="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
+                  <div className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest mb-1 flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     Sẽ tạo mới
                   </div>
-                  <div className="text-2xl font-black text-emerald-800 font-mono">
+                  <div className="text-2xl font-black text-emerald-800 dark:text-emerald-300 font-mono">
                     {previewData.createCount} hộ
                   </div>
                 </div>
 
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
-                  <div className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                <div className="p-4 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 rounded-2xl">
+                  <div className="text-[10px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-widest mb-1 flex items-center gap-1">
+                    <RefreshCw className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                     Sẽ cập nhật đè (Smart)
                   </div>
-                  <div className="text-2xl font-black text-amber-800 font-mono">
+                  <div className="text-2xl font-black text-amber-800 dark:text-amber-300 font-mono">
                     {previewData.updateCount} hộ
                   </div>
                 </div>
               </div>
 
               {/* Preview Table */}
-              <div className="border border-slate-200 rounded-2xl overflow-hidden">
-                <div className="bg-slate-100 px-4 py-2.5 font-bold text-slate-700 flex items-center justify-between border-b border-slate-200">
+              <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
+                <div className="bg-slate-100 dark:bg-slate-800 px-4 py-2.5 font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
                   <span>Danh sách xem trước ({previewData.previewList.length} hộ đầu tiên):</span>
                   <button
                     onClick={handleReset}
-                    className="text-[11px] text-slate-500 hover:text-slate-800 font-bold hover:underline cursor-pointer"
+                    className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-bold hover:underline cursor-pointer"
                   >
                     Chọn file khác
                   </button>
@@ -274,7 +274,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
                 <div className="max-h-56 overflow-y-auto">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="bg-slate-50 text-slate-600 font-bold text-[10px] uppercase border-b border-slate-200">
+                      <tr className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase border-b border-slate-200 dark:border-slate-800">
                         <th className="py-2.5 px-3">Họ và tên</th>
                         <th className="py-2.5 px-3 text-center">Hành động</th>
                         <th className="py-2.5 px-3 text-right">Tổng cây</th>
@@ -282,28 +282,28 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
                         <th className="py-2.5 px-3 text-right">Thủy sản</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 font-medium">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
                       {previewData.previewList.map((item, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50">
-                          <td className="py-2 px-3 font-bold text-slate-800">{item.full_name}</td>
+                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                          <td className="py-2 px-3 font-bold text-slate-800 dark:text-slate-200">{item.full_name}</td>
                           <td className="py-2 px-3 text-center">
                             {item.action === 'create' ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                 Tạo mới
                               </span>
                             ) : (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                                 Cập nhật đè
                               </span>
                             )}
                           </td>
-                          <td className="py-2 px-3 text-right font-mono text-slate-600">
+                          <td className="py-2 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
                             {item.cropCount} cây
                           </td>
-                          <td className="py-2 px-3 text-right font-mono text-slate-600">
+                          <td className="py-2 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
                             {item.livestockCount} nuôi
                           </td>
-                          <td className="py-2 px-3 text-right font-mono text-slate-600">
+                          <td className="py-2 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
                             {item.aquaCount} thủy sản
                           </td>
                         </tr>
@@ -317,8 +317,8 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+        <div className="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px]">
             <Info className="w-4 h-4 text-slate-400" />
             <span>Dòng không có họ tên hoặc số liệu tổng cộng sẽ tự động bị bỏ qua.</span>
           </div>
@@ -327,7 +327,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              className="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition-colors cursor-pointer"
             >
               Đóng
             </button>

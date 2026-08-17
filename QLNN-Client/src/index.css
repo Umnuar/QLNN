@@ -15,9 +15,14 @@
     font-size: 14px;
     line-height: 1.5;
   }
+
+  html.dark body {
+    background-color: #020617;
+    color: #f8fafc;
+  }
 }
 
-/* Custom modern scrollbar */
+/* Custom modern scrollbar (Light & Dark) */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -34,4 +39,16 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
