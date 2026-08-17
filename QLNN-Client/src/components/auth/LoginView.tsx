@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sprout, Lock, User, AlertCircle, ArrowRight, ShieldCheck, Sparkles, Building2 } from 'lucide-react';
+import { Sprout, Lock, User, AlertCircle, ArrowRight, ShieldCheck, Building2 } from 'lucide-react';
 import { authApi } from '../../api/authApi';
 import { secureStorage } from '../../utils/secureStorage';
 import { useApp } from '../../AppContext';
@@ -10,13 +10,6 @@ export const LoginView: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const quickAccounts = [
-    { label: 'Admin (Toàn xã)', user: 'admin', pass: 'admin123456', tag: 'Quản trị viên' },
-    { label: 'Thôn 1', user: 'thon1', pass: 'qlcs2025', tag: 'Trưởng thôn' },
-    { label: 'Kon Trang Long Loi', user: 'longloi', pass: 'qlcs2025', tag: 'Trưởng thôn' },
-    { label: 'Kon Tu Dô 1', user: 'tudo1', pass: 'qlcs2025', tag: 'Trưởng thôn' },
-  ];
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,12 +39,6 @@ export const LoginView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickFill = (u: string, p: string) => {
-    setUsername(u);
-    setPassword(p);
-    setError(null);
   };
 
   return (
@@ -141,34 +128,8 @@ export const LoginView: React.FC = () => {
           </button>
         </form>
 
-        {/* 1-Click Quick Accounts Pill selector */}
-        <div className="mt-6 pt-5 border-t border-slate-800">
-          <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-2.5">
-            <span className="flex items-center gap-1 text-emerald-400">
-              <Sparkles className="w-3.5 h-3.5" /> Tài khoản mẫu (Bấm để điền nhanh)
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {quickAccounts.map((acc) => (
-              <button
-                key={acc.user}
-                type="button"
-                onClick={() => handleQuickFill(acc.user, acc.pass)}
-                className="p-2 rounded-xl bg-slate-950/50 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-600/50 text-left transition-all group cursor-pointer"
-              >
-                <div className="text-xs font-bold text-slate-200 group-hover:text-emerald-300 truncate">
-                  {acc.label}
-                </div>
-                <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                  user: <span className="text-slate-400">{acc.user}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Footer Note */}
-        <div className="mt-6 text-center">
+        <div className="mt-8 pt-6 border-t border-slate-800 text-center">
           <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <span>Xác thực tập trung SSO Gateway • Mã hóa AES-256</span>
