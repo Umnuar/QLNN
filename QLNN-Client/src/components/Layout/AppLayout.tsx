@@ -40,7 +40,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-100/80 dark:bg-slate-900/40">
-          <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-200">
+          <div className="w-full max-w-none space-y-6 animate-in fade-in duration-200">
             {children}
           </div>
         </main>

@@ -49,23 +49,23 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside
-      className={`bg-slate-950 text-slate-300 flex flex-col shrink-0 border-r border-slate-800/80 select-none transition-all duration-300 ease-in-out ${
+      className={`bg-slate-950 text-slate-300 flex flex-col shrink-0 border-r border-slate-800/80 select-none transition-[width] duration-250 ease-out overflow-hidden ${
         isSidebarCollapsed ? 'w-16' : 'w-64'
       }`}
     >
-      {/* Top Header Section */}
-      <div className="p-3 flex items-center justify-between border-b border-slate-900 min-h-[52px]">
+      {/* Top Header Section (Single Toggle Button) */}
+      <div className="p-3 flex items-center justify-between border-b border-slate-900 min-h-[52px] overflow-hidden">
         {!isSidebarCollapsed ? (
           <>
-            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2 flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-slate-500" />
+            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2 flex items-center gap-1.5 whitespace-nowrap overflow-hidden">
+              <Database className="w-3.5 h-3.5 text-slate-500 shrink-0" />
               <span>DANH MỤC NGHIỆP VỤ</span>
             </div>
             <button
               type="button"
               onClick={toggleSidebar}
-              title="Thu gọn thanh bên (Mở rộng không gian làm việc)"
-              className="p-1.5 text-slate-500 hover:text-slate-200 hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+              title="Thu gọn thanh bên"
+              className="p-1.5 text-slate-500 hover:text-slate-200 hover:bg-slate-900 rounded-xl transition-all cursor-pointer shrink-0"
             >
               <PanelLeftClose className="w-4 h-4" />
             </button>
@@ -83,7 +83,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation List */}
-      <div className="p-2.5 flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="p-2 flex-1 overflow-y-auto overflow-x-hidden">
         <nav className="space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -94,9 +94,7 @@ export const Sidebar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center rounded-2xl transition-all relative cursor-pointer ${
-                    isSidebarCollapsed ? 'justify-center p-3' : 'items-start gap-3 px-3.5 py-3 text-left'
-                  } ${
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-2xl transition-colors duration-200 relative cursor-pointer overflow-hidden ${
                     isActive
                       ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40'
                       : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/90 font-medium'
@@ -104,15 +102,12 @@ export const Sidebar: React.FC = () => {
                 >
                   {/* Active Indicator bar */}
                   {isActive && (
-                    <span
-                      className={`absolute left-0 top-2 bottom-2 w-1.5 bg-emerald-300 rounded-r-full shadow-sm ${
-                        isSidebarCollapsed ? 'top-1.5 bottom-1.5' : ''
-                      }`}
-                    />
+                    <span className="absolute left-0 top-2 bottom-2 w-1 bg-emerald-300 rounded-r-full shadow-sm" />
                   )}
 
+                  {/* Fixed-size Icon (Never jumps or moves) */}
                   <div
-                    className={`p-1.5 rounded-xl transition-colors shrink-0 ${
+                    className={`w-8 h-8 rounded-xl transition-colors shrink-0 flex items-center justify-center ${
                       isActive
                         ? 'bg-emerald-500/30 text-white'
                         : 'bg-slate-900 text-slate-400 group-hover:text-emerald-400 group-hover:bg-slate-800'
@@ -121,33 +116,36 @@ export const Sidebar: React.FC = () => {
                     <Icon className="w-4 h-4" />
                   </div>
 
-                  {!isSidebarCollapsed && (
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs tracking-tight font-black">{item.label}</span>
-                        {item.badge && (
-                          <span
-                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider ${
-                              isActive
-                                ? 'bg-emerald-800/80 text-emerald-100'
-                                : 'bg-slate-800 text-slate-400'
-                            }`}
-                          >
-                            {item.badge}
-                          </span>
-                        )}
-                      </div>
-                      <div
-                        className={`text-[10px] truncate mt-0.5 ${
-                          isActive
-                            ? 'text-emerald-100/80 font-normal'
-                            : 'text-slate-500 group-hover:text-slate-400'
-                        }`}
-                      >
-                        {item.desc}
-                      </div>
+                  {/* Smooth Sliding Text Container (Never wraps onto multiple lines) */}
+                  <div
+                    className={`overflow-hidden whitespace-nowrap transition-all duration-250 ease-out text-left ${
+                      isSidebarCollapsed
+                        ? 'max-w-0 opacity-0 pointer-events-none'
+                        : 'max-w-[180px] opacity-100 flex-1'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs tracking-tight font-black">{item.label}</span>
+                      {item.badge && (
+                        <span
+                          className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider ml-1.5 ${
+                            isActive
+                              ? 'bg-emerald-800/80 text-emerald-100'
+                              : 'bg-slate-800 text-slate-400'
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
                     </div>
-                  )}
+                    <div
+                      className={`text-[10px] truncate mt-0.5 ${
+                        isActive ? 'text-emerald-100/80 font-normal' : 'text-slate-500 group-hover:text-slate-400'
+                      }`}
+                    >
+                      {item.desc}
+                    </div>
+                  </div>
                 </button>
 
                 {/* Floating Tooltip when Collapsed */}
@@ -171,18 +169,18 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Footer Info Card */}
-      <div className="p-3 border-t border-slate-900 bg-slate-950/60 text-[11px] text-slate-500">
+      <div className="p-3 border-t border-slate-900 bg-slate-950/60 text-[11px] text-slate-500 overflow-hidden">
         {!isSidebarCollapsed ? (
-          <div className="space-y-1">
+          <div className="space-y-1 whitespace-nowrap overflow-hidden">
             <div className="flex items-center gap-1.5 text-slate-300 font-bold">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <span>QLNN v1.0.0 (Bảo Mật SSO)</span>
             </div>
-            <p className="text-[10px] text-slate-500">Hệ sinh thái Số Đăk Hà • AES-256</p>
+            <p className="text-[10px] text-slate-500 truncate">Hệ sinh thái Số Đăk Hà • AES-256</p>
           </div>
         ) : (
           <div className="flex justify-center" title="Bảo mật SSO • AES-256">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
           </div>
         )}
       </div>

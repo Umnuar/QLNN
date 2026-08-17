@@ -12,7 +12,6 @@ import {
   Moon,
   ZoomIn,
   ZoomOut,
-  PanelLeftOpen,
 } from 'lucide-react';
 import { useApp } from '../../AppContext';
 import { ServerStatusModal } from '../network/ServerStatusModal';
@@ -25,8 +24,6 @@ export const Header: React.FC = () => {
     isBackendHealthy,
     latency,
     selectedVillageName,
-    isSidebarCollapsed,
-    toggleSidebar,
     theme,
     toggleTheme,
     zoomLevel,
@@ -40,20 +37,8 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between shadow-xs sticky top-0 z-30 select-none transition-colors duration-200">
-        {/* Left: Sidebar Toggle & Brand */}
+        {/* Left: Brand */}
         <div className="flex items-center gap-3">
-          {/* Quick Open Sidebar Button (when collapsed) */}
-          {isSidebarCollapsed && (
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              title="Mở rộng thanh điều hướng bên trái"
-              className="p-2 text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95 cursor-pointer"
-            >
-              <PanelLeftOpen className="w-5 h-5" />
-            </button>
-          )}
-
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-700 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-emerald-950/20 ring-2 ring-emerald-500/20 shrink-0">
             <Sprout className="w-5 h-5" />
           </div>
