@@ -100,7 +100,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
-            <span>⚡ Tổng Hợp (7 Cột)</span>
+            <span>Tổng Hợp</span>
           </button>
 
           {/* Tab 2: Cây trồng */}
@@ -114,7 +114,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             }`}
           >
             <Trees className="w-3.5 h-3.5" />
-            <span>Cây Trồng (8)</span>
+            <span>Cây Trồng</span>
           </button>
 
           {/* Tab 3: Dược liệu */}
@@ -128,7 +128,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Dược Liệu (4)</span>
+            <span>Dược Liệu</span>
           </button>
 
           {/* Tab 4: Vật nuôi */}
@@ -142,7 +142,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             }`}
           >
             <Dog className="w-3.5 h-3.5" />
-            <span>Vật Nuôi (4)</span>
+            <span>Vật Nuôi</span>
           </button>
 
           {/* Tab 5: Thủy sản */}
@@ -156,7 +156,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             }`}
           >
             <Fish className="w-3.5 h-3.5" />
-            <span>Thủy Sản (2)</span>
+            <span>Thủy Sản</span>
           </button>
 
           {/* Tab 6: 21 cột đầy đủ */}
@@ -170,7 +170,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
-            <span>Ma Trận 21 Cột</span>
+            <span>Tất cả</span>
           </button>
         </div>
 
@@ -453,7 +453,6 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                   <th className="py-3 px-3.5 border-r border-sky-200 dark:border-sky-800">Thôn</th>
                   <th className="py-3 px-4 text-right border-r border-sky-200 dark:border-sky-800">Cá Ao Hồ (ha)</th>
                   <th className="py-3 px-4 text-right border-r border-sky-200 dark:border-sky-800">Cá Lồng Bè (lồng)</th>
-                  <th className="py-3 px-4 text-left border-r border-sky-200 dark:border-sky-800">Ghi Chú Kèm Theo</th>
                   <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-sky-100 dark:bg-sky-950">Thao Tác</th>
                 </tr>
               </thead>
@@ -469,7 +468,6 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     <td className="py-3 px-3.5 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
                     <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.fish_pond)}</td>
                     <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}</td>
-                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-xs italic">{hh.notes || '-'}</td>
                     <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900">
                       <button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button>
                       <button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
