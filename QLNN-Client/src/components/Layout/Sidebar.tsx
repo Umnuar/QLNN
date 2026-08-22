@@ -49,12 +49,12 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside
-      className={`bg-slate-950 text-slate-300 flex flex-col shrink-0 border-r border-slate-800 select-none transition-[width] duration-200 ease-out overflow-hidden ${
+      className={`bg-slate-950 text-slate-300 flex flex-col shrink-0 border-r border-slate-800/80 select-none transition-[width] duration-200 ease-out overflow-hidden ${
         isSidebarCollapsed ? 'w-16' : 'w-64'
       }`}
     >
       {/* Top Header Section (Single Toggle Button) */}
-      <div className="p-3 flex items-center justify-between border-b border-slate-900 min-h-[52px] overflow-hidden">
+      <div className="p-3 flex items-center justify-between border-b border-slate-900 min-h-[56px] overflow-hidden">
         {!isSidebarCollapsed ? (
           <>
             <div className="text-xs font-black text-slate-400 uppercase tracking-widest px-2 flex items-center gap-2 whitespace-nowrap overflow-hidden">
@@ -66,7 +66,7 @@ export const Sidebar: React.FC = () => {
               onClick={toggleSidebar}
               aria-label="Thu gọn thanh bên"
               title="Thu gọn thanh bên"
-              className="p-1.5 text-slate-400 hover:text-slate-100 hover:bg-slate-900 rounded-xl transition-all cursor-pointer shrink-0"
+              className="p-2 text-slate-400 hover:text-slate-100 hover:bg-slate-900 rounded-xl transition-all cursor-pointer shrink-0"
             >
               <PanelLeftClose className="w-4 h-4" />
             </button>
@@ -77,7 +77,7 @@ export const Sidebar: React.FC = () => {
             onClick={toggleSidebar}
             aria-label="Mở rộng thanh điều hướng"
             title="Mở rộng thanh điều hướng"
-            className="w-full flex items-center justify-center p-1.5 text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+            className="w-full flex items-center justify-center p-2 text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
           >
             <PanelLeftOpen className="w-4 h-4" />
           </button>
@@ -85,38 +85,40 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation List */}
-      <div className="p-2 flex-1 overflow-y-auto overflow-x-hidden">
-        <nav className="space-y-1.5">
+      <div className="p-2.5 flex-1 overflow-y-auto overflow-x-hidden">
+        <nav className="space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
 
             return (
-              <div key={item.id} className="relative group">
+              <div key={item.id} className="relative group flex justify-center">
                 <button
                   type="button"
                   onClick={() => setActiveTab(item.id)}
                   aria-label={item.label}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl transition-colors duration-150 relative cursor-pointer overflow-hidden ${
+                  className={`w-full flex items-center gap-3 rounded-2xl transition-all duration-150 relative cursor-pointer overflow-hidden ${
+                    isSidebarCollapsed ? 'p-2 justify-center' : 'px-3 py-2.5'
+                  } ${
                     isActive
-                      ? 'bg-emerald-600 text-white font-bold shadow-xs'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-900 font-medium'
+                      ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-950/30'
+                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/90 font-medium'
                   }`}
                 >
                   {/* Active Indicator bar */}
-                  {isActive && (
-                    <span className="absolute left-0 top-2 bottom-2 w-1 bg-white rounded-r-full" />
+                  {isActive && !isSidebarCollapsed && (
+                    <span className="absolute left-0 top-2.5 bottom-2.5 w-1 bg-white rounded-r-full shadow-xs" />
                   )}
 
-                  {/* Fixed-size Icon (Never jumps or moves) */}
+                  {/* Fixed-size Icon Container (Always perfectly centered and sized) */}
                   <div
-                    className={`w-8 h-8 rounded-xl transition-colors shrink-0 flex items-center justify-center ${
+                    className={`w-9 h-9 rounded-xl transition-colors shrink-0 flex items-center justify-center ${
                       isActive
-                        ? 'bg-emerald-700 text-white'
+                        ? 'bg-emerald-700/80 text-white'
                         : 'bg-slate-900 text-slate-400 group-hover:text-emerald-400 group-hover:bg-slate-800'
                     }`}
                   >
-                    <Icon className="w-4.5 h-4.5" />
+                    <Icon className="w-5 h-5" />
                   </div>
 
                   {/* Smooth Sliding Text Container */}
@@ -133,7 +135,7 @@ export const Sidebar: React.FC = () => {
                         <span
                           className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ml-1.5 ${
                             isActive
-                              ? 'bg-emerald-800 text-emerald-100'
+                              ? 'bg-emerald-800/90 text-emerald-100'
                               : 'bg-slate-800 text-slate-300'
                           }`}
                         >
@@ -143,7 +145,7 @@ export const Sidebar: React.FC = () => {
                     </div>
                     <div
                       className={`text-xs truncate mt-0.5 ${
-                        isActive ? 'text-emerald-100 font-medium' : 'text-slate-400 group-hover:text-slate-300'
+                        isActive ? 'text-emerald-100/90 font-medium' : 'text-slate-400 group-hover:text-slate-300'
                       }`}
                     >
                       {item.desc}
@@ -153,11 +155,11 @@ export const Sidebar: React.FC = () => {
 
                 {/* Floating Tooltip when Collapsed */}
                 {isSidebarCollapsed && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 px-3.5 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xl border border-slate-700 whitespace-nowrap pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 px-3.5 py-2 bg-slate-900 text-white text-xs font-bold rounded-2xl shadow-2xl border border-slate-700/90 whitespace-nowrap pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm">{item.label}</span>
                       {item.badge && (
-                        <span className="text-[10px] bg-emerald-700 text-white px-1.5 py-0.5 rounded-md font-mono">
+                        <span className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded-md font-mono">
                           {item.badge}
                         </span>
                       )}

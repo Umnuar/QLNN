@@ -85,7 +85,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors duration-200">
+    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors duration-150">
       {/* Top Segmented Views Bar */}
       <div className="p-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 p-1 bg-slate-200/60 dark:bg-slate-800/80 rounded-2xl border border-slate-300/60 dark:border-slate-700/60 flex-wrap">
@@ -189,22 +189,22 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-slate-100/90 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-black uppercase tracking-wider">
-                  <th className="py-3 px-3.5 text-center w-12 border-r border-slate-200/80 dark:border-slate-800">STT</th>
-                  <th className="py-3 px-4 min-w-[200px] border-r border-slate-200/80 dark:border-slate-800">Họ và Tên Chủ Hộ</th>
-                  <th className="py-3 px-3.5 min-w-[130px] border-r border-slate-200/80 dark:border-slate-800">Thôn Quản Lý</th>
-                  <th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-300">
+                  <th className="py-3 px-3.5 text-center w-12 border-r border-slate-200/80 dark:border-slate-800 whitespace-nowrap">STT</th>
+                  <th className="py-3 px-4 min-w-[200px] border-r border-slate-200/80 dark:border-slate-800 whitespace-nowrap">Họ và Tên Chủ Hộ</th>
+                  <th className="py-3 px-3.5 min-w-[130px] border-r border-slate-200/80 dark:border-slate-800 whitespace-nowrap">Thôn Quản Lý</th>
+                  <th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-300 whitespace-nowrap">
                     Tổng Cây Trồng (ha)
                   </th>
-                  <th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 bg-teal-50/50 dark:bg-teal-950/30 text-teal-900 dark:text-teal-300">
+                  <th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 bg-teal-50/50 dark:bg-teal-950/30 text-teal-900 dark:text-teal-300 whitespace-nowrap">
                     Dược Liệu (ha)
                   </th>
-                  <th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300">
+                  <th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300 whitespace-nowrap">
                     Vật Nuôi (con)
                   </th>
-                  <th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 bg-sky-50/50 dark:bg-sky-950/30 text-sky-900 dark:text-sky-300">
+                  <th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 bg-sky-50/50 dark:bg-sky-950/30 text-sky-900 dark:text-sky-300 whitespace-nowrap">
                     Thủy Sản
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-slate-100 dark:bg-slate-950 shadow-xs">
+                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-slate-100 dark:bg-slate-950 shadow-xs whitespace-nowrap">
                     Thao Tác
                   </th>
                 </tr>
@@ -238,7 +238,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                         className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors group text-[13.5px] cursor-pointer"
                         title="Bấm đúp để sửa số liệu hộ này"
                       >
-                        <td className="py-3.5 px-3.5 border-r border-slate-100 dark:border-slate-800/60 text-center font-mono font-bold text-slate-500 dark:text-slate-400">
+                        <td className="py-3.5 px-3.5 border-r border-slate-100 dark:border-slate-800/60 text-center font-mono font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
                           {stt}
                         </td>
                         <td className="py-3.5 px-4 border-r border-slate-100 dark:border-slate-800/60 font-bold text-[14px] text-slate-900 dark:text-slate-100 whitespace-nowrap">
@@ -254,19 +254,19 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                             {hh.village_name || 'Chưa gán'}
                           </span>
                         </td>
-                        <td className="py-3.5 px-3 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-400">
+                        <td className="py-3.5 px-3 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
                           {cryptoHelper.formatArea(totalCrops)}
                         </td>
-                        <td className="py-3.5 px-3 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums font-bold text-teal-700 dark:text-teal-400">
+                        <td className="py-3.5 px-3 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums font-bold text-teal-700 dark:text-teal-400 whitespace-nowrap">
                           {cryptoHelper.formatArea(totalHerbs)}
                         </td>
-                        <td className="py-3.5 px-3 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums font-bold text-amber-700 dark:text-amber-400">
+                        <td className="py-3.5 px-3 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums font-bold text-amber-700 dark:text-amber-400 whitespace-nowrap">
                           {totalAnimals > 0 ? `${totalAnimals} con` : '-'}
                         </td>
-                        <td className="py-3.5 px-3 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">
+                        <td className="py-3.5 px-3 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
                           {hh.fish_pond ? cryptoHelper.formatArea(hh.fish_pond) : hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}
                         </td>
-                        <td className="py-3.5 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 group-hover:bg-emerald-50/70 dark:group-hover:bg-slate-800 transition-colors shadow-xs">
+                        <td className="py-3.5 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 group-hover:bg-emerald-50/70 dark:group-hover:bg-slate-800 transition-colors shadow-xs whitespace-nowrap">
                           <div className="flex items-center justify-center gap-1">
                             <button
                               type="button"
@@ -307,18 +307,18 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-emerald-100/70 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border-b border-emerald-200 dark:border-emerald-800 text-[11px] font-black uppercase tracking-wider">
-                  <th className="py-3 px-3.5 text-center w-12 border-r border-emerald-200 dark:border-emerald-800">STT</th>
-                  <th className="py-3 px-4 min-w-[180px] border-r border-emerald-200 dark:border-emerald-800">Họ và Tên Chủ Hộ</th>
-                  <th className="py-3 px-3.5 border-r border-emerald-200 dark:border-emerald-800">Thôn</th>
-                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800">Cà phê (Hộ)</th>
-                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800">Cà phê (Khoán)</th>
-                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800">Cao su (Hộ)</th>
-                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800">Cao su (Khoán)</th>
-                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800">Ăn Quả</th>
-                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800">Mắc Ca</th>
-                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800">Lúa Nước</th>
-                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800">Hàng Năm</th>
-                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-emerald-100 dark:bg-emerald-950">Thao Tác</th>
+                  <th className="py-3 px-3.5 text-center w-12 border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">STT</th>
+                  <th className="py-3 px-4 min-w-[180px] border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Họ và Tên Chủ Hộ</th>
+                  <th className="py-3 px-3.5 border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Thôn</th>
+                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Cà phê (Hộ)</th>
+                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Cà phê (Khoán)</th>
+                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Cao su (Hộ)</th>
+                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Cao su (Khoán)</th>
+                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Ăn Quả</th>
+                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Mắc Ca</th>
+                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Lúa Nước</th>
+                  <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Hàng Năm</th>
+                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-emerald-100 dark:bg-emerald-950 whitespace-nowrap">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -328,18 +328,18 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     onDoubleClick={() => onEdit(hh)}
                     className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                   >
-                    <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400">{(page - 1) * limit + idx + 1}</td>
+                    <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
                     <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{hh.full_name}</td>
                     <td className="py-3 px-3.5 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
-                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.cafe_household)}</td>
-                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.cafe_contracted)}</td>
-                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.rubber_household)}</td>
-                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.rubber_contracted)}</td>
-                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.fruit_tree)}</td>
-                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.macadamia)}</td>
-                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.wet_rice)}</td>
-                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.other_annual_crops)}</td>
-                    <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900">
+                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.cafe_household)}</td>
+                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.cafe_contracted)}</td>
+                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.rubber_household)}</td>
+                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.rubber_contracted)}</td>
+                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.fruit_tree)}</td>
+                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.macadamia)}</td>
+                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.wet_rice)}</td>
+                    <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.other_annual_crops)}</td>
+                    <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap">
                       <button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button>
                       <button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
                     </td>
@@ -356,15 +356,15 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-teal-100/70 dark:bg-teal-950/80 text-teal-950 dark:text-teal-200 border-b border-teal-200 dark:border-teal-800 text-[11px] font-black uppercase tracking-wider">
-                  <th className="py-3 px-3.5 text-center w-12 border-r border-teal-200 dark:border-teal-800">STT</th>
-                  <th className="py-3 px-4 min-w-[200px] border-r border-teal-200 dark:border-teal-800">Họ và Tên Chủ Hộ</th>
-                  <th className="py-3 px-3.5 border-r border-teal-200 dark:border-teal-800">Thôn</th>
-                  <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800">Đinh Lăng (ha)</th>
-                  <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800">Gừng (ha)</th>
-                  <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800">Nghệ (ha)</th>
-                  <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800">Sả (ha)</th>
-                  <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 font-bold bg-teal-200/50 dark:bg-teal-900/40">Tổng Dược Liệu (ha)</th>
-                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-teal-100 dark:bg-teal-950">Thao Tác</th>
+                  <th className="py-3 px-3.5 text-center w-12 border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">STT</th>
+                  <th className="py-3 px-4 min-w-[200px] border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">Họ và Tên Chủ Hộ</th>
+                  <th className="py-3 px-3.5 border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">Thôn</th>
+                  <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">Đinh Lăng (ha)</th>
+                  <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">Gừng (ha)</th>
+                  <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">Nghệ (ha)</th>
+                  <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">Sả (ha)</th>
+                  <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 font-bold bg-teal-200/50 dark:bg-teal-900/40 whitespace-nowrap">Tổng Dược Liệu (ha)</th>
+                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-teal-100 dark:bg-teal-950 whitespace-nowrap">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -376,15 +376,15 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                       onDoubleClick={() => onEdit(hh)}
                       className="hover:bg-teal-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                     >
-                      <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400">{(page - 1) * limit + idx + 1}</td>
+                      <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
                       <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{hh.full_name}</td>
                       <td className="py-3 px-3.5 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
-                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.herb_dinh_lang)}</td>
-                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.herb_gung)}</td>
-                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.herb_nghe)}</td>
-                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.herb_sa)}</td>
-                      <td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-teal-700 dark:text-teal-400 bg-teal-50/30 dark:bg-teal-950/20">{cryptoHelper.formatArea(totalHerbs)}</td>
-                      <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900">
+                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_dinh_lang)}</td>
+                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_gung)}</td>
+                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_nghe)}</td>
+                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_sa)}</td>
+                      <td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-teal-700 dark:text-teal-400 bg-teal-50/30 dark:bg-teal-950/20 whitespace-nowrap">{cryptoHelper.formatArea(totalHerbs)}</td>
+                      <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap">
                         <button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button>
                         <button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
                       </td>
@@ -402,15 +402,15 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-amber-100/70 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border-b border-amber-200 dark:border-amber-800 text-[11px] font-black uppercase tracking-wider">
-                  <th className="py-3 px-3.5 text-center w-12 border-r border-amber-200 dark:border-amber-800">STT</th>
-                  <th className="py-3 px-4 min-w-[200px] border-r border-amber-200 dark:border-amber-800">Họ và Tên Chủ Hộ</th>
-                  <th className="py-3 px-3.5 border-r border-amber-200 dark:border-amber-800">Thôn</th>
-                  <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800">Đàn Trâu (con)</th>
-                  <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800">Đàn Bò (con)</th>
-                  <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800">Đàn Heo (con)</th>
-                  <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800">Đàn Gia Cầm (con)</th>
-                  <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 font-bold bg-amber-200/50 dark:bg-amber-900/40">Tổng Đàn (con)</th>
-                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-amber-100 dark:bg-amber-950">Thao Tác</th>
+                  <th className="py-3 px-3.5 text-center w-12 border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">STT</th>
+                  <th className="py-3 px-4 min-w-[200px] border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">Họ và Tên Chủ Hộ</th>
+                  <th className="py-3 px-3.5 border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">Thôn</th>
+                  <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">Đàn Trâu (con)</th>
+                  <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">Đàn Bò (con)</th>
+                  <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">Đàn Heo (con)</th>
+                  <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">Đàn Gia Cầm (con)</th>
+                  <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 font-bold bg-amber-200/50 dark:bg-amber-900/40 whitespace-nowrap">Tổng Đàn (con)</th>
+                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-amber-100 dark:bg-amber-950 whitespace-nowrap">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -422,15 +422,15 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                       onDoubleClick={() => onEdit(hh)}
                       className="hover:bg-amber-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                     >
-                      <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400">{(page - 1) * limit + idx + 1}</td>
+                      <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
                       <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{hh.full_name}</td>
                       <td className="py-3 px-3.5 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
-                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{hh.buffalo || '-'}</td>
-                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{hh.cow || '-'}</td>
-                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{hh.pig || '-'}</td>
-                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{hh.poultry || '-'}</td>
-                      <td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-amber-700 dark:text-amber-400 bg-amber-50/30 dark:bg-amber-950/20">{totalAnimals || '-'}</td>
-                      <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900">
+                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.buffalo || '-'}</td>
+                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.cow || '-'}</td>
+                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.pig || '-'}</td>
+                      <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.poultry || '-'}</td>
+                      <td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-amber-700 dark:text-amber-400 bg-amber-50/30 dark:bg-amber-950/20 whitespace-nowrap">{totalAnimals || '-'}</td>
+                      <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap">
                         <button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button>
                         <button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
                       </td>
@@ -448,12 +448,12 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-sky-100/70 dark:bg-sky-950/80 text-sky-950 dark:text-sky-200 border-b border-sky-200 dark:border-sky-800 text-[11px] font-black uppercase tracking-wider">
-                  <th className="py-3 px-3.5 text-center w-12 border-r border-sky-200 dark:border-sky-800">STT</th>
-                  <th className="py-3 px-4 min-w-[220px] border-r border-sky-200 dark:border-sky-800">Họ và Tên Chủ Hộ</th>
-                  <th className="py-3 px-3.5 border-r border-sky-200 dark:border-sky-800">Thôn</th>
-                  <th className="py-3 px-4 text-right border-r border-sky-200 dark:border-sky-800">Cá Ao Hồ (ha)</th>
-                  <th className="py-3 px-4 text-right border-r border-sky-200 dark:border-sky-800">Cá Lồng Bè (lồng)</th>
-                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-sky-100 dark:bg-sky-950">Thao Tác</th>
+                  <th className="py-3 px-3.5 text-center w-12 border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">STT</th>
+                  <th className="py-3 px-4 min-w-[220px] border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">Họ và Tên Chủ Hộ</th>
+                  <th className="py-3 px-3.5 border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">Thôn</th>
+                  <th className="py-3 px-4 text-right border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">Cá Ao Hồ (ha)</th>
+                  <th className="py-3 px-4 text-right border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">Cá Lồng Bè (lồng)</th>
+                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-sky-100 dark:bg-sky-950 whitespace-nowrap">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -463,12 +463,12 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     onDoubleClick={() => onEdit(hh)}
                     className="hover:bg-sky-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                   >
-                    <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400">{(page - 1) * limit + idx + 1}</td>
+                    <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
                     <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{hh.full_name}</td>
                     <td className="py-3 px-3.5 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
-                    <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.fish_pond)}</td>
-                    <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">{hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}</td>
-                    <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900">
+                    <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.fish_pond)}</td>
+                    <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}</td>
+                    <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap">
                       <button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button>
                       <button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
                     </td>
@@ -485,23 +485,23 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-slate-100/90 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-black uppercase tracking-wider">
-                  <th rowSpan={2} className="py-3 px-3.5 border-r border-slate-200/80 dark:border-slate-800 text-center w-12">STT</th>
-                  <th rowSpan={2} className="py-3 px-4 border-r border-slate-200/80 dark:border-slate-800 min-w-[190px]">Họ và Tên Chủ Hộ</th>
-                  <th rowSpan={2} className="py-3 px-3.5 border-r border-slate-200/80 dark:border-slate-800 min-w-[130px]">Thôn Quản Lý</th>
+                  <th rowSpan={2} className="py-3 px-3.5 border-r border-slate-200/80 dark:border-slate-800 text-center w-12 whitespace-nowrap">STT</th>
+                  <th rowSpan={2} className="py-3 px-4 border-r border-slate-200/80 dark:border-slate-800 min-w-[190px] whitespace-nowrap">Họ và Tên Chủ Hộ</th>
+                  <th rowSpan={2} className="py-3 px-3.5 border-r border-slate-200/80 dark:border-slate-800 min-w-[130px] whitespace-nowrap">Thôn Quản Lý</th>
 
-                  <th colSpan={8} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300">
+                  <th colSpan={8} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 whitespace-nowrap">
                     1. Cây Trồng Chính (ha)
                   </th>
-                  <th colSpan={4} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-teal-50/70 dark:bg-teal-950/40 text-teal-900 dark:text-teal-300">
+                  <th colSpan={4} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-teal-50/70 dark:bg-teal-950/40 text-teal-900 dark:text-teal-300 whitespace-nowrap">
                     2. Dược Liệu Đăk Hà (ha)
                   </th>
-                  <th colSpan={4} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-amber-50/70 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300">
+                  <th colSpan={4} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-amber-50/70 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 whitespace-nowrap">
                     3. Đàn Vật Nuôi (con)
                   </th>
-                  <th colSpan={2} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-sky-50/70 dark:bg-sky-950/40 text-sky-900 dark:text-sky-300">
+                  <th colSpan={2} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-sky-50/70 dark:bg-sky-950/40 text-sky-900 dark:text-sky-300 whitespace-nowrap">
                     4. Thủy Sản
                   </th>
-                  <th rowSpan={2} className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-slate-100 dark:bg-slate-950 shadow-xs">
+                  <th rowSpan={2} className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-slate-100 dark:bg-slate-950 shadow-xs whitespace-nowrap">
                     Thao Tác
                   </th>
                 </tr>
@@ -537,28 +537,28 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     onDoubleClick={() => onEdit(hh)}
                     className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                   >
-                    <td className="py-3 px-3.5 border-r border-slate-100 dark:border-slate-800/60 text-center font-mono text-slate-500 dark:text-slate-400">{(page - 1) * limit + idx + 1}</td>
+                    <td className="py-3 px-3.5 border-r border-slate-100 dark:border-slate-800/60 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
                     <td className="py-3 px-4 border-r border-slate-100 dark:border-slate-800/60 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{hh.full_name}</td>
                     <td className="py-3 px-3.5 border-r border-slate-100 dark:border-slate-800/60 whitespace-nowrap"><span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.cafe_household)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.cafe_contracted)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.rubber_household)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.rubber_contracted)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.fruit_tree)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.macadamia)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.wet_rice)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.other_annual_crops)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20">{cryptoHelper.formatArea(hh.herb_dinh_lang)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20">{cryptoHelper.formatArea(hh.herb_gung)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20">{cryptoHelper.formatArea(hh.herb_nghe)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20">{cryptoHelper.formatArea(hh.herb_sa)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">{hh.buffalo || '-'}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">{hh.cow || '-'}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">{hh.pig || '-'}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200">{hh.poultry || '-'}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200">{cryptoHelper.formatArea(hh.fish_pond)}</td>
-                    <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200">{hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}</td>
-                    <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900">
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.cafe_household)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.cafe_contracted)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.rubber_household)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.rubber_contracted)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.fruit_tree)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.macadamia)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.wet_rice)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.other_annual_crops)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_dinh_lang)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_gung)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_nghe)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_sa)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.buffalo || '-'}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.cow || '-'}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.pig || '-'}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.poultry || '-'}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.fish_pond)}</td>
+                    <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}</td>
+                    <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap">
                       <button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button>
                       <button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
                     </td>
