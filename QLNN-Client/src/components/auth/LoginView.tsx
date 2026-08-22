@@ -42,19 +42,16 @@ export const LoginView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-screen bg-gradient-to-br from-emerald-950 via-slate-950 to-slate-900 flex items-center justify-center p-4 font-sans text-slate-100 relative overflow-hidden">
-      {/* Decorative Highland Glow Orbs */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-amber-600/15 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="max-w-md w-full bg-slate-900/80 border border-slate-700/70 rounded-3xl shadow-2xl p-8 backdrop-blur-xl relative z-10 animate-in fade-in zoom-in-95 duration-300">
+    <div className="min-h-screen w-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6 font-sans text-slate-100 select-none">
+      <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-sm">
         {/* Header Branding */}
-        <div className="text-center mb-7">
-          <div className="w-18 h-18 bg-gradient-to-tr from-emerald-600 to-emerald-400 rounded-3xl mx-auto flex items-center justify-center text-white shadow-xl shadow-emerald-950/60 mb-4 ring-4 ring-emerald-500/20">
-            <Sprout className="w-10 h-10" />
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl mx-auto flex items-center justify-center mb-4">
+            <Sprout className="w-8 h-8" />
           </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 text-[11px] font-bold uppercase tracking-wider mb-2">
-            <Building2 className="w-3.5 h-3.5" /> UBND XÃ ĐĂK HÀ • NÔNG THÔN MỚI
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 text-[11px] font-bold uppercase tracking-wider mb-2.5">
+            <Building2 className="w-3.5 h-3.5" />
+            <span>UBND XÃ ĐĂK HÀ • NÔNG THÔN MỚI</span>
           </div>
           <h1 className="text-2xl font-black text-white tracking-tight">
             QUẢN LÝ NÔNG NGHIỆP
@@ -64,9 +61,9 @@ export const LoginView: React.FC = () => {
           </p>
         </div>
 
-        {/* Error alert */}
+        {/* Error Alert */}
         {error && (
-          <div className="mb-5 p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-start gap-3 text-rose-300 text-xs leading-relaxed animate-in fade-in">
+          <div className="mb-6 p-3.5 bg-rose-950/40 border border-rose-800/60 rounded-2xl flex items-start gap-3 text-rose-300 text-xs leading-relaxed">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
             <span>{error}</span>
           </div>
@@ -79,7 +76,7 @@ export const LoginView: React.FC = () => {
               Tên tài khoản (SSO)
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                 <User className="w-4 h-4" />
               </div>
               <input
@@ -88,7 +85,8 @@ export const LoginView: React.FC = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Ví dụ: admin hoặc thon1"
                 required
-                className="w-full pl-10 pr-4 py-3 bg-slate-950/70 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all font-medium"
+                autoFocus
+                className="w-full h-11 pl-10 pr-4 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors font-medium"
               />
             </div>
           </div>
@@ -98,7 +96,7 @@ export const LoginView: React.FC = () => {
               Mật khẩu
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                 <Lock className="w-4 h-4" />
               </div>
               <input
@@ -107,7 +105,7 @@ export const LoginView: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full pl-10 pr-4 py-3 bg-slate-950/70 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all font-medium"
+                className="w-full h-11 pl-10 pr-4 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors font-medium"
               />
             </div>
           </div>
@@ -115,7 +113,7 @@ export const LoginView: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 active:from-emerald-700 active:to-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-950/40 transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] cursor-pointer"
+            className="w-full mt-2 h-11 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -129,9 +127,9 @@ export const LoginView: React.FC = () => {
         </form>
 
         {/* Footer Note */}
-        <div className="mt-8 pt-6 border-t border-slate-800 text-center">
-          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+        <div className="mt-8 pt-6 border-t border-slate-800/80 text-center">
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <span>Xác thực tập trung SSO Gateway • Mã hóa AES-256</span>
           </div>
         </div>

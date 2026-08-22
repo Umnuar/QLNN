@@ -29,7 +29,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="flex flex-col h-dvh w-screen overflow-hidden bg-slate-100 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-150">
       <Header />
       <ConnectionBanner
         isOffline={isDisconnected}
@@ -39,8 +39,8 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-100/80 dark:bg-slate-900/40">
-          <div className="w-full max-w-none space-y-6 animate-in fade-in duration-200">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-100/70 dark:bg-slate-900/30">
+          <div className="w-full max-w-none space-y-6">
             {children}
           </div>
         </main>
