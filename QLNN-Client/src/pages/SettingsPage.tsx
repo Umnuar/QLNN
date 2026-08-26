@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Plus, Trash2, Key, Building2, Users, History, Database } from 'lucide-react';
+import { Settings, Plus, Trash2, Key, Users, History, Database } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { apiClient } from '../api/apiClient';
 import { useModal } from '../hooks/useModal';
-import { CommuneProfileTab } from '../components/settings/CommuneProfileTab';
 import { AuditLogView } from '../components/audit/AuditLogView';
 import { BackupRestoreTab } from '../components/settings/BackupRestoreTab';
 
 export const SettingsPage: React.FC = () => {
   const { villages, user } = useApp();
   const { showModal } = useModal();
-  const [activeSubTab, setActiveSubTab] = useState<'users' | 'info' | 'audit' | 'backup'>('info');
+  const [activeSubTab, setActiveSubTab] = useState<'users' | 'audit' | 'backup'>('users');
   
   // Users state
   const [usersList, setUsersList] = useState<any[]>([]);
@@ -87,8 +86,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   const navTabs = [
-    { id: 'info', label: 'Thông tin Đơn vị', icon: Building2, desc: 'Cấu hình thông tin báo cáo xã' },
-    { id: 'users', label: 'Quản lý Tài khoản', icon: Users, desc: 'Tài khoản cán bộ xã và thôn' },
+        { id: 'users', label: 'Quản lý Tài khoản', icon: Users, desc: 'Tài khoản cán bộ xã và thôn' },
     { id: 'audit', label: 'Nhật ký Hoạt động', icon: History, desc: 'Theo dõi lịch sử thay đổi dữ liệu' },
     { id: 'backup', label: 'Sao lưu & Khôi phục', icon: Database, desc: 'Xuất & nhập cơ sở dữ liệu' },
   ] as const;
@@ -139,8 +137,7 @@ export const SettingsPage: React.FC = () => {
 
         {/* Right Content Area */}
         <div className="flex-1 min-w-0">
-          {activeSubTab === 'info' && <CommuneProfileTab />}
-
+          
           {activeSubTab === 'users' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs">
