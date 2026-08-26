@@ -16,7 +16,7 @@ export const authApi = {
     return res.data.data || res.data.user || res.data;
   },
 
-  async getUsers(): Promise<{ status: string; data: User[] }> {
+  async getUsers(): Promise<User[]> {
     const res = await apiClient.get('/users');
     return res.data.data || res.data;
   },

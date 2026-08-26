@@ -21,7 +21,7 @@ export const VillagesPage: React.FC = () => {
 
   useEffect(() => {
     if (isAdmin) {
-      authApi.getUsers().then(res => setUsersList(res.data)).catch(console.error);
+      authApi.getUsers().then(users => setUsersList(users)).catch(console.error);
     }
   }, [isAdmin]);
 
@@ -170,7 +170,7 @@ export const VillagesPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredVillages.map((village) => {
           const isEditing = editingId === village.id;
-          const manager = usersList.find((u) => u.village_id === village.id);
+          const manager = usersList?.find((u) => u.village_id === village.id);
 
           if (isEditing) {
             return (
