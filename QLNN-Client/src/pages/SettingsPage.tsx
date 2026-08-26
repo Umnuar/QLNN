@@ -5,6 +5,7 @@ import { apiClient } from '../api/apiClient';
 import { useModal } from '../hooks/useModal';
 import { CommuneProfileTab } from '../components/settings/CommuneProfileTab';
 import { AuditLogView } from '../components/audit/AuditLogView';
+import { BackupRestoreTab } from '../components/settings/BackupRestoreTab';
 
 export const SettingsPage: React.FC = () => {
   const { villages, user } = useApp();
@@ -233,15 +234,7 @@ export const SettingsPage: React.FC = () => {
           )}
 
           {activeSubTab === 'backup' && (
-            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col items-center justify-center text-center py-16">
-              <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-3">
-                <Database className="w-6 h-6" />
-              </div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white">Sao lưu & Khôi phục</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1">
-                Xuất file sao lưu cơ sở dữ liệu hoặc khôi phục dữ liệu hệ thống từ các bản sao lưu an toàn.
-              </p>
-            </div>
+            <BackupRestoreTab />
           )}
         </div>
       </div>
