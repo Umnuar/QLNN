@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, ArrowRight, Plus, Edit3, Trash2, Check, X, Search } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { villageApi } from '../api/villageApi';
+import { authApi } from '../api/authApi';
 import { useModal } from '../hooks/useModal';
 
 export const VillagesPage: React.FC = () => {
@@ -9,12 +10,19 @@ export const VillagesPage: React.FC = () => {
   const { showModal } = useModal();
   const isAdmin = user?.role === 'admin';
 
+  const [usersList, setUsersList] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAdmin) {
+      authApi.getUsers().then(res => setUsersList(res.data)).catch(console.error);
+    }
+  }, [isAdmin]);
 
   const filteredVillages = villages.filter((v) =>
     v.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -138,6 +146,7 @@ export const VillagesPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredVillages.map((village) => {
           const isEditing = editingId === village.id;
+          const manager = usersList.find((u) => u.village_id === village.id);
 
           if (isEditing) {
             return (
@@ -246,6 +255,11 @@ export const VillagesPage: React.FC = () => {
                 <p className="text-[11px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   ID: {village.id.substring(0, 8)}
                 </p>
+                {isAdmin && (
+                  <p className="text-[11px] font-medium mt-1 text-slate-500 dark:text-slate-400">
+                    👤 Quản lý: <span className="font-bold">{manager ? manager.username : '⚠️ Chưa phân công'}</span>
+                  </p>
+                )}
               </div>
             </div>
           );

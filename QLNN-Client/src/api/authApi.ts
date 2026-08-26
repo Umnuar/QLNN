@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { AUTH_BASE_URL } from './apiClient';
+import { apiClient } from './apiClient';
 import { User } from '../types';
 
 export const authApi = {
@@ -7,23 +6,22 @@ export const authApi = {
     username: string;
     password: string;
   }): Promise<{ accessToken: string; refreshToken: string; user: User }> {
-    const res = await axios.post(`${AUTH_BASE_URL}/login`, credentials);
-    // QLCS Backend returns { data: { accessToken, refreshToken, user } }
-    return res.data.data || res.data;
+    const res = await apiClient.post('/auth/login', credentials);
+    return res.data;
   },
 
   async getMe(accessToken: string): Promise<User> {
-    const res = await axios.get(`${AUTH_BASE_URL}/me`, {
+    const res = await apiClient.get('/auth/me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    return res.data.data || res.data.user || res.data;
+    return res.data;
   },
 
-  async logout(refreshToken: string): Promise<void> {
-    try {
-      await axios.post(`${AUTH_BASE_URL}/logout`, { refreshToken });
-    } catch {
-      // Ignore
-    }
+  async getUsers() {
+    return apiClient.get('/users');
+  },
+
+  async logout(_refreshToken: string): Promise<void> {
+    // Chúng ta không quản lý logout ở backend, token tự hết hạn
   },
 };
