@@ -348,21 +348,21 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
             </p>
           </div>
         ) : (
-          <div className="space-y-6 relative before:absolute before:inset-0 before:left-5 md:before:left-1/2 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-800 before:to-transparent">
+          <div className="space-y-6 relative before:absolute before:inset-0 before:left-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-800 before:to-transparent ml-2">
             {filteredLogs.map((log) => {
               const villageName = villages.find((v) => v.id === log.village_id)?.name;
               return (
                 <div
                   key={log.id}
-                  className="relative flex items-start justify-between md:justify-normal md:odd:flex-row-reverse group"
+                  className="relative flex items-start gap-5 group"
                 >
                   {/* Icon Marker */}
-                  <div className="flex items-center justify-center w-10 h-10 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 shadow-xs z-10 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 shadow-xs z-10 shrink-0">
                     {renderActionIcon(log.action)}
                   </div>
 
                   {/* Card Content */}
-                  <div className="w-[calc(100%-3.5rem)] md:w-[calc(50%-2rem)] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 hover:bg-white dark:hover:bg-slate-900 shadow-xs transition-all">
+                  <div className="flex-1 w-full p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 hover:bg-white dark:hover:bg-slate-900 shadow-xs transition-all">
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                       <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                         <Clock className="w-3.5 h-3.5" />
