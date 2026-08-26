@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Server, ShieldCheck, Globe, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { X, Server, ShieldCheck, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useApp } from '../../AppContext';
 
 interface ServerStatusModalProps {
@@ -76,25 +76,6 @@ export const ServerStatusModal: React.FC<ServerStatusModalProps> = ({
               <span className="font-mono font-bold text-slate-900 dark:text-white">
                 {latency !== null ? `${latency} ms` : 'Đang đo...'}
               </span>
-            </div>
-          </div>
-
-          {/* Endpoints Info */}
-          <div className="space-y-2">
-            <div className="font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] tracking-wider">
-              Địa Chỉ Máy Chủ Cấu Hình
-            </div>
-            <div className="p-3 bg-slate-100 dark:bg-slate-950 text-slate-300 rounded-xl font-mono text-[11px] space-y-1.5 border border-transparent dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <Globe className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="text-slate-400">SSO Gateway:</span>
-                <span className="text-white truncate">http://localhost:5000/api/auth</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Server className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="text-slate-400">QLNN Backend:</span>
-                <span className="text-white truncate">http://localhost:5001/api</span>
-              </div>
             </div>
           </div>
 

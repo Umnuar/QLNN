@@ -55,14 +55,14 @@ export const LoginView: React.FC = () => {
           <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl mx-auto flex items-center justify-center mb-4">
             <Sprout className="w-8 h-8" />
           </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 text-[11px] font-bold uppercase tracking-wider mb-2.5">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 text-[11px] font-bold uppercase tracking-wider mb-2.5">
             <Building2 className="w-3.5 h-3.5" />
             <span>UBND XÃ ĐĂK HÀ • NÔNG THÔN MỚI</span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             QUẢN LÝ NÔNG NGHIỆP
           </h1>
-          <p className="text-xs font-medium text-slate-400 mt-1">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
             Hệ thống Dữ liệu 25 Chỉ tiêu Nông thôn mới
           </p>
         </div>
@@ -78,7 +78,7 @@ export const LoginView: React.FC = () => {
         {/* Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Tên đăng nhập
             </label>
             <div className="relative">
@@ -98,7 +98,7 @@ export const LoginView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Mật khẩu
             </label>
             <div className="relative">
@@ -133,7 +133,7 @@ export const LoginView: React.FC = () => {
         </form>
 
         {/* Footer Note */}
-        <div className="mt-8 pt-6 border-t border-slate-800/80 text-center">
+        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800/80 text-center">
           <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <span>Đăng nhập an toàn nội bộ</span>
