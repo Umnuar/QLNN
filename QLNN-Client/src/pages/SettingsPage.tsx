@@ -4,6 +4,7 @@ import { useApp } from '../AppContext';
 import { apiClient } from '../api/apiClient';
 import { useModal } from '../hooks/useModal';
 import { CommuneProfileTab } from '../components/settings/CommuneProfileTab';
+import { AuditLogView } from '../components/audit/AuditLogView';
 
 export const SettingsPage: React.FC = () => {
   const { villages, user } = useApp();
@@ -228,15 +229,7 @@ export const SettingsPage: React.FC = () => {
           )}
 
           {activeSubTab === 'audit' && (
-            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col items-center justify-center text-center py-16">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
-                <History className="w-6 h-6" />
-              </div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white">Nhật ký Hoạt động</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1">
-                Ghi nhận và tra cứu toàn bộ lịch sử chỉnh sửa, cập nhật và xóa số liệu nông nghiệp trong hệ thống.
-              </p>
-            </div>
+            <AuditLogView />
           )}
 
           {activeSubTab === 'backup' && (
