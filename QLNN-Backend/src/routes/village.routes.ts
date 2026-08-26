@@ -1,10 +1,14 @@
 import { Router } from 'express';
-import { getVillages } from '../controllers/village.controller';
+import { getVillages, createVillage, updateVillage, deleteVillage } from '../controllers/village.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-// Danh sách thôn công khai sau khi đăng nhập
-router.get('/', authenticateToken, getVillages);
+router.get('/', getVillages);
+
+// Admin only routes
+router.post('/', authenticateToken, createVillage);
+router.put('/:id', authenticateToken, updateVillage);
+router.delete('/:id', authenticateToken, deleteVillage);
 
 export default router;

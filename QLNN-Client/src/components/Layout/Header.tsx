@@ -45,14 +45,14 @@ export const Header: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
-                QUẢN LÝ NÔNG NGHIỆP & NTM
+                QUẢN LÝ NÔNG NGHIỆP
               </h1>
               <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 rounded-full border border-emerald-200 dark:border-emerald-800 uppercase tracking-wider hidden sm:inline-block">
                 XÃ ĐĂK HÀ
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-none mt-0.5 hidden sm:block">
-              Hệ sinh thái Dữ liệu Số hóa Đăk Hà (Đồng bộ SSO Gateway)
+              Dữ liệu Nông Nghiệp số Xã Đăk Hà
             </p>
           </div>
         </div>

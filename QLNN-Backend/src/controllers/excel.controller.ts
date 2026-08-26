@@ -167,8 +167,10 @@ export const importExcel = async (req: AuthRequest, res: Response) => {
         await tx.audit_logs.create({
           data: {
             user_id: req.user?.id || null,
+            username: req.user?.username || 'System',
             village_id: targetVillageId,
             action: 'IMPORT_EXCEL',
+            entity_type: 'households',
             details: JSON.stringify({
               village_name: village.name,
               totalRowsParsed: analysis.totalCount,

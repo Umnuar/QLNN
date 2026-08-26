@@ -13,6 +13,7 @@ interface Window {
     }
     app: {
       getVersion: () => Promise<string>
+      setZoom: (level: number) => Promise<void>
     }
   }
 }

@@ -13,6 +13,7 @@ const api = {
   },
   app: {
     getVersion: () => ipcRenderer.invoke('get-app-version'),
+    setZoom: (level: number) => ipcRenderer.invoke('app:set-zoom', level),
   },
 }
 

@@ -25,7 +25,7 @@ export const excelApi = {
     const formData = new FormData();
     formData.append('file', file);
     if (villageId) {
-      formData.append('villageId', villageId);
+      formData.append('village_id', villageId);
     }
 
     const res = await apiClient.post('/excel/preview', formData, {
@@ -46,7 +46,7 @@ export const excelApi = {
     const formData = new FormData();
     formData.append('file', file);
     if (villageId) {
-      formData.append('villageId', villageId);
+      formData.append('village_id', villageId);
     }
 
     const res = await apiClient.post('/excel/import', formData, {

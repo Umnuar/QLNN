@@ -5,7 +5,7 @@ import { secureStorage } from '../../utils/secureStorage';
 import { useApp } from '../../AppContext';
 
 export const LoginView: React.FC = () => {
-  const { setUser } = useApp();
+  const { setUser, setActiveTab } = useApp();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,11 +24,17 @@ export const LoginView: React.FC = () => {
     try {
       const data = await authApi.login({ username: username.trim(), password });
       if (!data?.accessToken || !data?.user) {
-        throw new Error('Phản hồi đăng nhập không hợp lệ từ máy chủ SSO.');
+        throw new Error('Phản hồi đăng nhập không hợp lệ.');
       }
       await secureStorage.setItem('accessToken', data.accessToken);
       await secureStorage.setItem('refreshToken', data.refreshToken);
+      await secureStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
+        if (data.user.role === 'admin') {
+          setActiveTab('villages');
+        } else {
+          setActiveTab('analytics');
+        }
     } catch (err: any) {
       console.error('Login error:', err);
       const msg =
@@ -42,8 +48,8 @@ export const LoginView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6 font-sans text-slate-100 select-none">
-      <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-sm">
+    <div className="min-h-screen w-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 sm:p-6 font-sans text-slate-900 dark:text-slate-100 select-none">
+      <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
         {/* Header Branding */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl mx-auto flex items-center justify-center mb-4">
@@ -57,7 +63,7 @@ export const LoginView: React.FC = () => {
             QUẢN LÝ NÔNG NGHIỆP
           </h1>
           <p className="text-xs font-medium text-slate-400 mt-1">
-            Hệ thống Dữ liệu Số hóa 25 Chỉ Tiêu NTM (Đồng bộ SSO)
+            Hệ thống Dữ liệu 25 Chỉ tiêu Nông thôn mới
           </p>
         </div>
 
@@ -73,7 +79,7 @@ export const LoginView: React.FC = () => {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-              Tên tài khoản (SSO)
+              Tên đăng nhập
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
@@ -86,7 +92,7 @@ export const LoginView: React.FC = () => {
                 placeholder="Ví dụ: admin hoặc thon1"
                 required
                 autoFocus
-                className="w-full h-11 pl-10 pr-4 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors font-medium"
+                className="w-full h-11 pl-10 pr-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors font-medium"
               />
             </div>
           </div>
@@ -105,7 +111,7 @@ export const LoginView: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full h-11 pl-10 pr-4 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors font-medium"
+                className="w-full h-11 pl-10 pr-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors font-medium"
               />
             </div>
           </div>
@@ -130,7 +136,7 @@ export const LoginView: React.FC = () => {
         <div className="mt-8 pt-6 border-t border-slate-800/80 text-center">
           <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>Xác thực tập trung SSO Gateway • Mã hóa AES-256</span>
+            <span>Đăng nhập an toàn nội bộ</span>
           </div>
         </div>
       </div>

@@ -16,6 +16,7 @@ model villages {
   name       String       @db.VarChar(255)
   created_at DateTime?    @default(now()) @db.Timestamptz
   households households[]
+  users users[]
 }
 
 model households {
@@ -84,12 +85,32 @@ model aquaculture_items {
   @@index([aquaculture_type], map: "idx_aqua_type")
 }
 
-model audit_logs {
+
+
+model users {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String?   @db.Uuid
+  username   String    @unique @db.VarChar(50)
+  password   String    @db.VarChar(255)
+  role       String    @default("user") @db.VarChar(20)
   village_id String?   @db.Uuid
-  action     String
-  details    String?
-  ip_address String?   @db.VarChar(45)
   created_at DateTime? @default(now()) @db.Timestamptz
+  village    villages? @relation(fields: [village_id], references: [id])
+}
+
+
+
+
+
+model audit_logs {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  village_id  String?   @db.Uuid
+  user_id     String?   @db.Uuid
+  username    String    @db.VarChar(50)
+  action      String    @db.VarChar(50)
+  entity_type String    @db.VarChar(50)
+  entity_id   String?   @db.Uuid
+  details     Json?
+  created_at  DateTime? @default(now()) @db.Timestamptz
+
+  @@index([village_id])
 }

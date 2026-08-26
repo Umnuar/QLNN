@@ -6,7 +6,10 @@ import healthRoutes from './routes/health.routes';
 import villageRoutes from './routes/village.routes';
 import householdRoutes from './routes/household.routes';
 import excelRoutes from './routes/excel.routes';
+import auditRoutes from './routes/audit.routes';
 import analyticsRoutes from './routes/analytics.routes';
+import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
 import { authenticateToken, authorizeVillageScope, AuthRequest } from './middlewares/auth.middleware';
 
 const app = express();
@@ -53,7 +56,10 @@ app.get('/api/auth-test', authenticateToken, authorizeVillageScope, (req: AuthRe
 app.use('/api/villages', villageRoutes);
 app.use('/api/households', householdRoutes);
 app.use('/api/excel', excelRoutes);
+app.use('/api/audit', auditRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // Root route
 app.get('/', (_req, expressRes) => {
@@ -65,6 +71,7 @@ app.get('/', (_req, expressRes) => {
 });
 
 // Error handling middleware
+
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('[Error]', err);
   res.status(err.status || 500).json({
