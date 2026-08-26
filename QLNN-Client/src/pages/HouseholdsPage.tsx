@@ -14,7 +14,6 @@ import { HouseholdFilterBar } from '../components/households/HouseholdFilterBar'
 export const HouseholdsPage: React.FC = () => {
   const { user, selectedVillageId, selectedVillageName, setActiveTab, isOnline, isBackendHealthy } = useApp();
   const isDisconnected = !isOnline || !isBackendHealthy;
-  console.log(isDisconnected);
   const { showModal } = useModal();
 
   const [households, setHouseholds] = useState<HouseholdFlat[]>([]);
