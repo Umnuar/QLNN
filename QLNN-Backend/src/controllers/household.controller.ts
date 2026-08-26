@@ -278,9 +278,12 @@ export const createHousehold = async (req: AuthRequest, res: Response) => {
       await tx.audit_logs.create({
         data: {
           user_id: req.user?.id || null,
+          username: req.user?.username || 'System',
           village_id,
-          action: 'CREATE_HOUSEHOLD',
-          details: JSON.stringify({ household_id: hh.id, name: hh.full_name }),
+          action: 'CREATE',
+          entity_type: 'households',
+          entity_id: hh.id,
+          details: JSON.stringify({ name: hh.full_name }),
         },
       });
 
@@ -355,13 +358,21 @@ export const updateHousehold = async (req: AuthRequest, res: Response) => {
         },
       });
 
+      // So sánh tạo diff
+      const diff: any = {};
+      if (existing.full_name !== hh.full_name) diff.full_name = { old: existing.full_name, new: hh.full_name };
+      if (existing.phone !== hh.phone) diff.phone = { old: existing.phone, new: hh.phone };
+      
       // Ghi audit log
       await tx.audit_logs.create({
         data: {
           user_id: req.user?.id || null,
+          username: req.user?.username || 'System',
           village_id: existing.village_id,
-          action: 'UPDATE_HOUSEHOLD',
-          details: JSON.stringify({ household_id: hh.id, name: hh.full_name }),
+          action: 'UPDATE',
+          entity_type: 'households',
+          entity_id: hh.id,
+          details: JSON.stringify(diff),
         },
       });
 
@@ -396,12 +407,25 @@ export const deleteHousehold = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    await prisma.households.update({
-      where: { id },
-      data: {
-        is_deleted: true,
-        deleted_at: new Date(),
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.households.update({
+        where: { id },
+        data: {
+          is_deleted: true,
+          deleted_at: new Date(),
+        },
+      });
+      await tx.audit_logs.create({
+        data: {
+          user_id: req.user?.id || null,
+          username: req.user?.username || 'System',
+          village_id: existing.village_id,
+          action: 'DELETE',
+          entity_type: 'households',
+          entity_id: id,
+          details: JSON.stringify({ name: existing.full_name }),
+        },
+      });
     });
 
     res.json({ status: 'ok', message: 'Đã xóa hộ thành công' });

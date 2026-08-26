@@ -33,91 +33,69 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
   const { showModal } = useModal();
 
   const [activeTab, setActiveTab] = useState<TabType>('crops');
-  const [villageId, setVillageId] = useState<string>('');
-  const [fullName, setFullName] = useState<string>('');
-  const [notes, setNotes] = useState<string>('');
+  const INITIAL_FORM_DATA = {
+  villageId: '',
+  fullName: '',
+  notes: '',
+  cafeHousehold: '0',
+  cafeContracted: '0',
+  rubberHousehold: '0',
+  rubberContracted: '0',
+  fruitTree: '0',
+  macadamia: '0',
+  herbDinhLang: '0',
+  herbGung: '0',
+  herbNghe: '0',
+  herbSa: '0',
+  wetRice: '0',
+  otherAnnualCrops: '0',
+  buffalo: '0',
+  cow: '0',
+  pig: '0',
+  poultry: '0',
+  fishPond: '0',
+  fishCage: '0',
+};
 
-  // 1. Cây trồng (12 chỉ số)
-  const [cafeHousehold, setCafeHousehold] = useState<string>('0');
-  const [cafeContracted, setCafeContracted] = useState<string>('0');
-  const [rubberHousehold, setRubberHousehold] = useState<string>('0');
-  const [rubberContracted, setRubberContracted] = useState<string>('0');
-  const [fruitTree, setFruitTree] = useState<string>('0');
-  const [macadamia, setMacadamia] = useState<string>('0');
-  const [herbDinhLang, setHerbDinhLang] = useState<string>('0');
-  const [herbGung, setHerbGung] = useState<string>('0');
-  const [herbNghe, setHerbNghe] = useState<string>('0');
-  const [herbSa, setHerbSa] = useState<string>('0');
-  const [wetRice, setWetRice] = useState<string>('0');
-  const [otherAnnualCrops, setOtherAnnualCrops] = useState<string>('0');
-
-  // 2. Vật nuôi (4 chỉ số)
-  const [buffalo, setBuffalo] = useState<string>('0');
-  const [cow, setCow] = useState<string>('0');
-  const [pig, setPig] = useState<string>('0');
-  const [poultry, setPoultry] = useState<string>('0');
-
-  // 3. Thủy sản (2 chỉ số)
-  const [fishPond, setFishPond] = useState<string>('0');
-  const [fishCage, setFishCage] = useState<string>('0');
-
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleChange = (field: keyof typeof INITIAL_FORM_DATA) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+  };
 
   useEffect(() => {
     if (isOpen) {
       if (household) {
-        // Edit mode
-        setFullName(household.full_name || '');
-        setVillageId(household.village_id || '');
-        setNotes(household.notes || '');
-
-        setCafeHousehold(String(household.cafe_household ?? 0));
-        setCafeContracted(String(household.cafe_contracted ?? 0));
-        setRubberHousehold(String(household.rubber_household ?? 0));
-        setRubberContracted(String(household.rubber_contracted ?? 0));
-        setFruitTree(String(household.fruit_tree ?? 0));
-        setMacadamia(String(household.macadamia ?? 0));
-        setHerbDinhLang(String(household.herb_dinh_lang ?? 0));
-        setHerbGung(String(household.herb_gung ?? 0));
-        setHerbNghe(String(household.herb_nghe ?? 0));
-        setHerbSa(String(household.herb_sa ?? 0));
-        setWetRice(String(household.wet_rice ?? 0));
-        setOtherAnnualCrops(String(household.other_annual_crops ?? 0));
-
-        setBuffalo(String(household.buffalo ?? 0));
-        setCow(String(household.cow ?? 0));
-        setPig(String(household.pig ?? 0));
-        setPoultry(String(household.poultry ?? 0));
-
-        setFishPond(String(household.fish_pond ?? 0));
-        setFishCage(String(household.fish_cage ?? 0));
+        setFormData({
+          villageId: household.village_id || '',
+          fullName: household.full_name || '',
+          notes: household.notes || '',
+          cafeHousehold: String(household.cafe_household ?? 0),
+          cafeContracted: String(household.cafe_contracted ?? 0),
+          rubberHousehold: String(household.rubber_household ?? 0),
+          rubberContracted: String(household.rubber_contracted ?? 0),
+          fruitTree: String(household.fruit_tree ?? 0),
+          macadamia: String(household.macadamia ?? 0),
+          herbDinhLang: String(household.herb_dinh_lang ?? 0),
+          herbGung: String(household.herb_gung ?? 0),
+          herbNghe: String(household.herb_nghe ?? 0),
+          herbSa: String(household.herb_sa ?? 0),
+          wetRice: String(household.wet_rice ?? 0),
+          otherAnnualCrops: String(household.other_annual_crops ?? 0),
+          buffalo: String(household.buffalo ?? 0),
+          cow: String(household.cow ?? 0),
+          pig: String(household.pig ?? 0),
+          poultry: String(household.poultry ?? 0),
+          fishPond: String(household.fish_pond ?? 0),
+          fishCage: String(household.fish_cage ?? 0),
+        });
       } else {
-        // Create mode
-        setFullName('');
-        setVillageId(user?.role === 'user' && user.village_id ? user.village_id : villages[0]?.id || '');
-        setNotes('');
-
-        setCafeHousehold('0');
-        setCafeContracted('0');
-        setRubberHousehold('0');
-        setRubberContracted('0');
-        setFruitTree('0');
-        setMacadamia('0');
-        setHerbDinhLang('0');
-        setHerbGung('0');
-        setHerbNghe('0');
-        setHerbSa('0');
-        setWetRice('0');
-        setOtherAnnualCrops('0');
-
-        setBuffalo('0');
-        setCow('0');
-        setPig('0');
-        setPoultry('0');
-
-        setFishPond('0');
-        setFishCage('0');
+        setFormData({
+          ...INITIAL_FORM_DATA,
+          villageId: user?.role === 'user' && user.village_id ? user.village_id : villages[0]?.id || '',
+        });
       }
       setActiveTab('crops');
       setError(null);
@@ -127,52 +105,52 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
   // Live Subtotal Calculations
   const totalCropsArea = useMemo(() => {
     return (
-      (parseFloat(cafeHousehold) || 0) +
-      (parseFloat(cafeContracted) || 0) +
-      (parseFloat(rubberHousehold) || 0) +
-      (parseFloat(rubberContracted) || 0) +
-      (parseFloat(fruitTree) || 0) +
-      (parseFloat(macadamia) || 0) +
-      (parseFloat(herbDinhLang) || 0) +
-      (parseFloat(herbGung) || 0) +
-      (parseFloat(herbNghe) || 0) +
-      (parseFloat(herbSa) || 0) +
-      (parseFloat(wetRice) || 0) +
-      (parseFloat(otherAnnualCrops) || 0)
+      (parseFloat(formData.cafeHousehold) || 0) +
+      (parseFloat(formData.cafeContracted) || 0) +
+      (parseFloat(formData.rubberHousehold) || 0) +
+      (parseFloat(formData.rubberContracted) || 0) +
+      (parseFloat(formData.fruitTree) || 0) +
+      (parseFloat(formData.macadamia) || 0) +
+      (parseFloat(formData.herbDinhLang) || 0) +
+      (parseFloat(formData.herbGung) || 0) +
+      (parseFloat(formData.herbNghe) || 0) +
+      (parseFloat(formData.herbSa) || 0) +
+      (parseFloat(formData.wetRice) || 0) +
+      (parseFloat(formData.otherAnnualCrops) || 0)
     );
   }, [
-    cafeHousehold,
-    cafeContracted,
-    rubberHousehold,
-    rubberContracted,
-    fruitTree,
-    macadamia,
-    herbDinhLang,
-    herbGung,
-    herbNghe,
-    herbSa,
-    wetRice,
-    otherAnnualCrops,
+    formData.cafeHousehold,
+    formData.cafeContracted,
+    formData.rubberHousehold,
+    formData.rubberContracted,
+    formData.fruitTree,
+    formData.macadamia,
+    formData.herbDinhLang,
+    formData.herbGung,
+    formData.herbNghe,
+    formData.herbSa,
+    formData.wetRice,
+    formData.otherAnnualCrops,
   ]);
 
   const totalAnimalsCount = useMemo(() => {
     return (
-      (parseInt(buffalo, 10) || 0) +
-      (parseInt(cow, 10) || 0) +
-      (parseInt(pig, 10) || 0) +
-      (parseInt(poultry, 10) || 0)
+      (parseInt(formData.buffalo, 10) || 0) +
+      (parseInt(formData.cow, 10) || 0) +
+      (parseInt(formData.pig, 10) || 0) +
+      (parseInt(formData.poultry, 10) || 0)
     );
-  }, [buffalo, cow, pig, poultry]);
+  }, [formData.buffalo, formData.cow, formData.pig, formData.poultry]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim()) {
+    if (!formData.fullName.trim()) {
       setError('Vui lòng nhập họ và tên chủ hộ.');
       return;
     }
-    if (!villageId) {
+    if (!formData.villageId) {
       setError('Vui lòng chọn thôn quản lý.');
       return;
     }
@@ -181,32 +159,32 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
     setError(null);
 
     const payload = {
-      village_id: villageId,
-      full_name: fullName.trim(),
-      notes: notes.trim() || undefined,
+      village_id: formData.villageId,
+      full_name: formData.fullName.trim(),
+      notes: formData.notes.trim() || undefined,
       crops: {
-        cafe_household: parseFloat(cafeHousehold) || 0,
-        cafe_contracted: parseFloat(cafeContracted) || 0,
-        rubber_household: parseFloat(rubberHousehold) || 0,
-        rubber_contracted: parseFloat(rubberContracted) || 0,
-        fruit_tree: parseFloat(fruitTree) || 0,
-        macadamia: parseFloat(macadamia) || 0,
-        herb_dinh_lang: parseFloat(herbDinhLang) || 0,
-        herb_gung: parseFloat(herbGung) || 0,
-        herb_nghe: parseFloat(herbNghe) || 0,
-        herb_sa: parseFloat(herbSa) || 0,
-        wet_rice: parseFloat(wetRice) || 0,
-        other_annual_crops: parseFloat(otherAnnualCrops) || 0,
+        cafe_household: parseFloat(formData.cafeHousehold) || 0,
+        cafe_contracted: parseFloat(formData.cafeContracted) || 0,
+        rubber_household: parseFloat(formData.rubberHousehold) || 0,
+        rubber_contracted: parseFloat(formData.rubberContracted) || 0,
+        fruit_tree: parseFloat(formData.fruitTree) || 0,
+        macadamia: parseFloat(formData.macadamia) || 0,
+        herb_dinh_lang: parseFloat(formData.herbDinhLang) || 0,
+        herb_gung: parseFloat(formData.herbGung) || 0,
+        herb_nghe: parseFloat(formData.herbNghe) || 0,
+        herb_sa: parseFloat(formData.herbSa) || 0,
+        wet_rice: parseFloat(formData.wetRice) || 0,
+        other_annual_crops: parseFloat(formData.otherAnnualCrops) || 0,
       },
       livestock: {
-        buffalo: parseInt(buffalo, 10) || 0,
-        cow: parseInt(cow, 10) || 0,
-        pig: parseInt(pig, 10) || 0,
-        poultry: parseInt(poultry, 10) || 0,
+        buffalo: parseInt(formData.buffalo, 10) || 0,
+        cow: parseInt(formData.cow, 10) || 0,
+        pig: parseInt(formData.pig, 10) || 0,
+        poultry: parseInt(formData.poultry, 10) || 0,
       },
       aquaculture: {
-        fish_pond: parseFloat(fishPond) || 0,
-        fish_cage: parseInt(fishCage, 10) || 0,
+        fish_pond: parseFloat(formData.fishPond) || 0,
+        fish_cage: parseInt(formData.fishCage, 10) || 0,
       },
     };
 
@@ -225,7 +203,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
         const existingId = err.response?.data?.existing_household_id;
         showModal({
           title: 'Phát Hiện Trùng Tên Hộ',
-          message: `Hộ "${fullName.trim()}" đã tồn tại trong thôn. Bạn có muốn cập nhật đè số liệu mới này vào hồ sơ hộ đã có không?`,
+          message: `Hộ "${formData.fullName.trim()}" đã tồn tại trong thôn. Bạn có muốn cập nhật đè số liệu mới này vào hồ sơ hộ đã có không?`,
           type: 'warning',
           confirmText: 'Đồng Ý Cập Nhật',
           cancelText: 'Hủy Bỏ',
@@ -302,8 +280,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
               </label>
               <input
                 type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                value={formData.fullName}
+                onChange={handleChange('fullName')}
                 placeholder="Ví dụ: A Đôi, Y Blui, Trần Văn Nam..."
                 required
                 className="w-full h-10 px-3.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden"
@@ -316,8 +294,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                   Thôn quản lý <span className="text-rose-500">*</span>
                 </label>
                 <select
-                  value={villageId}
-                  onChange={(e) => setVillageId(e.target.value)}
+                  value={formData.villageId}
+                  onChange={handleChange('villageId')}
                   required
                   className="w-full h-10 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden cursor-pointer"
                 >
@@ -334,7 +312,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                   Thôn quản lý
                 </label>
                 <div className="h-10 px-3.5 flex items-center bg-slate-200/60 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300">
-                  {villages.find((v) => v.id === villageId)?.name || 'Thôn hiện tại'}
+                  {villages.find((v) => v.id === formData.villageId)?.name || 'Thôn hiện tại'}
                 </div>
               </div>
             )}
@@ -345,8 +323,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
               </label>
               <input
                 type="text"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                value={formData.notes}
+                onChange={handleChange('notes')}
                 placeholder="Ghi chú về nhận khoán, diện tích chuyển đổi, đề án nông thôn mới..."
                 className="w-full h-9 px-3.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden font-medium"
               />
@@ -415,8 +393,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                           type="number"
                           step="0.001"
                           min="0"
-                          value={cafeHousehold}
-                          onChange={(e) => setCafeHousehold(e.target.value)}
+                          value={formData.cafeHousehold}
+                          onChange={handleChange('cafeHousehold')}
                           className="w-full h-10 pl-3 pr-8 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden"
                         />
                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
@@ -433,8 +411,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                           type="number"
                           step="0.001"
                           min="0"
-                          value={cafeContracted}
-                          onChange={(e) => setCafeContracted(e.target.value)}
+                          value={formData.cafeContracted}
+                          onChange={handleChange('cafeContracted')}
                           className="w-full h-10 pl-3 pr-8 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden"
                         />
                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
@@ -461,8 +439,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                           type="number"
                           step="0.001"
                           min="0"
-                          value={rubberHousehold}
-                          onChange={(e) => setRubberHousehold(e.target.value)}
+                          value={formData.rubberHousehold}
+                          onChange={handleChange('rubberHousehold')}
                           className="w-full h-10 pl-3 pr-8 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden"
                         />
                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
@@ -479,8 +457,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                           type="number"
                           step="0.001"
                           min="0"
-                          value={rubberContracted}
-                          onChange={(e) => setRubberContracted(e.target.value)}
+                          value={formData.rubberContracted}
+                          onChange={handleChange('rubberContracted')}
                           className="w-full h-10 pl-3 pr-8 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden"
                         />
                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
@@ -503,8 +481,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       type="number"
                       step="0.001"
                       min="0"
-                      value={fruitTree}
-                      onChange={(e) => setFruitTree(e.target.value)}
+                      value={formData.fruitTree}
+                      onChange={handleChange('fruitTree')}
                       className="w-full h-9 pl-3 pr-7 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
@@ -522,8 +500,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       type="number"
                       step="0.001"
                       min="0"
-                      value={macadamia}
-                      onChange={(e) => setMacadamia(e.target.value)}
+                      value={formData.macadamia}
+                      onChange={handleChange('macadamia')}
                       className="w-full h-9 pl-3 pr-7 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
@@ -541,8 +519,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       type="number"
                       step="0.001"
                       min="0"
-                      value={wetRice}
-                      onChange={(e) => setWetRice(e.target.value)}
+                      value={formData.wetRice}
+                      onChange={handleChange('wetRice')}
                       className="w-full h-9 pl-3 pr-7 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
@@ -560,8 +538,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       type="number"
                       step="0.001"
                       min="0"
-                      value={otherAnnualCrops}
-                      onChange={(e) => setOtherAnnualCrops(e.target.value)}
+                      value={formData.otherAnnualCrops}
+                      onChange={handleChange('otherAnnualCrops')}
                       className="w-full h-9 pl-3 pr-7 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
@@ -590,8 +568,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                         type="number"
                         step="0.001"
                         min="0"
-                        value={herbDinhLang}
-                        onChange={(e) => setHerbDinhLang(e.target.value)}
+                        value={formData.herbDinhLang}
+                        onChange={handleChange('herbDinhLang')}
                         className="w-full h-8 pl-2.5 pr-7 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-teal-500"
                       />
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
@@ -609,8 +587,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                         type="number"
                         step="0.001"
                         min="0"
-                        value={herbGung}
-                        onChange={(e) => setHerbGung(e.target.value)}
+                        value={formData.herbGung}
+                        onChange={handleChange('herbGung')}
                         className="w-full h-8 pl-2.5 pr-7 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-teal-500"
                       />
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
@@ -628,8 +606,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                         type="number"
                         step="0.001"
                         min="0"
-                        value={herbNghe}
-                        onChange={(e) => setHerbNghe(e.target.value)}
+                        value={formData.herbNghe}
+                        onChange={handleChange('herbNghe')}
                         className="w-full h-8 pl-2.5 pr-7 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-teal-500"
                       />
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
@@ -647,8 +625,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                         type="number"
                         step="0.001"
                         min="0"
-                        value={herbSa}
-                        onChange={(e) => setHerbSa(e.target.value)}
+                        value={formData.herbSa}
+                        onChange={handleChange('herbSa')}
                         className="w-full h-8 pl-2.5 pr-7 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono tabular-nums font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-teal-500"
                       />
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
@@ -680,8 +658,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       type="number"
                       step="1"
                       min="0"
-                      value={buffalo}
-                      onChange={(e) => setBuffalo(e.target.value)}
+                      value={formData.buffalo}
+                      onChange={handleChange('buffalo')}
                       className="w-full h-10 pl-3 pr-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono tabular-nums font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-hidden"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
@@ -697,8 +675,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       type="number"
                       step="1"
                       min="0"
-                      value={cow}
-                      onChange={(e) => setCow(e.target.value)}
+                      value={formData.cow}
+                      onChange={handleChange('cow')}
                       className="w-full h-10 pl-3 pr-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono tabular-nums font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-hidden"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
@@ -714,8 +692,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       type="number"
                       step="1"
                       min="0"
-                      value={pig}
-                      onChange={(e) => setPig(e.target.value)}
+                      value={formData.pig}
+                      onChange={handleChange('pig')}
                       className="w-full h-10 pl-3 pr-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono tabular-nums font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-hidden"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
@@ -731,8 +709,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       type="number"
                       step="1"
                       min="0"
-                      value={poultry}
-                      onChange={(e) => setPoultry(e.target.value)}
+                      value={formData.poultry}
+                      onChange={handleChange('poultry')}
                       className="w-full h-10 pl-3 pr-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono tabular-nums font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-hidden"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
@@ -763,8 +741,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       type="number"
                       step="0.001"
                       min="0"
-                      value={fishPond}
-                      onChange={(e) => setFishPond(e.target.value)}
+                      value={formData.fishPond}
+                      onChange={handleChange('fishPond')}
                       className="w-full h-10 pl-3 pr-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono tabular-nums font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 focus:outline-hidden"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
@@ -781,8 +759,8 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
                       type="number"
                       step="1"
                       min="0"
-                      value={fishCage}
-                      onChange={(e) => setFishCage(e.target.value)}
+                      value={formData.fishCage}
+                      onChange={handleChange('fishCage')}
                       className="w-full h-10 pl-3 pr-12 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-mono tabular-nums font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 focus:outline-hidden"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">

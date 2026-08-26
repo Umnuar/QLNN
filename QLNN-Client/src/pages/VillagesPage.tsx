@@ -1,20 +1,29 @@
-import React, { useState } from 'react';
-import { MapPin, ArrowRight, Plus, Edit3, Trash2, Check, X, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, ArrowRight, Plus, Edit3, Trash2, Check, X, Search, BarChart3 } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { villageApi } from '../api/villageApi';
+import { authApi } from '../api/authApi';
 import { useModal } from '../hooks/useModal';
+import { User } from '../types';
 
 export const VillagesPage: React.FC = () => {
   const { villages, setSelectedVillageId, setActiveTab, user, refreshVillages } = useApp();
   const { showModal } = useModal();
   const isAdmin = user?.role === 'admin';
 
+  const [usersList, setUsersList] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAdmin) {
+      authApi.getUsers().then(res => setUsersList(res.data)).catch(console.error);
+    }
+  }, [isAdmin]);
 
   const filteredVillages = villages.filter((v) =>
     v.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -134,10 +143,34 @@ export const VillagesPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Toàn Xã Statistics Card */}
+      {isAdmin && (
+        <div className="mb-6">
+          <div
+            onClick={() => handleVillageClick('')}
+            className="bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white rounded-3xl p-6 transition-all cursor-pointer shadow-lg shadow-emerald-500/20 active:scale-[0.99] flex items-center justify-between group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-xs">
+                <BarChart3 className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black mb-1">Thống Kê Toàn Xã Đăk Hà</h3>
+                <p className="text-emerald-100 text-sm font-medium">Xem tổng hợp số liệu 25 chỉ tiêu Nông thôn mới của tất cả các thôn</p>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+              <ArrowRight className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Grid Danh Sách Thôn */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredVillages.map((village) => {
           const isEditing = editingId === village.id;
+          const manager = usersList.find((u) => u.village_id === village.id);
 
           if (isEditing) {
             return (
@@ -246,6 +279,11 @@ export const VillagesPage: React.FC = () => {
                 <p className="text-[11px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   ID: {village.id.substring(0, 8)}
                 </p>
+                {isAdmin && (
+                  <p className="text-[11px] font-medium mt-1 text-slate-500 dark:text-slate-400">
+                    👤 Quản lý: <span className="font-bold">{manager ? manager.username : '⚠️ Chưa phân công'}</span>
+                  </p>
+                )}
               </div>
             </div>
           );

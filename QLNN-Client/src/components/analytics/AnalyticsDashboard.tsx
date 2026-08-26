@@ -8,10 +8,12 @@ import {
   Sparkles,
   RefreshCw,
   Building2,
+  ArrowLeft,
 } from 'lucide-react';
 import { OverviewAnalytics, VillageAnalytics } from '../../types';
 import { analyticsApi } from '../../api/analyticsApi';
 import { useApp } from '../../AppContext';
+import { getCache, setCache } from '../../db/indexedDB';
 import { cryptoHelper } from '../../utils/cryptoHelper';
 
 // Component Donut Chart SVG nhẹ
@@ -131,27 +133,53 @@ const ProgressBar: React.FC<{
 };
 
 export const AnalyticsDashboard: React.FC = () => {
-  const { user, selectedVillageId, setSelectedVillageId, villages } = useApp();
+  const { user, selectedVillageId, setActiveTab } = useApp();
 
   const [loading, setLoading] = useState<boolean>(true);
   const [overview, setOverview] = useState<OverviewAnalytics | null>(null);
   const [scopeName, setScopeName] = useState<string>('Toàn xã');
   const [villageData, setVillageData] = useState<VillageAnalytics[]>([]);
+  const [isUsingCachedData, setIsUsingCachedData] = useState(false);
+  
+  
 
-  const loadData = async () => {
+    const loadData = async () => {
     setLoading(true);
     try {
       const targetVillage = user?.role === 'admin' ? selectedVillageId : undefined;
-      const res = await analyticsApi.getOverview(targetVillage);
-      setOverview(res.data);
-      setScopeName(res.scope.village_name);
-
-      if (user?.role === 'admin') {
-        const vRes = await analyticsApi.getByVillage();
-        setVillageData(vRes.data);
+      const cacheKeyOverview = `analytics_overview_${targetVillage}`;
+      const cacheKeyVillage = `analytics_villageData`;
+      
+      try {
+        const res = await analyticsApi.getOverview(targetVillage);
+        setOverview(res.data);
+        setScopeName(res.scope.village_name);
+        await setCache(cacheKeyOverview, res);
+        setIsUsingCachedData(false);
+        
+        if (user?.role === 'admin') {
+          const vRes = await analyticsApi.getByVillage();
+          setVillageData(vRes.data);
+          await setCache(cacheKeyVillage, vRes.data);
+        }
+      } catch (err: any) {
+        if (err.message === 'Network Error' || (err.response && err.response.status >= 500)) {
+          const cachedRes = await getCache<any>(cacheKeyOverview);
+          if (cachedRes) {
+            setOverview(cachedRes.data);
+            setScopeName(cachedRes.scope.village_name);
+            setIsUsingCachedData(true);
+          }
+          if (user?.role === 'admin') {
+            const cachedV = await getCache<VillageAnalytics[]>(cacheKeyVillage);
+            if (cachedV) setVillageData(cachedV);
+          }
+        } else {
+          throw err;
+        }
       }
     } catch (err) {
-      console.error('Analytics load error:', err);
+      console.error('Fetch analytics error:', err);
     } finally {
       setLoading(false);
     }
@@ -202,8 +230,9 @@ export const AnalyticsDashboard: React.FC = () => {
               {scopeName}
             </span>
             <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                {isUsingCachedData && <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full border border-amber-200">⚡ Ngoại tuyến</span>}
               <BarChart3 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-              <span>Tổng Hợp Chỉ Tiêu Nông Thôn Mới</span>
+              <span>Thống Kê</span>
             </h2>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
@@ -212,23 +241,15 @@ export const AnalyticsDashboard: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Admin Village Selector */}
           {user?.role === 'admin' && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Phạm vi:</span>
-              <select
-                value={selectedVillageId}
-                onChange={(e) => setSelectedVillageId(e.target.value)}
-                className="h-10 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden cursor-pointer"
-              >
-                <option value="">-- Toàn bộ các thôn --</option>
-                {villages.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('villages')}
+              className="h-10 flex items-center gap-1.5 px-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-[0.99] cursor-pointer border border-slate-200 dark:border-slate-700"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <span>Quay lại danh sách thôn</span>
+            </button>
           )}
 
           <button
@@ -578,9 +599,9 @@ export const AnalyticsDashboard: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                  4. Bảng So Sánh Số Liệu Giữa Các Thôn (Toàn Xã Đăk Hà)
+                  4. Bảng so sánh số liệu các thôn
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Đối chiếu 25 chỉ tiêu giữa các thôn quản lý</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">So sánh 25 chỉ tiêu nông thôn mới</p>
               </div>
             </div>
           </div>

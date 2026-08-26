@@ -5,16 +5,17 @@ import {
   Trees,
   Dog,
   Fish,
-  ChevronLeft,
-  ChevronRight,
   Sparkles,
   Zap,
   LayoutGrid,
 } from 'lucide-react';
 import { HouseholdFlat } from '../../types';
 import { cryptoHelper } from '../../utils/cryptoHelper';
+import { useApp } from '../../AppContext';
+import { TablePagination } from '../common/TablePagination';
 
 interface HouseholdTableProps {
+  readOnly?: boolean;
   households: HouseholdFlat[];
   loading: boolean;
   total: number;
@@ -30,6 +31,8 @@ interface HouseholdTableProps {
 type ViewMode = 'overview' | 'crops' | 'herbs' | 'livestock' | 'aquaculture' | 'full';
 
 export const HouseholdTable: React.FC<HouseholdTableProps> = ({
+
+  readOnly = false,
   households,
   loading,
   total,
@@ -41,6 +44,8 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const { isOnline, isBackendHealthy } = useApp();
+  const isDisconnected = !isOnline || !isBackendHealthy;
   const [viewMode, setViewMode] = useState<ViewMode>('overview');
 
   const villageColorMap: Record<string, string> = {
@@ -204,9 +209,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                   <th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 bg-sky-50/50 dark:bg-sky-950/30 text-sky-900 dark:text-sky-300 whitespace-nowrap">
                     Thủy Sản
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-slate-100 dark:bg-slate-950 shadow-xs whitespace-nowrap">
-                    Thao Tác
-                  </th>
+                  {!readOnly && <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-slate-100 dark:bg-slate-950 shadow-xs whitespace-nowrap">Thao Tác</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -234,7 +237,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     return (
                       <tr
                         key={hh.id}
-                        onDoubleClick={() => onEdit(hh)}
+                        onDoubleClick={() => !readOnly && onEdit(hh)}
                         className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors group text-[13.5px] cursor-pointer"
                         title="Bấm đúp để sửa số liệu hộ này"
                       >
@@ -318,14 +321,14 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                   <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Mắc Ca</th>
                   <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Lúa Nước</th>
                   <th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Hàng Năm</th>
-                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-emerald-100 dark:bg-emerald-950 whitespace-nowrap">Thao Tác</th>
+                  {!readOnly && <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-emerald-100 dark:bg-emerald-950 whitespace-nowrap">Thao Tác</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {households.map((hh, idx) => (
                   <tr
                     key={hh.id}
-                    onDoubleClick={() => onEdit(hh)}
+                    onDoubleClick={() => !readOnly && onEdit(hh)}
                     className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                   >
                     <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
@@ -339,10 +342,8 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.macadamia)}</td>
                     <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.wet_rice)}</td>
                     <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.other_annual_crops)}</td>
-                    <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap">
-                      <button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
-                    </td>
+                    {!readOnly && <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap"><button type="button" onClick={() => !isDisconnected && onEdit(hh)}
+                    disabled={isDisconnected} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
                   </tr>
                 ))}
               </tbody>
@@ -364,7 +365,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                   <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">Nghệ (ha)</th>
                   <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">Sả (ha)</th>
                   <th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 font-bold bg-teal-200/50 dark:bg-teal-900/40 whitespace-nowrap">Tổng Dược Liệu (ha)</th>
-                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-teal-100 dark:bg-teal-950 whitespace-nowrap">Thao Tác</th>
+                  {!readOnly && <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-teal-100 dark:bg-teal-950 whitespace-nowrap">Thao Tác</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -373,7 +374,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                   return (
                     <tr
                       key={hh.id}
-                      onDoubleClick={() => onEdit(hh)}
+                      onDoubleClick={() => !readOnly && onEdit(hh)}
                       className="hover:bg-teal-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                     >
                       <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
@@ -384,10 +385,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                       <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_nghe)}</td>
                       <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_sa)}</td>
                       <td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-teal-700 dark:text-teal-400 bg-teal-50/30 dark:bg-teal-950/20 whitespace-nowrap">{cryptoHelper.formatArea(totalHerbs)}</td>
-                      <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap">
-                        <button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
-                      </td>
+                      {!readOnly && <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
                     </tr>
                   );
                 })}
@@ -410,7 +408,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                   <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">Đàn Heo (con)</th>
                   <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">Đàn Gia Cầm (con)</th>
                   <th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 font-bold bg-amber-200/50 dark:bg-amber-900/40 whitespace-nowrap">Tổng Đàn (con)</th>
-                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-amber-100 dark:bg-amber-950 whitespace-nowrap">Thao Tác</th>
+                  {!readOnly && <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-amber-100 dark:bg-amber-950 whitespace-nowrap">Thao Tác</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -419,7 +417,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                   return (
                     <tr
                       key={hh.id}
-                      onDoubleClick={() => onEdit(hh)}
+                      onDoubleClick={() => !readOnly && onEdit(hh)}
                       className="hover:bg-amber-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                     >
                       <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
@@ -430,10 +428,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                       <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.pig || '-'}</td>
                       <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.poultry || '-'}</td>
                       <td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-amber-700 dark:text-amber-400 bg-amber-50/30 dark:bg-amber-950/20 whitespace-nowrap">{totalAnimals || '-'}</td>
-                      <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap">
-                        <button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
-                      </td>
+                      {!readOnly && <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
                     </tr>
                   );
                 })}
@@ -453,14 +448,14 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                   <th className="py-3 px-3.5 border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">Thôn</th>
                   <th className="py-3 px-4 text-right border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">Cá Ao Hồ (ha)</th>
                   <th className="py-3 px-4 text-right border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">Cá Lồng Bè (lồng)</th>
-                  <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-sky-100 dark:bg-sky-950 whitespace-nowrap">Thao Tác</th>
+                  {!readOnly && <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-sky-100 dark:bg-sky-950 whitespace-nowrap">Thao Tác</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {households.map((hh, idx) => (
                   <tr
                     key={hh.id}
-                    onDoubleClick={() => onEdit(hh)}
+                    onDoubleClick={() => !readOnly && onEdit(hh)}
                     className="hover:bg-sky-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                   >
                     <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
@@ -468,10 +463,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     <td className="py-3 px-3.5 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
                     <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.fish_pond)}</td>
                     <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}</td>
-                    <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap">
-                      <button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
-                    </td>
+                    {!readOnly && <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
                   </tr>
                 ))}
               </tbody>
@@ -501,9 +493,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                   <th colSpan={2} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-sky-50/70 dark:bg-sky-950/40 text-sky-900 dark:text-sky-300 whitespace-nowrap">
                     4. Thủy Sản
                   </th>
-                  <th rowSpan={2} className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-slate-100 dark:bg-slate-950 shadow-xs whitespace-nowrap">
-                    Thao Tác
-                  </th>
+                  {!readOnly && <th rowSpan={2} className="py-3 px-3 text-center min-w-[90px] sticky right-0 bg-slate-100 dark:bg-slate-950 shadow-xs whitespace-nowrap">Thao Tác</th>}
                 </tr>
 
                 <tr className="bg-slate-50 dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-bold">
@@ -534,7 +524,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                 {households.map((hh, idx) => (
                   <tr
                     key={hh.id}
-                    onDoubleClick={() => onEdit(hh)}
+                    onDoubleClick={() => !readOnly && onEdit(hh)}
                     className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                   >
                     <td className="py-3 px-3.5 border-r border-slate-100 dark:border-slate-800/60 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
@@ -558,10 +548,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.poultry || '-'}</td>
                     <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.fish_pond)}</td>
                     <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}</td>
-                    <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap">
-                      <button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
-                    </td>
+                    {!readOnly && <td className="py-3 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
                   </tr>
                 ))}
               </tbody>
@@ -570,57 +557,15 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
         </table>
       </div>
 
-      {/* Pagination Footer */}
-      <div className="p-4 bg-slate-50/90 dark:bg-slate-950/80 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-        <div className="text-slate-600 dark:text-slate-300 font-medium">
-          Hiển thị <strong className="text-slate-900 dark:text-white font-bold">{households.length}</strong> /{' '}
-          <strong className="text-slate-900 dark:text-white font-bold">{total}</strong> hộ nông nghiệp
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Limit selector */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">Số dòng:</span>
-            <select
-              value={limit}
-              onChange={(e) => onLimitChange(Number(e.target.value))}
-              className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden cursor-pointer"
-            >
-              <option value={10}>10 dòng</option>
-              <option value={20}>20 dòng</option>
-              <option value={50}>50 dòng</option>
-              <option value={100}>100 dòng</option>
-            </select>
-          </div>
-
-          {/* Page controls */}
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => onPageChange(page - 1)}
-              aria-label="Trang trước"
-              className="p-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            <span className="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-mono font-bold text-xs text-slate-800 dark:text-slate-200">
-              {page} / {totalPages || 1}
-            </span>
-
-            <button
-              type="button"
-              disabled={page >= totalPages}
-              onClick={() => onPageChange(page + 1)}
-              aria-label="Trang tiếp theo"
-              className="p-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
+      <TablePagination
+        itemCount={households.length}
+        total={total}
+        page={page}
+        limit={limit}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        onLimitChange={onLimitChange}
+      />
     </div>
   );
 };

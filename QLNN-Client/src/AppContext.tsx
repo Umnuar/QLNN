@@ -5,6 +5,7 @@ import { villageApi } from './api/villageApi';
 import { secureStorage } from './utils/secureStorage';
 import { useInactivityTimeout } from './hooks/useInactivityTimeout';
 import axios from 'axios';
+import { getCache, setCache } from './db/indexedDB';
 
 interface AppContextType {
   user: User | null;
@@ -15,6 +16,7 @@ interface AppContextType {
   setSelectedVillageId: (id: string) => void;
   selectedVillageName: string;
   villages: Village[];
+  setVillages: React.Dispatch<React.SetStateAction<Village[]>>;
   isOnline: boolean;
   isBackendHealthy: boolean;
   latency: number | null;
@@ -122,12 +124,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   useEffect(() => {
-    try {
-      (document.documentElement.style as any).zoom = `${zoomLevel}%`;
-      localStorage.setItem('qlnn_zoom', String(zoomLevel));
-    } catch {
-      // Ignore
+    // Zoom qua IPC của Electron (thay vì CSS document.documentElement.style.zoom gây lỗi)
+    if (window.api?.app?.setZoom) {
+      window.api.app.setZoom(zoomLevel);
     }
+    localStorage.setItem('qlnn_zoom', String(zoomLevel));
   }, [zoomLevel]);
 
   const zoomIn = () => {
@@ -182,26 +183,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     logout();
   }, !!user);
 
-  const refreshVillages = useCallback(async () => {
+    const refreshVillages = useCallback(async () => {
     try {
-      const data = await villageApi.getAll();
+      let data: any[] = [];
+      try {
+        data = await villageApi.getAll();
+        await setCache('villages', data);
+      } catch (apiErr: any) {
+        if (apiErr.message === 'Network Error' || (apiErr.response && apiErr.response.status >= 500)) {
+           console.warn('Offline mode: fetching villages from cache');
+           const cached = await getCache<Village[]>('villages');
+           if (cached) data = cached;
+        } else {
+           throw apiErr;
+        }
+      }
       setVillages(data);
       if (data.length > 0 && !selectedVillageId) {
         if (user?.role === 'user' && user.village_id) {
           setSelectedVillageId(user.village_id);
         } else {
-          setSelectedVillageId(data[0].id);
+          setSelectedVillageId('');
         }
       }
     } catch (err) {
-      console.warn('Lỗi tải danh mục thôn:', err);
+      console.warn('Loi tai danh muc thon:', err);
     }
   }, [selectedVillageId, user]);
 
   const checkServerHealth = useCallback(async (): Promise<boolean> => {
     const t0 = performance.now();
     try {
-      const res = await axios.get('http://localhost:5001/api/health', { timeout: 3000 });
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/health`, { timeout: 3000 });
       const lat = Math.round(performance.now() - t0);
       setLatency(lat);
       if (res.status === 200) {
@@ -222,18 +235,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [isBackendHealthy]);
 
   useEffect(() => {
+
     const initAuth = async () => {
       try {
         const token = await secureStorage.getItem('accessToken');
         if (token) {
-          const u = await authApi.getMe(token);
-          setUser(u);
-          if (u.village_id) {
-            setSelectedVillageId(u.village_id);
+          try {
+            const u = await authApi.getMe(token);
+            setUser(u);
+            await secureStorage.setItem('user', JSON.stringify(u)); // C?p nh?t l?i local
+            if (u.village_id) {
+              setSelectedVillageId(u.village_id);
+              setActiveTab('analytics');
+            } else if (u.role === 'admin') {
+              setActiveTab('villages');
+            }
+          } catch (err: any) {
+            if (err.message === 'Network Error' || (err.response && err.response.status >= 500)) {
+              console.warn('L?i m?ng khi ki?m tra token, dng User t? Cache.');
+              const cachedUserStr = await secureStorage.getItem('user');
+              if (cachedUserStr) {
+                const u = JSON.parse(cachedUserStr);
+                setUser(u);
+                if (u.village_id) {
+                  setSelectedVillageId(u.village_id);
+                  setActiveTab('analytics');
+                } else if (u.role === 'admin') {
+                  setActiveTab('villages');
+                }
+              }
+            } else {
+              console.warn('Phin ??ng nh?p h?t h?n ho?c ch?a ??ng nh?p');
+              await secureStorage.clear();
+              setUser(null);
+            }
           }
         }
-      } catch {
-        console.warn('Phiên đăng nhập hết hạn hoặc chưa đăng nhập');
+      } catch (e) {
         await secureStorage.clear();
         setUser(null);
       } finally {
@@ -246,6 +284,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const handleOnline = () => {
       setIsOnline(true);
+      window.dispatchEvent(new CustomEvent('server:reconnected'));
       checkServerHealth();
     };
     const handleOffline = () => {
@@ -297,6 +336,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedVillageId,
         selectedVillageName,
         villages,
+        setVillages,
         isOnline,
         isBackendHealthy,
         latency,

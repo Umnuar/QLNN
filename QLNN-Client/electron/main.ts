@@ -90,4 +90,11 @@ ipcMain.handle('dialog:open-file', async (_e, filters: { name: string; extension
 
 ipcMain.handle('get-app-version', () => app.getVersion())
 
+ipcMain.handle('app:set-zoom', (_e, level: number) => {
+  if (win && win.webContents) {
+    // Zoom level 100% -> 1.0, 80% -> 0.8
+    win.webContents.setZoomFactor(level / 100)
+  }
+})
+
 app.whenReady().then(createWindow)

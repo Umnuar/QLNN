@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <p className="text-slate-600 mb-6 max-w-md">
             Giao diện ứng dụng gặp lỗi không mong muốn. Vui lòng thử tải lại hoặc liên hệ quản trị viên.
           </p>
-          <pre className="bg-white border border-slate-200 rounded-xl p-4 max-w-xl w-full overflow-auto text-left text-xs font-mono text-slate-700 mb-6 shadow-xs">
+          <pre className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 max-w-xl w-full overflow-auto text-left text-xs font-mono text-slate-700 dark:text-slate-300 mb-6 shadow-xs">
             {this.state.error?.message}
             {'\n\n'}
             {this.state.error?.stack}
