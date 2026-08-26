@@ -3,6 +3,7 @@ import { Settings, Plus, Trash2, Key, Building2, Users, History, Database } from
 import { useApp } from '../AppContext';
 import { apiClient } from '../api/apiClient';
 import { useModal } from '../hooks/useModal';
+import { CommuneProfileTab } from '../components/settings/CommuneProfileTab';
 
 export const SettingsPage: React.FC = () => {
   const { villages, user } = useApp();
@@ -136,17 +137,7 @@ export const SettingsPage: React.FC = () => {
 
         {/* Right Content Area */}
         <div className="flex-1 min-w-0">
-          {activeSubTab === 'info' && (
-            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col items-center justify-center text-center py-16">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
-                <Building2 className="w-6 h-6" />
-              </div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white">Thông tin Đơn vị</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1">
-                Cấu hình thông tin UBND Xã, cán bộ phụ trách phục vụ xuất báo cáo Excel và biểu mẫu thống kê.
-              </p>
-            </div>
-          )}
+          {activeSubTab === 'info' && <CommuneProfileTab />}
 
           {activeSubTab === 'users' && (
             <div className="space-y-4">
