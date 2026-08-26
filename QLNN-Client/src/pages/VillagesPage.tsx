@@ -4,13 +4,14 @@ import { useApp } from '../AppContext';
 import { villageApi } from '../api/villageApi';
 import { authApi } from '../api/authApi';
 import { useModal } from '../hooks/useModal';
+import { User } from '../types';
 
 export const VillagesPage: React.FC = () => {
   const { villages, setSelectedVillageId, setActiveTab, user, refreshVillages } = useApp();
   const { showModal } = useModal();
   const isAdmin = user?.role === 'admin';
 
-  const [usersList, setUsersList] = useState<any[]>([]);
+  const [usersList, setUsersList] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
