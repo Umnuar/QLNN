@@ -18,6 +18,20 @@ export const auditApi = {
       ? `/audit/${villageId}?limit=${limit}&offset=${offset}`
       : `/audit?limit=${limit}&offset=${offset}`;
     const res = await apiClient.get(url);
+    
+    if (res.data && Array.isArray(res.data.data)) {
+      res.data.data = res.data.data.map((log: AuditLog) => {
+        if (typeof log.details === 'string') {
+          try {
+            log.details = JSON.parse(log.details);
+          } catch (e) {
+            // keep string if not parseable
+          }
+        }
+        return log;
+      });
+    }
+    
     return res.data;
   },
   getPage: async (params?: { villageId?: string; limit?: number; offset?: number; page?: number }) => {
