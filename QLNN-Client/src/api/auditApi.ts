@@ -19,8 +19,8 @@ export const auditApi = {
       : `/audit?limit=${limit}&offset=${offset}`;
     const res = await apiClient.get(url);
     
-    if (res && Array.isArray(res.data)) {
-      res.data = res.data.map((log: AuditLog) => {
+    if (res.data && Array.isArray(res.data.data)) {
+      res.data.data = res.data.data.map((log: AuditLog) => {
         if (typeof log.details === 'string') {
           try {
             log.details = JSON.parse(log.details);
