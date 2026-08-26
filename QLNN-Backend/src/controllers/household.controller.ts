@@ -166,6 +166,8 @@ export const getHouseholdById = async (req: AuthRequest, res: Response) => {
  * Helper build items array from flat 18 metrics
  */
 function buildItemsFromPayload(body: any) {
+  const getVal = (key: string, group?: string) => (group && body[group] ? body[group][key] : undefined) ?? body[key];
+
   const crop_items: Array<{
     crop_type: string;
     crop_subtype: string | null;
@@ -178,36 +180,36 @@ function buildItemsFromPayload(body: any) {
     if (num > 0) crop_items.push({ crop_type: type, crop_subtype: subtype, ownership_type: own, area: num });
   };
 
-  addCrop('Cà phê', null, 'household', body.cafe_household);
-  addCrop('Cà phê', null, 'contracted', body.cafe_contracted);
-  addCrop('Cao su', null, 'household', body.rubber_household);
-  addCrop('Cao su', null, 'contracted', body.rubber_contracted);
-  addCrop('Cây ăn quả', null, null, body.fruit_tree);
-  addCrop('Cây Mắc Ca', null, null, body.macadamia);
-  addCrop('Cây dược liệu', 'Đinh lăng', null, body.herb_dinh_lang);
-  addCrop('Cây dược liệu', 'Gừng', null, body.herb_gung);
-  addCrop('Cây dược liệu', 'Nghệ', null, body.herb_nghe);
-  addCrop('Cây dược liệu', 'Sả', null, body.herb_sa);
-  addCrop('Lúa nước', null, null, body.wet_rice);
-  addCrop('Cây hàng năm khác', null, null, body.other_annual_crops);
+  addCrop('Cà phê', null, 'household', getVal('cafe_household', 'crops'));
+  addCrop('Cà phê', null, 'contracted', getVal('cafe_contracted', 'crops'));
+  addCrop('Cao su', null, 'household', getVal('rubber_household', 'crops'));
+  addCrop('Cao su', null, 'contracted', getVal('rubber_contracted', 'crops'));
+  addCrop('Cây ăn quả', null, null, getVal('fruit_tree', 'crops'));
+  addCrop('Cây Mắc Ca', null, null, getVal('macadamia', 'crops'));
+  addCrop('Cây dược liệu', 'Đinh lăng', null, getVal('herb_dinh_lang', 'crops'));
+  addCrop('Cây dược liệu', 'Gừng', null, getVal('herb_gung', 'crops'));
+  addCrop('Cây dược liệu', 'Nghệ', null, getVal('herb_nghe', 'crops'));
+  addCrop('Cây dược liệu', 'Sả', null, getVal('herb_sa', 'crops'));
+  addCrop('Lúa nước', null, null, getVal('wet_rice', 'crops'));
+  addCrop('Cây hàng năm khác', null, null, getVal('other_annual_crops', 'crops'));
 
   const livestock_items: Array<{ animal_type: string; quantity: number }> = [];
   const addLivestock = (type: string, val: any) => {
     const num = parseInt(val, 10) || 0;
     if (num > 0) livestock_items.push({ animal_type: type, quantity: num });
   };
-  addLivestock('Trâu', body.buffalo);
-  addLivestock('Bò', body.cow);
-  addLivestock('Heo', body.pig);
-  addLivestock('Gia cầm', body.poultry);
+  addLivestock('Trâu', getVal('buffalo', 'livestock'));
+  addLivestock('Bò', getVal('cow', 'livestock'));
+  addLivestock('Heo', getVal('pig', 'livestock'));
+  addLivestock('Gia cầm', getVal('poultry', 'livestock'));
 
   const aquaculture_items: Array<{ aquaculture_type: string; value: number; unit: string }> = [];
   const addAqua = (type: string, unit: string, val: any) => {
     const num = parseFloat(val) || 0;
     if (num > 0) aquaculture_items.push({ aquaculture_type: type, value: num, unit });
   };
-  addAqua('Nuôi cá ao', 'ha', body.fish_pond);
-  addAqua('Nuôi cá lồng bè', 'lồng', body.fish_cage);
+  addAqua('Nuôi cá ao', 'ha', getVal('fish_pond', 'aquaculture'));
+  addAqua('Nuôi cá lồng bè', 'lồng', getVal('fish_cage', 'aquaculture'));
 
   return { crop_items, livestock_items, aquaculture_items };
 }
@@ -308,6 +310,11 @@ export const updateHousehold = async (req: AuthRequest, res: Response) => {
 
     const existing = await prisma.households.findFirst({
       where: { id, is_deleted: false },
+      include: {
+        crop_items: true,
+        livestock_items: true,
+        aquaculture_items: true,
+      }
     });
 
     if (!existing) {
@@ -363,6 +370,23 @@ export const updateHousehold = async (req: AuthRequest, res: Response) => {
       if (existing.full_name !== hh.full_name) diff.full_name = { old: existing.full_name, new: hh.full_name };
       if (existing.phone !== hh.phone) diff.phone = { old: existing.phone, new: hh.phone };
       
+      // Calculate diffs for production items
+      const sumArea = (items: any[]) => items.reduce((acc, item) => acc + (item.area || 0), 0);
+      const sumQuant = (items: any[]) => items.reduce((acc, item) => acc + (item.quantity || 0), 0);
+      const sumAqua = (items: any[]) => items.reduce((acc, item) => acc + (item.value || 0), 0);
+
+      const oldCropsArea = sumArea(existing.crop_items);
+      const newCropsArea = sumArea(hh.crop_items);
+      if (oldCropsArea !== newCropsArea) diff['Tổng diện tích Trồng trọt'] = { old: oldCropsArea, new: newCropsArea };
+
+      const oldLivestock = sumQuant(existing.livestock_items);
+      const newLivestock = sumQuant(hh.livestock_items);
+      if (oldLivestock !== newLivestock) diff['Tổng số lượng Chăn nuôi'] = { old: oldLivestock, new: newLivestock };
+
+      const oldAqua = sumAqua(existing.aquaculture_items);
+      const newAqua = sumAqua(hh.aquaculture_items);
+      if (oldAqua !== newAqua) diff['Tổng diện tích Thủy sản'] = { old: oldAqua, new: newAqua };
+
       // Ghi audit log
       await tx.audit_logs.create({
         data: {
