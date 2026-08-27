@@ -78,7 +78,7 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside
-      className={`bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 flex flex-col shrink-0 border-r border-slate-200 dark:border-slate-800/80 select-none transition-[width] duration-200 ease-out overflow-hidden ${
+      className={`bg-slate-950 text-slate-300 flex flex-col shrink-0 border-r border-slate-800/80 select-none transition-[width] duration-200 ease-out overflow-hidden ${
         isSidebarCollapsed ? 'w-16' : 'w-64'
       }`}
     >
@@ -92,7 +92,7 @@ export const Sidebar: React.FC = () => {
             <button
               type="button"
               onClick={toggleSidebar}
-              className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer shrink-0"
+              className="p-2 text-slate-400 hover:text-slate-100 hover:bg-slate-900 rounded-xl transition-all cursor-pointer shrink-0"
             >
               <PanelLeftClose className="w-4 h-4" />
             </button>
@@ -101,7 +101,7 @@ export const Sidebar: React.FC = () => {
           <button
             type="button"
             onClick={toggleSidebar}
-            className="w-full flex items-center justify-center p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+            className="w-full flex items-center justify-center p-2 text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
           >
             <PanelLeftOpen className="w-4 h-4" />
           </button>
@@ -129,7 +129,7 @@ export const Sidebar: React.FC = () => {
                   } ${
                     isActive
                       ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/30'
-                      : 'text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-200 dark:hover:bg-slate-800/50'
+                      : 'text-slate-400 hover:text-emerald-400 hover:bg-slate-800/50'
                   }`}
                 >
                   <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : ''}`} />
@@ -148,7 +148,7 @@ export const Sidebar: React.FC = () => {
                           className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ml-1.5 ${
                             isActive
                               ? 'bg-emerald-800/90 text-emerald-100'
-                              : 'bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-300'
+                              : 'bg-slate-800 text-slate-300'
                           }`}
                         >
                           {item.badge}
@@ -166,7 +166,7 @@ export const Sidebar: React.FC = () => {
                 </button>
 
                 {isSidebarCollapsed && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 px-3.5 py-2 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-bold rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700/90 whitespace-nowrap pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 px-3.5 py-2 bg-slate-900 text-white text-xs font-bold rounded-2xl shadow-2xl border border-slate-700/90 whitespace-nowrap pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm">{item.label}</span>
                     </div>
@@ -179,7 +179,7 @@ export const Sidebar: React.FC = () => {
         </nav>
       </div>
       
-      <div className="p-3.5 border-t border-slate-200 dark:border-slate-900 bg-slate-50 dark:bg-slate-950 text-xs text-slate-400 overflow-hidden">
+      <div className="p-3.5 border-t border-slate-900 bg-slate-950 text-xs text-slate-400 overflow-hidden">
         {!isSidebarCollapsed ? (
           <div className="space-y-1 whitespace-nowrap overflow-hidden">
             <div className="flex items-center gap-2 text-slate-200 font-bold text-xs">
