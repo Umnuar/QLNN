@@ -11,12 +11,13 @@ import {
   ArrowLeft,
   Download,
 } from 'lucide-react';
-import * as XLSX from 'xlsx';
+
 import { OverviewAnalytics, VillageAnalytics } from '../../types';
 import { analyticsApi } from '../../api/analyticsApi';
 import { useApp } from '../../AppContext';
 import { getCache, setCache } from '../../db/indexedDB';
 import { cryptoHelper } from '../../utils/cryptoHelper';
+import { secureStorage } from '../../utils/secureStorage';
 
 // Component Donut Chart SVG nhẹ
 const MiniDonut: React.FC<{
@@ -219,59 +220,38 @@ export const AnalyticsDashboard: React.FC = () => {
   }
 
 
-  const handleExportComparisonExcel = () => {
-    if (!villageData || villageData.length === 0) return;
+  
+  const handleExportComparisonExcel = async () => {
+    try {
+      const token = await secureStorage.getItem('accessToken');
+      if (!token) {
+        alert('Phiên đăng nhập đã hết hạn.');
+        return;
+      }
 
-    const data = villageData.map(v => ({
-      'Tên Thôn': v.village_name,
-      'Số Hộ': v.household_count,
-      'Cà Phê (ha)': v.crops.total_cafe,
-      'Cao Su (ha)': v.crops.total_rubber,
-      'Cây Ăn Quả (ha)': v.crops.fruit_tree,
-      'Dược Liệu (ha)': v.crops.total_herb_area,
-      'Tổng Cây (ha)': v.crops.total_crops_area,
-      'Trâu Bò (con)': v.livestock.total_cattle,
-      'Heo (con)': v.livestock.pig,
-      'Gia Cầm (con)': v.livestock.poultry,
-      'Cá Ao (ha)': v.aquaculture.fish_pond,
-      'Cá Lồng (lồng)': v.aquaculture.fish_cage,
-    }));
+      const response = await fetch('http://localhost:5001/api/analytics/export-comparison', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-    // Add Total row
-    const totals = data.reduce((acc, curr) => {
-      acc['Số Hộ'] += curr['Số Hộ'];
-      acc['Cà Phê (ha)'] += curr['Cà Phê (ha)'];
-      acc['Cao Su (ha)'] += curr['Cao Su (ha)'];
-      acc['Cây Ăn Quả (ha)'] += curr['Cây Ăn Quả (ha)'];
-      acc['Dược Liệu (ha)'] += curr['Dược Liệu (ha)'];
-      acc['Tổng Cây (ha)'] += curr['Tổng Cây (ha)'];
-      acc['Trâu Bò (con)'] += curr['Trâu Bò (con)'];
-      acc['Heo (con)'] += curr['Heo (con)'];
-      acc['Gia Cầm (con)'] += curr['Gia Cầm (con)'];
-      acc['Cá Ao (ha)'] += curr['Cá Ao (ha)'];
-      acc['Cá Lồng (lồng)'] += curr['Cá Lồng (lồng)'];
-      return acc;
-    }, {
-      'Tên Thôn': 'TỔNG CỘNG',
-      'Số Hộ': 0,
-      'Cà Phê (ha)': 0,
-      'Cao Su (ha)': 0,
-      'Cây Ăn Quả (ha)': 0,
-      'Dược Liệu (ha)': 0,
-      'Tổng Cây (ha)': 0,
-      'Trâu Bò (con)': 0,
-      'Heo (con)': 0,
-      'Gia Cầm (con)': 0,
-      'Cá Ao (ha)': 0,
-      'Cá Lồng (lồng)': 0,
-    });
+      if (!response.ok) {
+        throw new Error('Lỗi khi xuất dữ liệu Excel');
+      }
 
-    data.push(totals);
-
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'SoSanhThon');
-    XLSX.writeFile(wb, `SoSanhCacThon_${new Date().toISOString().split('T')[0]}.xlsx`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `BangSoSanhCacThon_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error(err);
+      alert('Không thể tải file Excel. Vui lòng kiểm tra kết nối.');
+    }
   };
 
   const crops = overview.crops;
