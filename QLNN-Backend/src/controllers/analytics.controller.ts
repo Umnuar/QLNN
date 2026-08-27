@@ -250,7 +250,7 @@ export const exportAnalyticsExcel = async (req: AuthRequest, res: Response) => {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'QLNN - Đăk Hà';
     const worksheet = workbook.addWorksheet('So Sanh Thon', {
-      views: [{ showGridLines: false }]
+      views: [{ showGridLines: false, state: 'frozen', xSplit: 1, ySplit: 5 }]
     });
 
     // 1. Tiêu đề
