@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Database, Download, UploadCloud, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { secureStorage } from '../../utils/secureStorage';
+import { useModal } from '../../hooks/useModal';
 
 export const BackupRestoreTab: React.FC = () => {
+  const { showModal } = useModal();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const handleExport = async () => {
     try {
       const token = await secureStorage.getItem('accessToken');
@@ -36,8 +39,55 @@ export const BackupRestoreTab: React.FC = () => {
     }
   };
 
-  const handleRestore = () => {
-    alert('Tính năng khôi phục đang được phát triển.');
+    const handleRestoreClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    showModal({
+      title: 'Cảnh báo khôi phục dữ liệu',
+      message: 'Bạn có chắc chắn muốn khôi phục? Toàn bộ dữ liệu hiện tại sẽ bị xóa sạch và thay thế bằng dữ liệu từ tệp backup.',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          const text = await file.text();
+          const parsedJSON = JSON.parse(text);
+
+          const token = await secureStorage.getItem('accessToken');
+          if (!token) {
+            alert('Phiên đăng nhập đã hết hạn.');
+            return;
+          }
+
+          const response = await fetch('http://localhost:5001/api/backup/restore', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(parsedJSON)
+          });
+
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Lỗi khi khôi phục dữ liệu');
+          }
+
+          alert('Phục hồi dữ liệu thành công. Vui lòng đăng nhập lại.');
+          window.dispatchEvent(new CustomEvent('auth:expired'));
+        } catch (err: any) {
+          console.error(err);
+          alert(`Lỗi khôi phục: ${err.message}`);
+        }
+      }
+    });
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -110,7 +160,7 @@ export const BackupRestoreTab: React.FC = () => {
           <div className="pt-2 flex justify-start">
             <button
               type="button"
-              onClick={handleRestore}
+              onClick={handleRestoreClick}
               className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl font-bold text-xs cursor-pointer transition-all shadow-xs"
             >
               <UploadCloud className="w-4 h-4" />
@@ -124,6 +174,7 @@ export const BackupRestoreTab: React.FC = () => {
           <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
           <span>Dữ liệu được lưu trữ cục bộ an toàn trên Server. Tự động sao lưu mỗi ngày lúc 02:00 AM.</span>
         </div>
+        <input type="file" accept=".json" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
       </div>
     </div>
   );

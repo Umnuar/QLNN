@@ -1,5 +1,5 @@
 ﻿import { Router, Response, NextFunction } from 'express';
-import { exportDatabase } from '../controllers/backup.controller';
+import { exportDatabase, restoreDatabase } from '../controllers/backup.controller';
 import { authenticateToken, AuthRequest } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -13,5 +13,8 @@ const authorizeAdmin = (req: AuthRequest, res: Response, next: NextFunction) => 
 };
 
 router.get('/export', authenticateToken, authorizeAdmin, exportDatabase);
+
+
+router.post('/restore', authenticateToken, restoreDatabase);
 
 export default router;
