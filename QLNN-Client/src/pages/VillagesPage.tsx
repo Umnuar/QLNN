@@ -281,7 +281,7 @@ export const VillagesPage: React.FC = () => {
                 </p>
                 {isAdmin && (
                   <p className="text-[11px] font-medium mt-1 text-slate-500 dark:text-slate-400">
-                    👤 Quản lý: <span className="font-bold">{manager ? manager.username : '⚠️ Chưa phân công'}</span>
+                    Quản lý: <span className="font-bold">{manager ? manager.username : 'Chưa phân công'}</span>
                   </p>
                 )}
               </div>

@@ -1,9 +1,43 @@
 import React from 'react';
 import { Database, Download, UploadCloud, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { secureStorage } from '../../utils/secureStorage';
 
 export const BackupRestoreTab: React.FC = () => {
-  const handleAction = () => {
-    alert('Chức năng đang được cập nhật ở Backend');
+  const handleExport = async () => {
+    try {
+      const token = await secureStorage.getItem('accessToken');
+      if (!token) {
+        alert('Phiên đăng nhập đã hết hạn.');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5001/api/backup/export', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Lỗi khi xuất dữ liệu');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Dakha_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error(err);
+      alert('Không thể tải bản sao lưu. Vui lòng kiểm tra quyền Admin hoặc kết nối máy chủ.');
+    }
+  };
+
+  const handleRestore = () => {
+    alert('Tính năng khôi phục đang được phát triển.');
   };
 
   return (
@@ -35,7 +69,7 @@ export const BackupRestoreTab: React.FC = () => {
                 Tải xuống Bản sao lưu (Export Database)
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                Tải về toàn bộ cơ sở dữ liệu hệ thống (JSON/SQLite) gồm danh sách hộ nông nghiệp, chỉ tiêu NTM, phân quyền tài khoản và nhật ký hoạt động để lưu trữ an toàn hoặc chuyển đổi thiết bị.
+                Tải về toàn bộ cơ sở dữ liệu hệ thống (JSON) gồm danh sách hộ nông nghiệp, chỉ tiêu NTM, phân quyền tài khoản và nhật ký hoạt động để lưu trữ an toàn hoặc chuyển đổi thiết bị.
               </p>
             </div>
           </div>
@@ -43,11 +77,11 @@ export const BackupRestoreTab: React.FC = () => {
           <div className="pt-2 flex justify-start">
             <button
               type="button"
-              onClick={handleAction}
+              onClick={handleExport}
               className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl font-bold text-xs cursor-pointer transition-all shadow-xs"
             >
               <Download className="w-4 h-4" />
-              <span>Xuất Database (.sqlite / .json)</span>
+              <span>Xuất Database (.json)</span>
             </button>
           </div>
         </div>
@@ -76,11 +110,11 @@ export const BackupRestoreTab: React.FC = () => {
           <div className="pt-2 flex justify-start">
             <button
               type="button"
-              onClick={handleAction}
+              onClick={handleRestore}
               className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl font-bold text-xs cursor-pointer transition-all shadow-xs"
             >
               <UploadCloud className="w-4 h-4" />
-              <span>Nhập Database (.sqlite / .json)</span>
+              <span>Nhập Database (.json)</span>
             </button>
           </div>
         </div>
@@ -88,7 +122,7 @@ export const BackupRestoreTab: React.FC = () => {
         {/* System Storage Note */}
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
           <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-          <span>Dữ liệu được lưu trữ cục bộ an toàn theo cơ chế mã hóa AES & SQLite engine.</span>
+          <span>Dữ liệu được lưu trữ cục bộ an toàn trên Server. Tự động sao lưu mỗi ngày lúc 02:00 AM.</span>
         </div>
       </div>
     </div>

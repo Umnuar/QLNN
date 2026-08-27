@@ -1,0 +1,51 @@
+{
+  "project": "QLNN-Client",
+  "framework": "React, Vite, Electron",
+  "language": "TypeScript",
+  "stateManagement": {
+    "pattern": "Monolithic React Context",
+    "files": ["src/AppContext.tsx"],
+    "issues": [
+      "God Context storing Auth, UI, Data, and Network states.",
+      "Unnecessary re-renders triggered by frequent updates (e.g. 6s heartbeat checking latency updates all consumers)."
+    ]
+  },
+  "componentStructure": {
+    "issues": [
+      "Massive monolithic components violating SRP.",
+      "Excessive use of individual useState for form data instead of object state/form libraries."
+    ],
+    "largestFiles": [
+      {
+        "name": "HouseholdTable.tsx",
+        "path": "src/components/households/HouseholdTable.tsx",
+        "sizeKB": 47,
+        "lines": 615,
+        "concerns": ["Inline computation helpers", "Hardcoded values (village colors)", "Deeply nested JSX for complex tabs and columns"]
+      },
+      {
+        "name": "HouseholdModal.tsx",
+        "path": "src/components/households/HouseholdModal.tsx",
+        "sizeKB": 41,
+        "lines": 827,
+        "concerns": ["Over 20 independent useState hooks for a single form", "Repetitive JSX for 18+ agricultural indicators"]
+      },
+      {
+        "name": "AnalyticsDashboard.tsx",
+        "path": "src/components/analytics/AnalyticsDashboard.tsx",
+        "sizeKB": 33,
+        "lines": 661,
+        "concerns": ["Inline SVG components (MiniDonut) inside main component file", "Complex mixing of API logic and UI layout"]
+      }
+    ]
+  },
+  "coupling": {
+    "issues": [
+      "Widespread dependency on `useApp` across most components, tightly coupling them to the monolithic Context."
+    ]
+  },
+  "hardcodedValues": [
+    "Village colors in HouseholdTable.tsx",
+    "Repeated agricultural indicator lists scattered across forms and tables"
+  ]
+}

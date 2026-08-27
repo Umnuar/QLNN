@@ -10,6 +10,8 @@ import auditRoutes from './routes/audit.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
+import backupRoutes from './routes/backup.routes';
+import { initBackupCron } from './crons/backup.cron';
 import { authenticateToken, authorizeVillageScope, AuthRequest } from './middlewares/auth.middleware';
 
 const app = express();
@@ -60,6 +62,7 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/backup', backupRoutes);
 
 // Root route
 app.get('/', (_req, expressRes) => {
@@ -80,7 +83,10 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
+  // Khởi chạy các tác vụ nền
+initBackupCron();
+
+app.listen(PORT, () => {
     console.log(`[QLNN-Backend] Server running on http://localhost:${PORT}`);
     console.log(`[QLNN-Backend] Health check available at http://localhost:${PORT}/api/health`);
   });
