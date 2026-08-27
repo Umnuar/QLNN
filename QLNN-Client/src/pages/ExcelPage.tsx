@@ -26,12 +26,17 @@ export const ExcelPage: React.FC = () => {
   // Export Logic (for Preview)
   const [exportData, setExportData] = useState<HouseholdFlat[]>([]);
     const [exportPage, setExportPage] = useState(1);
-    const [exportLimit] = useState(20);
+    const [exportLimit, setExportLimit] = useState(20);
+    const [exportTotal, setExportTotal] = useState(0);
+    const [exportTotalPages, setExportTotalPages] = useState(1);
+
+    const [importPage, setImportPage] = useState(1);
+    const [importLimit, setImportLimit] = useState(20);
     
   // -- GET DISPLAY DATA --
   const getDisplayData = () => {
     if (previewMode === 'import') {
-      return importData;
+      return importData.slice((importPage - 1) * importLimit, importPage * importLimit);
     }
     if (previewMode === 'export') {
       return exportData.map((hh, idx) => {
@@ -91,6 +96,8 @@ export const ExcelPage: React.FC = () => {
         const parsedRows = rawData.slice(9).filter(row => row[1] && typeof row[1] === 'string' && (row[1] as string).trim() !== '');
         
         setImportData(parsedRows);
+        setImportPage(1);
+        setImportLimit(20);
         setPreviewMode('import');
       } catch (err) {
         console.error('Error parsing excel:', err);
@@ -158,6 +165,8 @@ export const ExcelPage: React.FC = () => {
         limit: exportLimit,
       });
       setExportData(res.data);
+      setExportTotal(res.pagination.total);
+      setExportTotalPages(res.pagination.totalPages);
     } catch (err) {
       console.error('Fetch export preview error:', err);
     } finally {
@@ -398,7 +407,61 @@ export const ExcelPage: React.FC = () => {
                   </table>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-2">
+
+                {/* Pagination Controls */}
+                <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-4 mt-2">
+                  <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                    <span>Hiển thị</span>
+                    <select
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-emerald-500/50"
+                      value={previewMode === 'export' ? exportLimit : importLimit}
+                      onChange={(e) => {
+                        const newLimit = Number(e.target.value);
+                        if (previewMode === 'export') {
+                          setExportLimit(newLimit);
+                          setExportPage(1);
+                        } else {
+                          setImportLimit(newLimit);
+                          setImportPage(1);
+                        }
+                      }}
+                    >
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                    <span>/ {previewMode === 'export' ? exportTotal : importData.length} bản ghi</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={(previewMode === 'export' ? exportPage : importPage) === 1}
+                      onClick={() => {
+                        if (previewMode === 'export') setExportPage(p => Math.max(1, p - 1));
+                        else setImportPage(p => Math.max(1, p - 1));
+                      }}
+                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      Trước
+                    </button>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 min-w-[3rem] text-center">
+                      {(previewMode === 'export' ? exportPage : importPage)} / {previewMode === 'export' ? exportTotalPages : (Math.ceil(importData.length / importLimit) || 1)}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={(previewMode === 'export' ? exportPage : importPage) >= (previewMode === 'export' ? exportTotalPages : Math.ceil(importData.length / importLimit))}
+                      onClick={() => {
+                        if (previewMode === 'export') setExportPage(p => p + 1);
+                        else setImportPage(p => p + 1);
+                      }}
+                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      Sau
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-3 mt-4">
                   <button
                     type="button"
                     onClick={() => setPreviewMode(null)}
