@@ -9,7 +9,9 @@ import {
   RefreshCw,
   Building2,
   ArrowLeft,
+  Download,
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { OverviewAnalytics, VillageAnalytics } from '../../types';
 import { analyticsApi } from '../../api/analyticsApi';
 import { useApp } from '../../AppContext';
@@ -216,7 +218,64 @@ export const AnalyticsDashboard: React.FC = () => {
     );
   }
 
+
+  const handleExportComparisonExcel = () => {
+    if (!villageData || villageData.length === 0) return;
+
+    const data = villageData.map(v => ({
+      'Tên Thôn': v.village_name,
+      'Số Hộ': v.household_count,
+      'Cà Phê (ha)': v.crops.total_cafe,
+      'Cao Su (ha)': v.crops.total_rubber,
+      'Cây Ăn Quả (ha)': v.crops.fruit_tree,
+      'Dược Liệu (ha)': v.crops.total_herb_area,
+      'Tổng Cây (ha)': v.crops.total_crops_area,
+      'Trâu Bò (con)': v.livestock.total_cattle,
+      'Heo (con)': v.livestock.pig,
+      'Gia Cầm (con)': v.livestock.poultry,
+      'Cá Ao (ha)': v.aquaculture.fish_pond,
+      'Cá Lồng (lồng)': v.aquaculture.fish_cage,
+    }));
+
+    // Add Total row
+    const totals = data.reduce((acc, curr) => {
+      acc['Số Hộ'] += curr['Số Hộ'];
+      acc['Cà Phê (ha)'] += curr['Cà Phê (ha)'];
+      acc['Cao Su (ha)'] += curr['Cao Su (ha)'];
+      acc['Cây Ăn Quả (ha)'] += curr['Cây Ăn Quả (ha)'];
+      acc['Dược Liệu (ha)'] += curr['Dược Liệu (ha)'];
+      acc['Tổng Cây (ha)'] += curr['Tổng Cây (ha)'];
+      acc['Trâu Bò (con)'] += curr['Trâu Bò (con)'];
+      acc['Heo (con)'] += curr['Heo (con)'];
+      acc['Gia Cầm (con)'] += curr['Gia Cầm (con)'];
+      acc['Cá Ao (ha)'] += curr['Cá Ao (ha)'];
+      acc['Cá Lồng (lồng)'] += curr['Cá Lồng (lồng)'];
+      return acc;
+    }, {
+      'Tên Thôn': 'TỔNG CỘNG',
+      'Số Hộ': 0,
+      'Cà Phê (ha)': 0,
+      'Cao Su (ha)': 0,
+      'Cây Ăn Quả (ha)': 0,
+      'Dược Liệu (ha)': 0,
+      'Tổng Cây (ha)': 0,
+      'Trâu Bò (con)': 0,
+      'Heo (con)': 0,
+      'Gia Cầm (con)': 0,
+      'Cá Ao (ha)': 0,
+      'Cá Lồng (lồng)': 0,
+    });
+
+    data.push(totals);
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'SoSanhThon');
+    XLSX.writeFile(wb, `SoSanhCacThon_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   const crops = overview.crops;
+
   const livestock = overview.livestock;
   const aqua = overview.aquaculture;
 
@@ -604,6 +663,14 @@ export const AnalyticsDashboard: React.FC = () => {
                 <p className="text-xs text-slate-500 dark:text-slate-400">So sánh 25 chỉ tiêu nông thôn mới</p>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={handleExportComparisonExcel}
+              className="px-3 py-1.5 flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold text-xs rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors border border-emerald-200 dark:border-emerald-800 shrink-0"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Xuất Excel</span>
+            </button>
           </div>
 
           <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
