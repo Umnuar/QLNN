@@ -5,7 +5,6 @@ import { useApp } from '../AppContext';
 import { excelApi } from '../api/excelApi';
 import { householdApi } from '../api/householdApi';
 import { useModal } from '../hooks/useModal';
-import { HouseholdTable } from '../components/households/HouseholdTable';
 import { HouseholdFlat } from '../types';
 
 export const ExcelPage: React.FC = () => {
@@ -26,11 +25,42 @@ export const ExcelPage: React.FC = () => {
 
   // Export Logic (for Preview)
   const [exportData, setExportData] = useState<HouseholdFlat[]>([]);
-  const [exportLoading, setExportLoading] = useState(false);
-  const [exportPage, setExportPage] = useState(1);
-  const [exportLimit, setExportLimit] = useState(20);
-  const [exportTotal, setExportTotal] = useState(0);
-  const [exportTotalPages, setExportTotalPages] = useState(1);
+    const [exportPage, setExportPage] = useState(1);
+    const [exportLimit] = useState(20);
+    
+  // -- GET DISPLAY DATA --
+  const getDisplayData = () => {
+    if (previewMode === 'import') {
+      return importData;
+    }
+    if (previewMode === 'export') {
+      return exportData.map((hh, idx) => {
+        return [
+          hh.stt || idx + 1,
+          hh.full_name,
+          hh.cafe_household,
+          hh.cafe_contracted,
+          hh.rubber_household,
+          hh.rubber_contracted,
+          hh.fruit_tree,
+          hh.macadamia,
+          hh.herb_dinh_lang,
+          hh.herb_gung,
+          hh.herb_nghe,
+          hh.herb_sa,
+          hh.wet_rice,
+          hh.other_annual_crops,
+          hh.cow,
+          hh.pig,
+          hh.poultry,
+          hh.fish_pond,
+          hh.fish_cage,
+          hh.notes
+        ];
+      });
+    }
+    return [];
+  };
 
   // -- IMPORT PREVIEW LOGIC --
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,7 +150,6 @@ export const ExcelPage: React.FC = () => {
   // -- EXPORT PREVIEW LOGIC --
   const fetchExportPreview = useCallback(async () => {
     if (previewMode !== 'export') return;
-    setExportLoading(true);
     try {
       const targetVillage = user?.role === 'admin' ? selectedVillageId : undefined;
       const res = await householdApi.getPage({
@@ -129,12 +158,9 @@ export const ExcelPage: React.FC = () => {
         limit: exportLimit,
       });
       setExportData(res.data);
-      setExportTotal(res.pagination.total);
-      setExportTotalPages(res.pagination.totalPages);
     } catch (err) {
       console.error('Fetch export preview error:', err);
     } finally {
-      setExportLoading(false);
     }
   }, [previewMode, selectedVillageId, exportPage, exportLimit, user?.role]);
 
@@ -306,23 +332,9 @@ export const ExcelPage: React.FC = () => {
           </div>
 
           <div className="p-4">
-            {previewMode === 'export' && (
-              <HouseholdTable
-                readOnly={true}
-                households={exportData}
-                loading={exportLoading}
-                total={exportTotal}
-                page={exportPage}
-                limit={exportLimit}
-                totalPages={exportTotalPages}
-                onPageChange={setExportPage}
-                onLimitChange={setExportLimit}
-                onEdit={() => {}}
-                onDelete={() => {}}
-              />
-            )}
 
-            {previewMode === 'import' && (
+
+            {(previewMode === 'import' || previewMode === 'export') && (
               <div className="flex flex-col gap-4">
                 <div className="border border-slate-200 dark:border-slate-800 rounded-2xl max-h-[500px] overflow-auto">
                   <table className="w-full text-left border-collapse text-xs whitespace-nowrap">
@@ -351,7 +363,7 @@ export const ExcelPage: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                      {importData.map((row, idx) => (
+                      {getDisplayData().map((row, idx) => (
                         <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                           <td className="py-2 px-3 font-mono text-slate-500">{row[0] || idx + 1}</td>
                           <td className="py-2 px-3 font-bold text-slate-800 dark:text-slate-200">{row[1]}</td>
@@ -375,7 +387,7 @@ export const ExcelPage: React.FC = () => {
                           <td className="py-2 px-3 text-slate-500">{row[19] || ''}</td>
                         </tr>
                       ))}
-                      {importData.length === 0 && (
+                      {getDisplayData().length === 0 && (
                         <tr>
                           <td colSpan={20} className="py-8 text-center text-slate-500">
                             Không tìm thấy dữ liệu hợp lệ trong file
@@ -394,24 +406,26 @@ export const ExcelPage: React.FC = () => {
                   >
                     Hủy Bỏ
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleImportSubmit}
-                    disabled={importing || importData.length === 0}
-                    className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    {importing ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Đang xử lý...</span>
-                      </>
-                    ) : (
-                      <>
-                        <UploadCloud className="w-4 h-4" />
-                        <span>Xác Nhận Nhập Dữ Liệu</span>
-                      </>
-                    )}
-                  </button>
+                  {previewMode === 'import' && (
+                    <button
+                      type="button"
+                      onClick={handleImportSubmit}
+                      disabled={importing || importData.length === 0}
+                      className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {importing ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Đang xử lý...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UploadCloud className="w-4 h-4" />
+                          <span>Xác Nhận Nhập Dữ Liệu</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
