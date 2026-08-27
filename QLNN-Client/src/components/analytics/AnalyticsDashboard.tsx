@@ -629,7 +629,7 @@ export const AnalyticsDashboard: React.FC = () => {
       </div>
 
       {/* SECTION 4: BẢNG SO SÁNH GIỮA CÁC THÔN (Admin) */}
-      {user?.role === 'admin' && villageData.length > 0 && (
+      {user?.role === 'admin' && !selectedVillageId && villageData.length > 0 && (
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden space-y-3 p-5 transition-colors duration-150">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
