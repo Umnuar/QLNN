@@ -60,10 +60,11 @@ export const VillagesPage: React.FC = () => {
   const handleDelete = (id: string, name: string) => {
     showModal({
       title: 'Xác nhận xóa thôn',
-      message: `Bạn có chắc muốn xóa "${name}" không?\nThao tác này không thể hoàn tác.`,
+      message: `Bạn có chắc muốn xóa "${name}" không?
+Thao tác này không thể hoàn tác.`,
       type: 'danger',
       confirmText: 'Xóa',
-      cancelText: 'Hủy bỏ',
+      cancelText: 'Hủy',
       onConfirm: async () => {
         try {
           await villageApi.delete(id);
@@ -74,13 +75,32 @@ export const VillagesPage: React.FC = () => {
             type: 'success',
           });
         } catch (err: any) {
-          showModal({
-            title: 'Lỗi',
-            message: err.response?.data?.error || 'Không thể xóa thôn',
-            type: 'danger',
-          });
+          if (err.response?.data?.requireForce) {
+            showModal({
+              title: 'CẢNH BÁO MẤT DỮ LIỆU',
+              message: err.response.data.error,
+              type: 'danger',
+              confirmText: 'Xóa tất cả',
+              cancelText: 'Hủy',
+              onConfirm: async () => {
+                try {
+                  await villageApi.delete(id, true);
+                  await refreshVillages();
+                  showModal({ title: 'Thành công', message: 'Đã xóa thôn và toàn bộ dữ liệu', type: 'success' });
+                } catch (forceErr: any) {
+                  showModal({ title: 'Lỗi', message: forceErr.response?.data?.error || 'Không thể xóa', type: 'danger' });
+                }
+              }
+            });
+          } else {
+            showModal({
+              title: 'Lỗi',
+              message: err.response?.data?.error || 'Không thể xóa thôn',
+              type: 'danger',
+            });
+          }
         }
-      },
+      }
     });
   };
 

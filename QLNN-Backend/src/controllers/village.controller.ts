@@ -60,23 +60,34 @@ export const deleteVillage = async (req: AuthRequest, res: Response) => {
       return;
     }
     const id = String(req.params.id);
+    const force = req.query.force === 'true';
     
     // Check if it has households or users
     const householdsCount = await prisma.households.count({ where: { village_id: id } });
-    if (householdsCount > 0) {
-      res.status(400).json({ error: 'Không thể xóa vì thôn này đang chứa dữ liệu hộ dân' });
+    if (householdsCount > 0 && !force) {
+      res.status(400).json({ 
+        error: `Thôn này đang chứa ${householdsCount} hộ dân. Bạn có chắc chắn muốn xóa toàn bộ dữ liệu (cây trồng, vật nuôi...) của thôn này không?`,
+        requireForce: true
+      });
       return;
     }
 
-    const usersCount = await prisma.users.count({ where: { village_id: id } });
-    if (usersCount > 0) {
-      res.status(400).json({ error: 'Không thể xóa vì đang có tài khoản quản lý thôn này' });
-      return;
-    }
+    await prisma.$transaction([
+      prisma.users.updateMany({
+        where: { village_id: id },
+        data: { village_id: null }
+      }),
+      prisma.households.deleteMany({
+        where: { village_id: id }
+      }),
+      prisma.villages.delete({
+        where: { id }
+      })
+    ]);
 
-    await prisma.villages.delete({ where: { id } });
-    res.json({ success: true });
+    res.json({ status: 'ok', message: 'Xóa thôn thành công' });
   } catch (error: any) {
-    res.status(500).json({ error: 'Lỗi xóa thôn' });
+    console.error('deleteVillage error:', error);
+    res.status(500).json({ error: error.message || 'Lỗi xóa thôn' });
   }
 };

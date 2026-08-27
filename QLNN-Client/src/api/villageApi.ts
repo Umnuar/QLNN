@@ -17,7 +17,7 @@ export const villageApi = {
     return res.data.data || res.data;
   },
 
-  async delete(id: string): Promise<void> {
-    await apiClient.delete(`/villages/${id}`);
+  async delete(id: string, force?: boolean): Promise<void> {
+    await apiClient.delete(`/villages/${id}${force ? '?force=true' : ''}`);
   }
 };
