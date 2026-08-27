@@ -191,7 +191,17 @@ export const SettingsPage: React.FC = () => {
                       const villageName = villages.find(v => v.id === u.village_id)?.name || 'Không có';
                       return (
                         <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                          <td className="px-6 py-3.5 font-bold text-slate-900 dark:text-white">{u.username}</td>
+                          <td className="px-6 py-3.5">
+                              <div className="flex items-center gap-2">
+                                <div className="relative flex h-2.5 w-2.5" title={u.is_online ? 'Đang hoạt động' : 'Ngoại tuyến'}>
+                                  {u.is_online && (
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                  )}
+                                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${u.is_online ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
+                                </div>
+                                <span className="font-bold text-slate-900 dark:text-white">{u.username}</span>
+                              </div>
+                            </td>
                           <td className="px-6 py-3.5">
                             <span className={`px-2.5 py-1 text-[10px] font-bold rounded-lg ${u.role === 'admin' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60' : 'bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60'}`}>
                               {u.role.toUpperCase()}

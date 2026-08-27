@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { isUserOnline } from '../services/userActivity.service';
 import { prisma } from '../config/prisma';
 import bcrypt from 'bcryptjs';
 
@@ -13,7 +14,8 @@ export const getUsers = async (req: AuthRequest, res: Response) => {
       select: { id: true, username: true, role: true, village_id: true, created_at: true },
       orderBy: { created_at: 'desc' }
     });
-    res.json(users);
+    const result = users.map(u => ({ ...u, is_online: isUserOnline(u.id) }));
+      res.json(result);
   } catch (error) {
     res.status(500).json({ error: 'Lỗi lấy danh sách user' });
   }

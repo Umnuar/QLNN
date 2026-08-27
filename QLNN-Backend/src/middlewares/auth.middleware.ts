@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken, TokenPayload } from '../config/jwt';
+import { trackActivity } from '../services/userActivity.service';
 
 export interface AuthRequest extends Request {
   user?: TokenPayload;
@@ -20,6 +21,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
 
     const decoded = verifyAccessToken(token);
     req.user = decoded;
+    trackActivity(decoded.id);
     next();
   } catch (error) {
     res.status(401).json({ error: 'Token không hợp lệ hoặc đã hết hạn' });
