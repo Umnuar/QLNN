@@ -156,8 +156,8 @@ Thao tác này không thể hoàn tác.`,
                 <BarChart3 className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-black mb-1">Thống Kê Toàn Xã Đăk Hà</h3>
-                <p className="text-emerald-100 text-sm font-medium">Xem tổng hợp số liệu 25 chỉ tiêu Nông thôn mới của tất cả các thôn</p>
+                <h3 className="text-xl font-black mb-1">Thống Kê Toàn Xã</h3>
+                <p className="text-emerald-100 text-sm font-medium">Xem tổng hợp số liệu của tất cả các thôn</p>
               </div>
             </div>
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">

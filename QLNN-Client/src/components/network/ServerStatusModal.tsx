@@ -46,7 +46,7 @@ export const ServerStatusModal: React.FC<ServerStatusModalProps> = ({
           {/* Status Overview Card */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-600 dark:text-slate-300">Trạng thái mạng máy trạm:</span>
+              <span className="font-bold text-slate-600 dark:text-slate-300">Trạng thái mạng máy:</span>
               {isOnline ? (
                 <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Có kết nối Internet
@@ -59,7 +59,7 @@ export const ServerStatusModal: React.FC<ServerStatusModalProps> = ({
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-600 dark:text-slate-300">Máy chủ QLNN (Port 5001):</span>
+              <span className="font-bold text-slate-600 dark:text-slate-300">Máy chủ QLNN:</span>
               {isBackendHealthy ? (
                 <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Hoạt động bình thường
@@ -72,7 +72,7 @@ export const ServerStatusModal: React.FC<ServerStatusModalProps> = ({
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-600 dark:text-slate-300">Độ trễ phản hồi (Latency):</span>
+              <span className="font-bold text-slate-600 dark:text-slate-300">Độ trễ phản hồi:</span>
               <span className="font-mono font-bold text-slate-900 dark:text-white">
                 {latency !== null ? `${latency} ms` : 'Đang đo...'}
               </span>

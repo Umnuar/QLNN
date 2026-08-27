@@ -113,7 +113,7 @@ export const Header: React.FC = () => {
           <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 rounded-xl text-slate-200 text-xs font-bold border border-slate-700">
             <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span className="max-w-[140px] truncate">
-              {selectedVillageName || (user?.role === 'admin' ? 'Toàn xã Đăk Hà' : 'Chưa chọn thôn')}
+              {selectedVillageName || (user?.role === 'admin' ? 'Toàn xã' : 'Chưa chọn thôn')}
             </span>
           </div>
 

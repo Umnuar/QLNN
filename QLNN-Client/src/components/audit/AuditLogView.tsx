@@ -266,7 +266,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
                     onChange={(e) => setSelectedVillage(e.target.value)}
                     className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden appearance-none"
                   >
-                    <option value="">-- Toàn xã Đăk Hà --</option>
+                    <option value="">-- Toàn xã --</option>
                     {villages.map((v) => (
                       <option key={v.id} value={v.id}>
                         {v.name}

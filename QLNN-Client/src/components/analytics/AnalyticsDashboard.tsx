@@ -623,7 +623,7 @@ export const AnalyticsDashboard: React.FC = () => {
           </div>
 
           <div className="p-3.5 bg-slate-50 dark:bg-slate-950 rounded-2xl text-xs text-slate-500 dark:text-slate-400 italic border border-slate-200/90 dark:border-slate-800">
-            * Số liệu được cập nhật theo thời gian thực từ CSDL hộ nông nghiệp xã Đăk Hà.
+            * Số liệu được cập nhật theo thời gian thực từ CSDL.
           </div>
         </div>
       </div>

@@ -324,7 +324,7 @@ export const ExcelPage: React.FC = () => {
 
             {previewMode === 'import' && (
               <div className="flex flex-col gap-4">
-                <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden max-h-[500px] overflow-y-auto">
+                <div className="border border-slate-200 dark:border-slate-800 rounded-2xl max-h-[500px] overflow-auto">
                   <table className="w-full text-left border-collapse text-xs whitespace-nowrap">
                     <thead className="sticky top-0 bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 font-bold z-10 shadow-sm">
                       <tr>

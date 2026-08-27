@@ -154,7 +154,7 @@ export const HouseholdsPage: React.FC = () => {
                 </span>
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                Phạm vi: <strong className="text-slate-700 dark:text-slate-200">{selectedVillageName || 'Toàn xã Đăk Hà'}</strong> • Quản lý 18 chỉ số kê khai
+                Phạm vi: <strong className="text-slate-700 dark:text-slate-200">{selectedVillageName || 'Toàn xã'}</strong> • Quản lý 18 chỉ số kê khai
               </p>
             </div>
           </div>
