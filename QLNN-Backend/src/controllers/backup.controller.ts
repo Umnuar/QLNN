@@ -47,7 +47,7 @@ export const exportDatabase = async (req: Request, res: Response): Promise<void>
       'Content-Disposition',
       `attachment; filename="Dakha_Backup_${new Date().toISOString().split('T')[0]}.json"`
     );
-    res.json(backupData);
+    res.send(JSON.stringify(backupData, null, 2));
   } catch (error: any) {
     console.error('Lỗi khi export database:', error);
     res.status(500).json({ error: 'Không thể xuất dữ liệu backup.' });
