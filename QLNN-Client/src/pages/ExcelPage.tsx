@@ -408,7 +408,7 @@ export const ExcelPage: React.FC = () => {
                 </div>
 
 
-                {/* Pagination Controls */}
+                {/* Pagination Controls & Actions Combined */}
                 <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-4 mt-2">
                   <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                     <span>Hiển thị</span>
@@ -433,62 +433,80 @@ export const ExcelPage: React.FC = () => {
                     <span>/ {previewMode === 'export' ? exportTotal : importData.length} bản ghi</span>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      disabled={(previewMode === 'export' ? exportPage : importPage) === 1}
-                      onClick={() => {
-                        if (previewMode === 'export') setExportPage(p => Math.max(1, p - 1));
-                        else setImportPage(p => Math.max(1, p - 1));
-                      }}
-                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                    >
-                      Trước
-                    </button>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 min-w-[3rem] text-center">
-                      {(previewMode === 'export' ? exportPage : importPage)} / {previewMode === 'export' ? exportTotalPages : (Math.ceil(importData.length / importLimit) || 1)}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={(previewMode === 'export' ? exportPage : importPage) >= (previewMode === 'export' ? exportTotalPages : Math.ceil(importData.length / importLimit))}
-                      onClick={() => {
-                        if (previewMode === 'export') setExportPage(p => p + 1);
-                        else setImportPage(p => p + 1);
-                      }}
-                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                    >
-                      Sau
-                    </button>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewMode(null)}
-                    className="h-10 px-5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition-colors cursor-pointer"
-                  >
-                    Hủy Bỏ
-                  </button>
-                  {previewMode === 'import' && (
-                    <button
-                      type="button"
-                      onClick={handleImportSubmit}
-                      disabled={importing || importData.length === 0}
-                      className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                    >
-                      {importing ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          <span>Đang xử lý...</span>
-                        </>
-                      ) : (
-                        <>
-                          <UploadCloud className="w-4 h-4" />
-                          <span>Xác Nhận Nhập Dữ Liệu</span>
-                        </>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={(previewMode === 'export' ? exportPage : importPage) === 1}
+                        onClick={() => {
+                          if (previewMode === 'export') setExportPage(p => Math.max(1, p - 1));
+                          else setImportPage(p => Math.max(1, p - 1));
+                        }}
+                        className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                      >
+                        Trước
+                      </button>
+                      <div className="flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <input 
+                          type="number"
+                          className="w-12 text-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md py-1 outline-none focus:ring-1 focus:ring-emerald-500"
+                          value={previewMode === 'export' ? exportPage : importPage}
+                          onChange={(e) => {
+                            let val = parseInt(e.target.value);
+                            const maxPage = previewMode === 'export' ? exportTotalPages : (Math.ceil(importData.length / importLimit) || 1);
+                            if (isNaN(val) || val < 1) val = 1;
+                            if (val > maxPage) val = maxPage;
+                            if (previewMode === 'export') setExportPage(val);
+                            else setImportPage(val);
+                          }}
+                        />
+                        <span>/ {previewMode === 'export' ? exportTotalPages : (Math.ceil(importData.length / importLimit) || 1)}</span>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={(previewMode === 'export' ? exportPage : importPage) >= (previewMode === 'export' ? exportTotalPages : Math.ceil(importData.length / importLimit))}
+                        onClick={() => {
+                          if (previewMode === 'export') setExportPage(p => p + 1);
+                          else setImportPage(p => p + 1);
+                        }}
+                        className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                      >
+                        Sau
+                      </button>
+                    </div>
+
+                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMode(null)}
+                        className="h-10 px-5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                      >
+                        Hủy Bỏ
+                      </button>
+                      {previewMode === 'import' && (
+                        <button
+                          type="button"
+                          onClick={handleImportSubmit}
+                          disabled={importing || importData.length === 0}
+                          className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                          {importing ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              <span>Đang xử lý...</span>
+                            </>
+                          ) : (
+                            <>
+                              <UploadCloud className="w-4 h-4" />
+                              <span>Xác Nhận Nhập Dữ Liệu</span>
+                            </>
+                          )}
+                        </button>
                       )}
-                    </button>
-                  )}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
