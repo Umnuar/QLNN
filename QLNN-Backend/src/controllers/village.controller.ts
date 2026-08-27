@@ -60,17 +60,6 @@ export const deleteVillage = async (req: AuthRequest, res: Response) => {
       return;
     }
     const id = String(req.params.id);
-    const force = req.query.force === 'true';
-    
-    // Check if it has households or users
-    const householdsCount = await prisma.households.count({ where: { village_id: id } });
-    if (householdsCount > 0 && !force) {
-      res.status(400).json({ 
-        error: `Thôn này đang chứa ${householdsCount} hộ dân. Bạn có chắc chắn muốn xóa toàn bộ dữ liệu (cây trồng, vật nuôi...) của thôn này không?`,
-        requireForce: true
-      });
-      return;
-    }
 
     await prisma.$transaction([
       prisma.users.updateMany({

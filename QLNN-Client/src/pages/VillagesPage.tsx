@@ -75,30 +75,11 @@ Thao tác này không thể hoàn tác.`,
             type: 'success',
           });
         } catch (err: any) {
-          if (err.response?.data?.requireForce) {
-            showModal({
-              title: 'CẢNH BÁO MẤT DỮ LIỆU',
-              message: err.response.data.error,
-              type: 'danger',
-              confirmText: 'Xóa tất cả',
-              cancelText: 'Hủy',
-              onConfirm: async () => {
-                try {
-                  await villageApi.delete(id, true);
-                  await refreshVillages();
-                  showModal({ title: 'Thành công', message: 'Đã xóa thôn và toàn bộ dữ liệu', type: 'success' });
-                } catch (forceErr: any) {
-                  showModal({ title: 'Lỗi', message: forceErr.response?.data?.error || 'Không thể xóa', type: 'danger' });
-                }
-              }
-            });
-          } else {
-            showModal({
-              title: 'Lỗi',
-              message: err.response?.data?.error || 'Không thể xóa thôn',
-              type: 'danger',
-            });
-          }
+          showModal({
+            title: 'Lỗi',
+            message: err.response?.data?.error || 'Không thể xóa thôn',
+            type: 'danger',
+          });
         }
       }
     });
