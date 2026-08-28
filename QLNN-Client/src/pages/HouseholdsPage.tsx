@@ -166,6 +166,10 @@ export const HouseholdsPage: React.FC = () => {
     fetchHouseholds();
   }, [fetchHouseholds]);
 
+  useEffect(() => {
+    setSelectedHouseholdIds([]);
+  }, [page, limit, search, selectedVillageId]);
+
   // Lắng nghe sự kiện kết nối lại máy chủ để tự động đồng bộ lại danh sách
   useEffect(() => {
     const handleReconnected = () => {
@@ -270,6 +274,53 @@ export const HouseholdsPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+
+      {/* Sticky Action Bar */}
+      {selectedHouseholdIds.length > 0 && (
+        <div className="sticky top-4 z-50 bg-emerald-50 dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-3 flex items-center justify-between shadow-lg">
+          <div className="text-emerald-800 dark:text-emerald-300 font-bold text-sm">
+            Đã chọn {selectedHouseholdIds.length} hộ
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedHouseholdIds([])}
+              className="px-4 py-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold shadow-sm"
+            >
+              Bỏ chọn
+            </button>
+            <button
+              onClick={() => setIsExportModalOpen(true)}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5"
+            >
+              <Download className="w-4 h-4" /> Xuất Excel
+            </button>
+            <button
+              onClick={() => {
+                showModal({
+                  title: 'Xóa hàng loạt',
+                  message: `Bạn có chắc chắn muốn xóa ${selectedHouseholdIds.length} hộ đã chọn?`,
+                  type: 'danger',
+                  confirmText: 'Xóa',
+                  cancelText: 'Hủy',
+                  onConfirm: async () => {
+                    try {
+                      await householdApi.bulkDelete(selectedHouseholdIds);
+                      setSelectedHouseholdIds([]);
+                      fetchHouseholds();
+                    } catch (err) {
+                      showModal({ title: 'Lỗi', message: 'Không thể xóa hàng loạt.', type: 'danger' });
+                    }
+                  }
+                });
+              }}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5"
+            >
+              Xóa
+            </button>
+          </div>
+        </div>
+      )}
 
       <HouseholdFilterBar
         search={search}

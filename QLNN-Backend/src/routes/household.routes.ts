@@ -5,6 +5,7 @@ import {
   createHousehold,
   updateHousehold,
   deleteHousehold,
+  bulkDeleteHouseholds
 } from '../controllers/household.controller';
 import { authenticateToken, authorizeVillageScope } from '../middlewares/auth.middleware';
 
@@ -17,6 +18,7 @@ router.get('/', getHouseholds);
 router.get('/:id', getHouseholdById);
 router.post('/', createHousehold);
 router.put('/:id', updateHousehold);
+router.delete('/', bulkDeleteHouseholds);
 router.delete('/:id', deleteHousehold);
 
 export default router;

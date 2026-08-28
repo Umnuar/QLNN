@@ -222,14 +222,14 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="py-16 text-center text-slate-400 dark:text-slate-500">
+                    <td colSpan={9} className="py-16 text-center text-slate-400 dark:text-slate-500">
                       <div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mx-auto mb-2" />
                       <span className="font-bold text-sm">Đang tải dữ liệu hộ nông nghiệp...</span>
                     </td>
                   </tr>
                 ) : households.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-16 text-center text-slate-400 dark:text-slate-500">
+                    <td colSpan={9} className="py-16 text-center text-slate-400 dark:text-slate-500">
                       <div className="text-base font-bold text-slate-600 dark:text-slate-300">Không tìm thấy hộ nông nghiệp nào</div>
                     </td>
                   </tr>
@@ -248,6 +248,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                         className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors group text-[13.5px] cursor-pointer"
                         title="Bấm đúp để sửa số liệu hộ này"
                       >
+                        <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
                         <td className="py-3.5 px-3.5 border-r border-slate-100 dark:border-slate-800/60 text-center font-mono font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
                           {stt}
                         </td>
@@ -274,7 +275,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                           {totalAnimals > 0 ? `${totalAnimals} con` : '-'}
                         </td>
                         <td className="py-3.5 px-3 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                          {hh.fish_pond ? cryptoHelper.formatArea(hh.fish_pond) : hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}
+                          {hh.fish_pond && hh.fish_cage ? `${cryptoHelper.formatArea(hh.fish_pond)} • ${hh.fish_cage} lồng` : hh.fish_pond ? cryptoHelper.formatArea(hh.fish_pond) : hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}
                         </td>
                         <td className="py-3.5 px-3 text-center sticky right-0 bg-white dark:bg-slate-900 group-hover:bg-emerald-50/70 dark:group-hover:bg-slate-800 transition-colors shadow-xs whitespace-nowrap">
                           <div className="flex items-center justify-center gap-1">
@@ -497,7 +498,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                   <th rowSpan={2} className="py-3 px-4 border-r border-slate-200/80 dark:border-slate-800 min-w-[190px] whitespace-nowrap">Họ và Tên Chủ Hộ</th>
                   <th rowSpan={2} className="py-3 px-3.5 border-r border-slate-200/80 dark:border-slate-800 min-w-[130px] whitespace-nowrap">Thôn Quản Lý</th>
 
-                  <th colSpan={8} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 whitespace-nowrap">
+                  <th colSpan={9} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 whitespace-nowrap">
                     1. Cây Trồng Chính (ha)
                   </th>
                   <th colSpan={4} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-teal-50/70 dark:bg-teal-950/40 text-teal-900 dark:text-teal-300 whitespace-nowrap">

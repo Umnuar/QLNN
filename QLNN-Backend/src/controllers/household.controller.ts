@@ -457,3 +457,64 @@ export const deleteHousehold = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: error.message || 'Lỗi xóa hộ' });
   }
 };
+
+
+export const bulkDeleteHouseholds = async (req: AuthRequest, res: Response) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ error: 'Danh sách ID không hợp lệ' });
+      return;
+    }
+
+    const households = await prisma.households.findMany({
+      where: { id: { in: ids }, is_deleted: false },
+    });
+
+    if (households.length === 0) {
+      res.status(404).json({ error: 'Không tìm thấy hộ nông nghiệp nào để xóa' });
+      return;
+    }
+
+    // RBAC Check
+    if (req.user?.role === 'user' && req.user.village_id) {
+      const invalid = households.some(hh => hh.village_id !== req.user!.village_id);
+      if (invalid) {
+        res.status(403).json({ error: 'Không có quyền xóa dữ liệu thôn khác' });
+        return;
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.households.updateMany({
+        where: { id: { in: ids } },
+        data: { is_deleted: true, deleted_at: new Date() },
+      });
+
+      // Group by village to record audit logs appropriately
+      const byVillage: Record<string, string[]> = {};
+      households.forEach(hh => {
+        if (!byVillage[hh.village_id]) byVillage[hh.village_id] = [];
+        byVillage[hh.village_id].push(hh.full_name);
+      });
+
+      for (const [village_id, names] of Object.entries(byVillage)) {
+        await tx.audit_logs.create({
+          data: {
+            user_id: req.user?.id || null,
+            username: req.user?.username || 'System',
+            village_id,
+            action: 'DELETE',
+            entity_type: 'households',
+            entity_id: 'BULK',
+            details: JSON.stringify({ message: `Xóa hàng loạt ${names.length} hộ dân`, names }),
+          },
+        });
+      }
+    });
+
+    res.json({ count: households.length });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Lỗi xóa hàng loạt' });
+  }
+};

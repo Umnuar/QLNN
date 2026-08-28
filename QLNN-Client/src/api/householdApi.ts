@@ -34,7 +34,7 @@ export const householdApi = {
   },
 
   async bulkDelete(ids: string[]): Promise<{ count: number }> {
-    const res = await apiClient.post('/households/bulk-delete', { ids });
+    const res = await apiClient.delete('/households', { data: { ids } });
     return res.data;
   },
 };
