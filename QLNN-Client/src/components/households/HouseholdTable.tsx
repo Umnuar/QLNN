@@ -487,7 +487,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-slate-100/90 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-black uppercase tracking-wider">
-                  <th rowSpan={2} className="py-3 px-2 text-center w-10 border-r border-slate-200/80 dark:border-slate-800"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
+                  <th className="py-3 px-2 text-center w-10 border-r border-slate-200/80 dark:border-slate-800 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
                   <th rowSpan={2} className="py-3 px-3.5 border-r border-slate-200/80 dark:border-slate-800 text-center w-12 whitespace-nowrap">STT</th>
                   <th rowSpan={2} className="py-3 px-4 border-r border-slate-200/80 dark:border-slate-800 min-w-[190px] whitespace-nowrap">Họ và Tên Chủ Hộ</th>
                   <th rowSpan={2} className="py-3 px-3.5 border-r border-slate-200/80 dark:border-slate-800 min-w-[130px] whitespace-nowrap">Thôn Quản Lý</th>
@@ -504,10 +504,11 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                   <th colSpan={2} className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-sky-50/70 dark:bg-sky-950/40 text-sky-900 dark:text-sky-300 whitespace-nowrap">
                     4. Thủy Sản
                   </th>
-                  {!readOnly && <th rowSpan={2} className="py-3 px-3 text-center min-w-[90px] sticky right-0 z-20 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-slate-100 dark:bg-slate-950 shadow-xs whitespace-nowrap">Thao Tác</th>}
+                  {!readOnly && <th className="py-3 px-3 text-center min-w-[90px] sticky right-0 z-20 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-slate-100 dark:bg-slate-950 shadow-xs whitespace-nowrap">Thao Tác</th>}
                 </tr>
 
                 <tr className="bg-slate-50 dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-bold">
+                  <th className="sticky left-0 z-20 bg-slate-50 dark:bg-slate-900/90 border-r border-slate-200/80 dark:border-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]"></th>
                   <th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">Cà phê (Hộ)</th>
                   <th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">Cà phê (Khoán)</th>
                   <th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">Cao su (Hộ)</th>
@@ -529,6 +530,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 
                   <th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">Cá ao (ha)</th>
                   <th className="py-2 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 whitespace-nowrap">Cá lồng (lồng)</th>
+                {!readOnly && <th className="sticky right-0 z-20 bg-slate-50 dark:bg-slate-900/90 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] border-l border-slate-200/80 dark:border-slate-800"></th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
