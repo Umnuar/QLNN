@@ -2,7 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Upload, Download, Users } from 'lucide-react';
 import { HouseholdFlat } from '../types';
 import { householdApi } from '../api/householdApi';
+import * as XLSX from 'xlsx';
 import { excelApi } from '../api/excelApi';
+import { ImportPreviewModal } from '../components/excel/ImportPreviewModal';
+import { ExportSettingsModal } from '../components/excel/ExportSettingsModal';
 import { useApp } from '../AppContext';
 import { getCache, setCache } from '../db/indexedDB';
 import { useModal } from '../hooks/useModal';
@@ -12,7 +15,7 @@ import { HouseholdFilterBar } from '../components/households/HouseholdFilterBar'
 
 
 export const HouseholdsPage: React.FC = () => {
-  const { user, selectedVillageId, selectedVillageName, setActiveTab, isOnline, isBackendHealthy } = useApp();
+  const { user, selectedVillageId, selectedVillageName, isOnline, isBackendHealthy } = useApp();
   const isDisconnected = !isOnline || !isBackendHealthy;
   const { showModal } = useModal();
 
@@ -24,11 +27,91 @@ export const HouseholdsPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
 
+  // Excel logic
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importData, setImportData] = useState<any[]>([]);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const handleFileParse = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.name.endsWith('.xls') && !file.name.endsWith('.xlsx')) {
+      showModal({ title: 'Lỗi', message: 'Chỉ chấp nhận file .xls hoặc .xlsx', type: 'danger' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const wb = XLSX.read(evt.target?.result, { type: 'binary' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rawData = XLSX.utils.sheet_to_json<any[][]>(ws, { header: 1 });
+        const parsedRows = rawData.slice(9).filter(row => row[1] && typeof row[1] === 'string' && (row[1] as string).trim() !== '');
+        
+        setImportData(parsedRows);
+        setImportFile(file);
+        setIsImportModalOpen(true);
+      } catch (err) {
+        showModal({ title: 'Lỗi', message: 'Không thể đọc file.', type: 'danger' });
+      }
+    };
+    reader.readAsBinaryString(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleImportConfirm = async (file: File) => {
+    setImporting(true);
+    try {
+      const targetVillage = user?.role === 'admin' ? selectedVillageId : undefined;
+      const res = await excelApi.importExcel(file, targetVillage);
+      showModal({
+        title: 'Thành công',
+        message: `Đã xử lý ${res.totalRowsParsed} hộ:\n• Thêm: ${res.createdCount}\n• Cập nhật: ${res.updatedCount}`,
+        type: 'info',
+        onConfirm: () => {
+          setIsImportModalOpen(false);
+          setImportFile(null);
+          setImportData([]);
+          fetchHouseholds();
+        }
+      });
+    } catch (err: any) {
+      showModal({ title: 'Lỗi', message: err.response?.data?.error || 'Lỗi nhập dữ liệu', type: 'danger' });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleExportConfirm = async (excludeEmpty: boolean) => {
+    setExporting(true);
+    try {
+      const targetVillage = user?.role === 'admin' ? selectedVillageId : undefined;
+      const blob = await excelApi.exportExcel(targetVillage, excludeEmpty ? 'true' : undefined);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Thong_ke_nong_nghiep_${new Date().toISOString().slice(0,10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setIsExportModalOpen(false);
+    } catch (err) {
+      showModal({ title: 'Lỗi', message: 'Lỗi xuất dữ liệu', type: 'danger' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // Modals state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingHousehold, setEditingHousehold] = useState<HouseholdFlat | null>(null);
   
-  const [exporting, setExporting] = useState(false);
   const [isUsingCachedData, setIsUsingCachedData] = useState(false);
 
     const fetchHouseholds = useCallback(async () => {
@@ -111,31 +194,6 @@ export const HouseholdsPage: React.FC = () => {
     });
   };
 
-  const handleExport = async () => {
-    setExporting(true);
-    try {
-      const targetVillage = user?.role === 'admin' ? selectedVillageId : undefined;
-      const blob = await excelApi.exportExcel(targetVillage);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Thong_ke_nong_nghiep_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err: any) {
-      console.error('Export error:', err);
-      showModal({
-        title: 'Lỗi Xuất File',
-        message: err.response?.data?.error || 'Không thể xuất file Excel.',
-        type: 'danger',
-      });
-    } finally {
-      setExporting(false);
-    }
-  };
-
   return (
     <div className="space-y-5 animate-in fade-in duration-150">
       {/* Top Banner & Main Actions */}
@@ -166,7 +224,7 @@ export const HouseholdsPage: React.FC = () => {
 
           <button
             type="button"
-            onClick={handleExport}
+            onClick={() => setIsExportModalOpen(true)}
             disabled={exporting}
             className="h-10 flex items-center gap-1.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all disabled:opacity-50 active:scale-[0.99] cursor-pointer border border-slate-200 dark:border-slate-700"
           >
@@ -174,9 +232,10 @@ export const HouseholdsPage: React.FC = () => {
             <span>{exporting ? 'Đang xuất...' : 'Xuất Excel'}</span>
           </button>
 
+          <input type="file" ref={fileInputRef} hidden accept=".xls,.xlsx" onChange={handleFileParse} />
           <button
             type="button"
-            onClick={() => setActiveTab('excel')}
+            onClick={() => fileInputRef.current?.click()}
             disabled={isDisconnected}
             className={`h-10 flex items-center gap-1.5 px-4 border rounded-2xl text-xs font-bold transition-all active:scale-[0.99] shadow-xs ${isDisconnected ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border-amber-200/80 dark:border-amber-800 cursor-pointer"}`}
           >
@@ -228,8 +287,22 @@ export const HouseholdsPage: React.FC = () => {
         onSuccess={fetchHouseholds}
       />
 
-      {/* Modal Import Excel */}
+      <ImportPreviewModal
+        isOpen={isImportModalOpen}
+        onClose={() => { setIsImportModalOpen(false); setImportFile(null); setImportData([]); }}
+        file={importFile}
+        parsedData={importData}
+        onConfirm={handleImportConfirm}
+        importing={importing}
+      />
       
+      <ExportSettingsModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onExport={handleExportConfirm}
+        exporting={exporting}
+        isAdmin={user?.role === 'admin'}
+      />
     </div>
   );
 };
