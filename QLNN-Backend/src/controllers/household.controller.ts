@@ -506,7 +506,7 @@ export const bulkDeleteHouseholds = async (req: AuthRequest, res: Response) => {
             village_id,
             action: 'DELETE',
             entity_type: 'households',
-            entity_id: 'BULK',
+            entity_id: null,
             details: JSON.stringify({ message: `Xóa hàng loạt ${names.length} hộ dân`, names }),
           },
         });
