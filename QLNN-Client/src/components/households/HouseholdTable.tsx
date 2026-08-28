@@ -194,7 +194,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-slate-100/90 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-black uppercase tracking-wider">
-                  <th className="py-3 px-2 text-center w-10 border-r border-slate-200/80 dark:border-slate-800"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
+                  <th className="py-3 px-2 text-center w-10 border-r border-slate-200/80 dark:border-slate-800 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
                   <th className="py-3 px-3.5 text-center w-12 border-r border-slate-200/80 dark:border-slate-800 whitespace-nowrap">STT</th>
                   <th className="py-3 px-4 min-w-[200px] border-r border-slate-200/80 dark:border-slate-800 whitespace-nowrap">Họ và Tên Chủ Hộ</th>
                   <th className="py-3 px-3.5 min-w-[130px] border-r border-slate-200/80 dark:border-slate-800 whitespace-nowrap">Thôn Quản Lý</th>
@@ -242,7 +242,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                         className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors group text-[13.5px] cursor-pointer"
                         title="Bấm đúp để sửa số liệu hộ này"
                       >
-                        <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
+                        <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
                         <td className="py-3.5 px-3.5 border-r border-slate-100 dark:border-slate-800/60 text-center font-mono font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
                           {stt}
                         </td>
@@ -312,7 +312,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-emerald-100/70 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border-b border-emerald-200 dark:border-emerald-800 text-[11px] font-black uppercase tracking-wider">
-                  <th className="py-3 px-2 text-center w-10 border-r border-emerald-200 dark:border-emerald-800"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
+                  <th className="py-3 px-2 text-center w-10 border-r border-emerald-200 dark:border-emerald-800 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
                   <th className="py-3 px-3.5 text-center w-12 border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">STT</th>
                   <th className="py-3 px-4 min-w-[180px] border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Họ và Tên Chủ Hộ</th>
                   <th className="py-3 px-3.5 border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Thôn</th>
@@ -334,7 +334,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     onDoubleClick={() => !readOnly && onEdit(hh)}
                     className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                   >
-                    <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
+                    <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
                     <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
                     <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{hh.full_name}</td>
                     <td className="py-3 px-3.5 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
@@ -346,7 +346,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.macadamia)}</td>
                     <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.wet_rice)}</td>
                     <td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.other_annual_crops)}</td>
-                    {!readOnly && <td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 whitespace-nowrap"><button type="button" onClick={() => !isDisconnected && onEdit(hh)}
+                    {!readOnly && <td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors whitespace-nowrap"><button type="button" onClick={() => !isDisconnected && onEdit(hh)}
                       disabled={isDisconnected} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
                   </tr>
                 ))}
@@ -361,7 +361,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-teal-100/70 dark:bg-teal-950/80 text-teal-950 dark:text-teal-200 border-b border-teal-200 dark:border-teal-800 text-[11px] font-black uppercase tracking-wider">
-                  <th className="py-3 px-2 text-center w-10 border-r border-teal-200 dark:border-teal-800"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
+                  <th className="py-3 px-2 text-center w-10 border-r border-teal-200 dark:border-teal-800 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
                   <th className="py-3 px-3.5 text-center w-12 border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">STT</th>
                   <th className="py-3 px-4 min-w-[200px] border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">Họ và Tên Chủ Hộ</th>
                   <th className="py-3 px-3.5 border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">Thôn</th>
@@ -382,7 +382,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                       onDoubleClick={() => !readOnly && onEdit(hh)}
                       className="hover:bg-teal-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                     >
-                      <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
+                      <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
                       <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
                       <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{hh.full_name}</td>
                       <td className="py-3 px-3.5 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
@@ -391,7 +391,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                       <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_nghe)}</td>
                       <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.herb_sa)}</td>
                       <td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-teal-700 dark:text-teal-400 bg-teal-50/30 dark:bg-teal-950/20 whitespace-nowrap">{cryptoHelper.formatArea(totalHerbs)}</td>
-                      {!readOnly && <td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
+                      {!readOnly && <td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
                     </tr>
                   );
                 })}
@@ -406,7 +406,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-amber-100/70 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border-b border-amber-200 dark:border-amber-800 text-[11px] font-black uppercase tracking-wider">
-                  <th className="py-3 px-2 text-center w-10 border-r border-amber-200 dark:border-amber-800"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
+                  <th className="py-3 px-2 text-center w-10 border-r border-amber-200 dark:border-amber-800 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
                   <th className="py-3 px-3.5 text-center w-12 border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">STT</th>
                   <th className="py-3 px-4 min-w-[200px] border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">Họ và Tên Chủ Hộ</th>
                   <th className="py-3 px-3.5 border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">Thôn</th>
@@ -427,7 +427,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                       onDoubleClick={() => !readOnly && onEdit(hh)}
                       className="hover:bg-amber-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                     >
-                      <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
+                      <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
                       <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
                       <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{hh.full_name}</td>
                       <td className="py-3 px-3.5 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
@@ -436,7 +436,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                       <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.pig || '-'}</td>
                       <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.poultry || '-'}</td>
                       <td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-amber-700 dark:text-amber-400 bg-amber-50/30 dark:bg-amber-950/20 whitespace-nowrap">{totalAnimals || '-'}</td>
-                      {!readOnly && <td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
+                      {!readOnly && <td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
                     </tr>
                   );
                 })}
@@ -451,7 +451,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
             <>
               <thead>
                 <tr className="bg-sky-100/70 dark:bg-sky-950/80 text-sky-950 dark:text-sky-200 border-b border-sky-200 dark:border-sky-800 text-[11px] font-black uppercase tracking-wider">
-                  <th className="py-3 px-2 text-center w-10 border-r border-sky-200 dark:border-sky-800"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
+                  <th className="py-3 px-2 text-center w-10 border-r border-sky-200 dark:border-sky-800 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={households.length > 0 && selectedIds.length === households.length} onChange={() => onToggleSelectAll && onToggleSelectAll()} /></th>
                   <th className="py-3 px-3.5 text-center w-12 border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">STT</th>
                   <th className="py-3 px-4 min-w-[220px] border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">Họ và Tên Chủ Hộ</th>
                   <th className="py-3 px-3.5 border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">Thôn</th>
@@ -467,13 +467,13 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     onDoubleClick={() => !readOnly && onEdit(hh)}
                     className="hover:bg-sky-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                   >
-                    <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
+                    <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
                     <td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
                     <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{hh.full_name}</td>
                     <td className="py-3 px-3.5 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
                     <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.fish_pond)}</td>
                     <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}</td>
-                    {!readOnly && <td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
+                    {!readOnly && <td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
                   </tr>
                 ))}
               </tbody>
@@ -538,7 +538,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     onDoubleClick={() => !readOnly && onEdit(hh)}
                     className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
                   >
-                    <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
+                    <td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors"><input type="checkbox" className="w-4 h-4 cursor-pointer accent-emerald-600 rounded" checked={selectedIds.includes(hh.id!)} onChange={() => onToggleSelect && onToggleSelect(hh.id!)} onClick={(e) => e.stopPropagation()} /></td>
                     <td className="py-3 px-3.5 border-r border-slate-100 dark:border-slate-800/60 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{(page - 1) * limit + idx + 1}</td>
                     <td className="py-3 px-4 border-r border-slate-100 dark:border-slate-800/60 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{hh.full_name}</td>
                     <td className="py-3 px-3.5 border-r border-slate-100 dark:border-slate-800/60 whitespace-nowrap"><span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${villageColorMap[hh.village_name || '']}`}>{hh.village_name}</span></td>
@@ -560,7 +560,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
                     <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.poultry || '-'}</td>
                     <td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{cryptoHelper.formatArea(hh.fish_pond)}</td>
                     <td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">{hh.fish_cage ? `${hh.fish_cage} lồng` : '-'}</td>
-                    {!readOnly && <td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
+                    {!readOnly && <td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors whitespace-nowrap"><button type="button" onClick={() => onEdit(hh)} aria-label="Sửa hộ" className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"><Edit3 className="w-4 h-4" /></button><button type="button" onClick={() => onDelete(hh)} aria-label="Xóa hộ" className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>}
                   </tr>
                 ))}
               </tbody>
