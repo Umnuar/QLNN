@@ -4,7 +4,6 @@ import {
   Users,
   BarChart3,
   Map,
-  FileSpreadsheet,
   ShieldCheck,
   Database,
   PanelLeftClose,
@@ -45,12 +44,6 @@ export const Sidebar: React.FC = () => {
         icon: Users,
         desc: 'Quản lý 18 chỉ số hộ dân',
       });
-      navItems.push({
-        id: 'excel',
-        label: 'Nhập/Xuất Excel',
-        icon: FileSpreadsheet,
-        desc: 'Cập nhật từ file Excel 21 cột',
-      });
     }
   } else {
     navItems = [
@@ -66,12 +59,6 @@ export const Sidebar: React.FC = () => {
         label: 'Hộ Nông Nghiệp',
         icon: Users,
         desc: 'Quản lý 18 chỉ số hộ dân',
-      },
-      {
-        id: 'excel',
-        label: 'Nhập/Xuất Excel',
-        icon: FileSpreadsheet,
-        desc: 'Cập nhật từ file Excel 21 cột',
       }
     ];
   }

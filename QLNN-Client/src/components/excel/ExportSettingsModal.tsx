@@ -4,15 +4,16 @@ import { DownloadCloud, X } from 'lucide-react';
 interface ExportSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onExport: (excludeEmpty: boolean) => void;
+  onExport: (scope: 'all' | 'selected') => void;
   exporting: boolean;
   isAdmin: boolean;
+  selectedCount?: number;
 }
 
 export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
-  isOpen, onClose, onExport, exporting, isAdmin
+  isOpen, onClose, onExport, exporting, isAdmin, selectedCount = 0
 }) => {
-  const [excludeEmpty, setExcludeEmpty] = useState(false);
+  const [exportScope, setExportScope] = useState<'all' | 'selected'>('all');
 
   if (!isOpen) return null;
 
@@ -41,22 +42,36 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
             </p>
           </div>
           
-          <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+          <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
             <label className="flex items-start gap-3 cursor-pointer group">
               <div className="relative flex items-start">
                 <input
-                  type="checkbox"
-                  checked={excludeEmpty}
-                  onChange={(e) => setExcludeEmpty(e.target.checked)}
-                  className="peer w-5 h-5 appearance-none border-2 border-slate-300 dark:border-slate-600 rounded-lg checked:border-sky-500 checked:bg-sky-500 transition-all"
+                  type="radio"
+                  name="exportScope"
+                  checked={exportScope === 'all'}
+                  onChange={() => setExportScope('all')}
+                  className="peer w-5 h-5 appearance-none border-2 border-slate-300 dark:border-slate-600 rounded-full checked:border-sky-500 checked:border-[6px] transition-all"
                 />
-                <svg className="absolute inset-0 w-5 h-5 p-1 pointer-events-none opacity-0 peer-checked:opacity-100 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-sky-600 transition-colors">Loại bỏ hộ trống</p>
-                <p className="text-xs text-slate-500">Chỉ xuất những hộ có dữ liệu cây trồng, vật nuôi hoặc thủy sản.</p>
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors">Toàn bộ hộ trong phạm vi</p>
+                <p className="text-xs text-slate-500">Xuất toàn bộ các hộ hiện thị.</p>
+              </div>
+            </label>
+            <label className={`flex items-start gap-3 ${selectedCount === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer group'}`}>
+              <div className="relative flex items-start">
+                <input
+                  type="radio"
+                  name="exportScope"
+                  disabled={selectedCount === 0}
+                  checked={exportScope === 'selected'}
+                  onChange={() => setExportScope('selected')}
+                  className="peer w-5 h-5 appearance-none border-2 border-slate-300 dark:border-slate-600 rounded-full checked:border-sky-500 checked:border-[6px] transition-all disabled:cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors">Chỉ xuất {selectedCount} hộ đã chọn</p>
+                <p className="text-xs text-slate-500">Chỉ xuất các hộ đã được tích chọn trong bảng.</p>
               </div>
             </label>
           </div>
@@ -67,7 +82,7 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
             Hủy
           </button>
           <button
-            onClick={() => onExport(excludeEmpty)}
+            onClick={() => onExport(exportScope)}
             disabled={exporting}
             className="h-10 px-6 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all flex items-center gap-2 disabled:opacity-50"
           >

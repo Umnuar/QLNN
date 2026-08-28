@@ -57,13 +57,8 @@ export const excelApi = {
     return res.data;
   },
 
-  async exportExcel(villageId?: string, excludeEmpty?: string): Promise<Blob> {
-    const params: any = {};
-    if (villageId) params.villageId = villageId;
-    if (excludeEmpty) params.excludeEmpty = excludeEmpty;
-    
-    const res = await apiClient.get('/excel/export', {
-      params,
+  async exportExcel(villageId?: string, selectedIds?: string[]): Promise<Blob> {
+    const res = await apiClient.post('/excel/export', { villageId, selectedIds }, {
       responseType: 'blob',
     });
     return res.data;

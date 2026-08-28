@@ -87,11 +87,12 @@ export const HouseholdsPage: React.FC = () => {
     }
   };
 
-  const handleExportConfirm = async (excludeEmpty: boolean) => {
+  const handleExportConfirm = async (exportScope: 'all' | 'selected') => {
     setExporting(true);
     try {
       const targetVillage = user?.role === 'admin' ? selectedVillageId : undefined;
-      const blob = await excelApi.exportExcel(targetVillage, excludeEmpty ? 'true' : undefined);
+      const selectedIds = exportScope === 'selected' ? selectedHouseholdIds : undefined;
+      const blob = await excelApi.exportExcel(targetVillage, selectedIds);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -113,6 +114,21 @@ export const HouseholdsPage: React.FC = () => {
   const [editingHousehold, setEditingHousehold] = useState<HouseholdFlat | null>(null);
   
   const [isUsingCachedData, setIsUsingCachedData] = useState(false);
+
+  const [selectedHouseholdIds, setSelectedHouseholdIds] = useState<string[]>([]);
+
+  const onToggleSelect = (id: string) => {
+    setSelectedHouseholdIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const onToggleSelectAll = () => {
+    if (households.length > 0 && selectedHouseholdIds.length === households.length) {
+      setSelectedHouseholdIds([]);
+    } else {
+      setSelectedHouseholdIds(households.map(hh => hh.id as string));
+    }
+  };
+
 
     const fetchHouseholds = useCallback(async () => {
     setLoading(true);
@@ -264,6 +280,9 @@ export const HouseholdsPage: React.FC = () => {
 
       {/* Main Table */}
       <HouseholdTable
+        selectedIds={selectedHouseholdIds}
+        onToggleSelect={onToggleSelect}
+        onToggleSelectAll={onToggleSelectAll}
         households={households}
         loading={loading}
         total={total}
@@ -300,6 +319,7 @@ export const HouseholdsPage: React.FC = () => {
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         onExport={handleExportConfirm}
+        selectedCount={selectedHouseholdIds.length}
         exporting={exporting}
         isAdmin={user?.role === 'admin'}
       />

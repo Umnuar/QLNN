@@ -273,21 +273,16 @@ export const previewExcel = async (req: AuthRequest, res: Response) => {
  */
 export const exportExcel = async (req: AuthRequest, res: Response) => {
   try {
-    const { villageId, excludeEmpty } = req.query;
+    const { villageId, selectedIds } = req.body;
     const targetVillageId = req.user?.role === 'user' ? req.user.village_id : villageId ? String(villageId) : undefined;
-    const isExcludeEmpty = excludeEmpty === 'true';
 
     const where: any = { is_deleted: false };
     if (targetVillageId) {
       where.village_id = targetVillageId;
     }
     
-    if (isExcludeEmpty) {
-      where.OR = [
-        { crop_items: { some: {} } },
-        { livestock_items: { some: {} } },
-        { aquaculture_items: { some: {} } }
-      ];
+    if (selectedIds && Array.isArray(selectedIds) && selectedIds.length > 0) {
+      where.id = { in: selectedIds };
     }
 
     let villageName = 'Toàn xã Đăk Hà';

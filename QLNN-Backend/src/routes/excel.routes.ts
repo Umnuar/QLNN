@@ -18,6 +18,6 @@ router.post('/preview', upload.single('file'), previewExcel);
 router.post('/import', upload.single('file'), importExcel);
 
 // GET /api/excel/export
-router.get('/export', exportExcel);
+router.post('/export', exportExcel);
 
 export default router;
