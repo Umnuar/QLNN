@@ -26,6 +26,16 @@ export const HouseholdsPage: React.FC = () => {
   const [limit, setLimit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
+  const [undoAction, setUndoAction] = useState<{ ids: string[] } | null>(null);
+
+  useEffect(() => {
+    if (undoAction) {
+      const timer = setTimeout(() => {
+        setUndoAction(null);
+      }, 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [undoAction]);
 
   // Excel logic
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -200,6 +210,7 @@ export const HouseholdsPage: React.FC = () => {
         try {
           if (hh.id) {
             await householdApi.delete(hh.id);
+            setUndoAction({ ids: [hh.id] });
             fetchHouseholds();
           }
         } catch (err) {
@@ -305,8 +316,10 @@ export const HouseholdsPage: React.FC = () => {
                   cancelText: 'Hủy',
                   onConfirm: async () => {
                     try {
+                      const deletedIds = [...selectedHouseholdIds];
                       await householdApi.bulkDelete(selectedHouseholdIds);
                       setSelectedHouseholdIds([]);
+                      setUndoAction({ ids: deletedIds });
                       fetchHouseholds();
                     } catch (err) {
                       showModal({ title: 'Lỗi', message: 'Không thể xóa hàng loạt.', type: 'danger' });
@@ -374,6 +387,26 @@ export const HouseholdsPage: React.FC = () => {
         exporting={exporting}
         isAdmin={user?.role === 'admin'}
       />
+
+      {undoAction && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-800 text-white px-4 py-3 rounded-lg shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
+          <span className="text-sm font-medium">Đã xóa {undoAction.ids.length} hộ nông nghiệp.</span>
+          <button
+            onClick={async () => {
+              try {
+                await householdApi.restore(undoAction.ids);
+                setUndoAction(null);
+                fetchHouseholds();
+              } catch (e) {
+                alert('Lỗi hoàn tác');
+              }
+            }}
+            className="text-emerald-400 font-bold hover:text-emerald-300 transition-colors uppercase text-xs tracking-wider"
+          >
+            Hoàn tác
+          </button>
+        </div>
+      )}
     </div>
   );
 };

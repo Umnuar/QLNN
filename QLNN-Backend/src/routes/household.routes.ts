@@ -5,7 +5,10 @@ import {
   createHousehold,
   updateHousehold,
   deleteHousehold,
-  bulkDeleteHouseholds
+  bulkDeleteHouseholds,
+  getDeletedHouseholds,
+  restoreHouseholds,
+  hardDeleteHouseholds
 } from '../controllers/household.controller';
 import { authenticateToken, authorizeVillageScope } from '../middlewares/auth.middleware';
 
@@ -14,6 +17,9 @@ const router = Router();
 // Tất cả các routes hộ nông nghiệp đều yêu cầu xác thực SSO và lọc theo Thôn
 router.use(authenticateToken, authorizeVillageScope);
 
+router.get('/deleted', getDeletedHouseholds);
+router.put('/restore', restoreHouseholds);
+router.delete('/hard-delete', hardDeleteHouseholds);
 router.get('/', getHouseholds);
 router.get('/:id', getHouseholdById);
 router.post('/', createHousehold);

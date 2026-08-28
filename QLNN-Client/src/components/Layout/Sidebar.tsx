@@ -7,7 +7,8 @@ import {
   ShieldCheck,
   Database,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Trash2
 } from 'lucide-react';
 import { useApp } from '../../AppContext';
 
@@ -62,6 +63,13 @@ export const Sidebar: React.FC = () => {
       }
     ];
   }
+  
+  navItems.push({
+    id: 'recycle-bin',
+    label: 'Thùng Rác',
+    icon: Trash2,
+    desc: 'Quản lý hộ dân đã xóa'
+  });
 
   return (
     <aside

@@ -7,6 +7,7 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 import { ExcelPage } from './pages/ExcelPage';
 import { VillagesPage } from './pages/VillagesPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { RecycleBinPage } from './pages/RecycleBinPage';
 
 export const App: React.FC = () => {
   const { user, isInitializing, activeTab } = useApp();
@@ -31,6 +32,7 @@ export const App: React.FC = () => {
       {activeTab === 'excel' && <ExcelPage />}
       {activeTab === 'villages' && <VillagesPage />}
       {activeTab === 'settings' && <SettingsPage />}
+      {activeTab === 'recycle-bin' && <RecycleBinPage />}
     </AppLayout>
   );
 };

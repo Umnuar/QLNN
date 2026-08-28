@@ -37,4 +37,22 @@ export const householdApi = {
     const res = await apiClient.delete('/households', { data: { ids } });
     return res.data;
   },
+
+  async getDeleted(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    villageId?: string;
+  }): Promise<{ data: HouseholdFlat[]; pagination: { total: number; page: number; limit: number; totalPages: number } }> {
+    const res = await apiClient.get('/households/deleted', { params });
+    return res.data;
+  },
+
+  async restore(ids: string[]): Promise<void> {
+    await apiClient.put('/households/restore', { ids });
+  },
+
+  async hardDelete(ids: string[]): Promise<void> {
+    await apiClient.delete('/households/hard-delete', { data: { ids } });
+  }
 };

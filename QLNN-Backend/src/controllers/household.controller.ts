@@ -518,3 +518,174 @@ export const bulkDeleteHouseholds = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: error.message || 'Lỗi xóa hàng loạt' });
   }
 };
+
+
+export const getDeletedHouseholds = async (req: AuthRequest, res: Response) => {
+  try {
+    const { villageId, search, page = '1', limit = '50' } = req.query;
+
+    const where: any = {
+      is_deleted: true,
+    };
+
+    if (villageId) {
+      where.village_id = String(villageId);
+    }
+
+    if (search) {
+      const searchNormalized = removeAccents(String(search));
+      where.name_unaccented = { contains: searchNormalized };
+    }
+
+    const pageNum = parseInt(String(page), 10) || 1;
+    const limitNum = parseInt(String(limit), 10) || 50;
+    const skip = (pageNum - 1) * limitNum;
+
+    const [total, households] = await Promise.all([
+      prisma.households.count({ where }),
+      prisma.households.findMany({
+        where,
+        include: {
+          village: true,
+          crop_items: true,
+          livestock_items: true,
+          aquaculture_items: true,
+        },
+        orderBy: [{ deleted_at: 'desc' }, { village_id: 'asc' }],
+        skip,
+        take: limitNum,
+      }),
+    ]);
+
+    const data = households.map(serializeHousehold);
+
+    res.json({
+      data,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error: any) {
+    console.error('getDeletedHouseholds error:', error);
+    res.status(500).json({ error: error.message || 'Lá»—i láº¥y danh sÃ¡ch há»™ Ä‘Ã£ xÃ³a' });
+  }
+};
+
+export const restoreHouseholds = async (req: AuthRequest, res: Response) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ error: 'Danh sÃ¡ch ID khÃ´ng há»£p lá»‡' });
+      return;
+    }
+
+    const households = await prisma.households.findMany({
+      where: { id: { in: ids }, is_deleted: true },
+    });
+
+    if (households.length === 0) {
+      res.status(404).json({ error: 'KhÃ´ng tÃ¬m tháº¥y há»™ nÃ´ng nghiá»‡p nÃ o Ä‘á»ƒ khÃ´i phá»¥c' });
+      return;
+    }
+
+    if (req.user?.role === 'user' && req.user.village_id) {
+      const invalid = households.some(hh => hh.village_id !== req.user!.village_id);
+      if (invalid) {
+        res.status(403).json({ error: 'KhÃ´ng cÃ³ quyá»n khÃ´i phá»¥c dá»¯ liá»‡u thÃ´n khÃ¡c' });
+        return;
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.households.updateMany({
+        where: { id: { in: ids } },
+        data: { is_deleted: false, deleted_at: null },
+      });
+
+      const byVillage: Record<string, string[]> = {};
+      households.forEach(hh => {
+        if (!byVillage[hh.village_id]) byVillage[hh.village_id] = [];
+        byVillage[hh.village_id].push(hh.full_name);
+      });
+
+      for (const [village_id, names] of Object.entries(byVillage)) {
+        await tx.audit_logs.create({
+          data: {
+            user_id: req.user?.id || null,
+            username: req.user?.username || 'System',
+            village_id,
+            action: 'RESTORE',
+            entity_type: 'households',
+            entity_id: null,
+            details: JSON.stringify({ message: `KhÃ´i phá»¥c ${names.length} há»™ dÃ¢n`, names }),
+          },
+        });
+      }
+    });
+
+    res.json({ status: 'ok', message: 'ÄÃ£ khÃ´i phá»¥c há»™ thÃ nh cÃ´ng' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Lá»—i khÃ´i phá»¥c há»™' });
+  }
+};
+
+export const hardDeleteHouseholds = async (req: AuthRequest, res: Response) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ error: 'Danh sÃ¡ch ID khÃ´ng há»£p lá»‡' });
+      return;
+    }
+
+    if (req.user?.role !== 'admin') {
+      res.status(403).json({ error: 'Chá»‰ Admin má»›i cÃ³ quyá»n xÃ³a vÄ©nh viá»…n' });
+      return;
+    }
+
+    const households = await prisma.households.findMany({
+      where: { id: { in: ids }, is_deleted: true },
+    });
+
+    if (households.length === 0) {
+      res.status(404).json({ error: 'KhÃ´ng tÃ¬m tháº¥y há»™ nÃ´ng nghiá»‡p nÃ o trong thÃ¹ng rÃ¡c Ä‘á»ƒ xÃ³a vÄ©nh viá»…n' });
+      return;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.crop_items.deleteMany({ where: { household_id: { in: ids } } });
+      await tx.livestock_items.deleteMany({ where: { household_id: { in: ids } } });
+      await tx.aquaculture_items.deleteMany({ where: { household_id: { in: ids } } });
+      await tx.households.deleteMany({
+        where: { id: { in: ids } },
+      });
+
+      const byVillage: Record<string, string[]> = {};
+      households.forEach(hh => {
+        if (!byVillage[hh.village_id]) byVillage[hh.village_id] = [];
+        byVillage[hh.village_id].push(hh.full_name);
+      });
+
+      for (const [village_id, names] of Object.entries(byVillage)) {
+        await tx.audit_logs.create({
+          data: {
+            user_id: req.user?.id || null,
+            username: req.user?.username || 'System',
+            village_id,
+            action: 'HARD_DELETE',
+            entity_type: 'households',
+            entity_id: null,
+            details: JSON.stringify({ message: `XÃ³a vÄ©nh viá»…n ${names.length} há»™ dÃ¢n`, names }),
+          },
+        });
+      }
+    });
+
+    res.json({ status: 'ok', message: 'ÄÃ£ xÃ³a vÄ©nh viá»…n há»™ thÃ nh cÃ´ng' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Lá»—i xÃ³a vÄ©nh viá»…n há»™' });
+  }
+};
+
