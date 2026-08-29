@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { householdApi } from '../api/householdApi';
 import { HouseholdFlat } from '../types';
 import { useApp } from '../AppContext';
-import { HouseholdTable } from '../components/households/HouseholdTable';
+import { RecycleBinTable } from '../components/households/RecycleBinTable';
 import { RefreshCw, Trash2, RotateCcw } from 'lucide-react';
 
 export const RecycleBinPage: React.FC = () => {
@@ -111,8 +111,8 @@ export const RecycleBinPage: React.FC = () => {
         </div>
       </div>
 
-      <HouseholdTable
-        readOnly={true}
+      <RecycleBinTable
+        
         households={households}
         loading={loading}
         total={pagination.total}
