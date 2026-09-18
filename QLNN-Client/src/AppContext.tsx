@@ -6,6 +6,7 @@ import { secureStorage } from './utils/secureStorage';
 import { useInactivityTimeout } from './hooks/useInactivityTimeout';
 import axios from 'axios';
 import { getCache, setCache } from './db/indexedDB';
+import { API_BASE_URL } from './api/apiClient';
 
 interface AppContextType {
   user: User | null;
@@ -234,7 +235,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const checkServerHealth = useCallback(async (): Promise<boolean> => {
     const t0 = performance.now();
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const apiUrl = API_BASE_URL;
       let res;
       try {
         res = await axios.get(`${apiUrl}/ping`, { timeout: 3000 });

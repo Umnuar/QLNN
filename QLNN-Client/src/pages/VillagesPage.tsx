@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapPin, Edit3, Trash2, Check, X, Search, BarChart3, Plus, ArrowRight } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { useModal } from '../hooks/useModal';
@@ -29,10 +29,22 @@ export const VillagesPage: React.FC = () => {
   const [overview, setOverview] = useState<OverviewAnalytics | null>(null);
   const [villageStats, setVillageStats] = useState<Record<string, VillageAnalytics>>({});
 
+  const isFetchingStatsRef = useRef(false);
+  const isFetchingUsersRef = useRef(false);
+  const overviewRef = useRef<OverviewAnalytics | null>(null);
+  const userListRef = useRef<User[]>([]);
+
+  overviewRef.current = overview;
+  userListRef.current = userList;
+
   const fetchVillageStats = useCallback(async (force = false) => {
-    if (!force && Date.now() - cachedStatsTime < 30000 && overview) {
+    if (isFetchingStatsRef.current) {
       return;
     }
+    if (!force && Date.now() - cachedStatsTime < 30000 && overviewRef.current) {
+      return;
+    }
+    isFetchingStatsRef.current = true;
     try {
       const [overviewRes, byVillageRes] = await Promise.all([
         analyticsApi.getOverview(),
@@ -40,6 +52,7 @@ export const VillagesPage: React.FC = () => {
       ]);
 
       if (overviewRes?.data) {
+        overviewRef.current = overviewRes.data;
         setOverview(overviewRes.data);
         await setCache('villages_overview', overviewRes.data);
       }
@@ -56,7 +69,6 @@ export const VillagesPage: React.FC = () => {
         setVillageStats(statsMap);
         await setCache('villages_breakdown', byVillageRes.data);
       }
-      cachedStatsTime = Date.now();
     } catch (err) {
       console.warn('[VillagesPage] Lỗi tải số liệu thống kê thời gian thực, nạp từ Offline Cache:', err);
       try {
@@ -64,6 +76,7 @@ export const VillagesPage: React.FC = () => {
         const cachedBreakdown = await getCache<VillageAnalytics[]>('villages_breakdown');
 
         if (cachedOverview) {
+          overviewRef.current = cachedOverview;
           setOverview(cachedOverview);
         }
         if (Array.isArray(cachedBreakdown)) {
@@ -80,21 +93,31 @@ export const VillagesPage: React.FC = () => {
       } catch (cacheErr) {
         console.error('[VillagesPage] Lỗi đọc Offline Cache:', cacheErr);
       }
+    } finally {
+      cachedStatsTime = Date.now();
+      isFetchingStatsRef.current = false;
     }
-  }, [overview]);
+  }, []);
 
   const fetchUsers = useCallback(async (force = false) => {
-    if (!force && Date.now() - cachedUsersTime < 30000 && userList.length > 0) {
+    if (isFetchingUsersRef.current) {
       return;
     }
+    if (!force && Date.now() - cachedUsersTime < 30000 && userListRef.current.length > 0) {
+      return;
+    }
+    isFetchingUsersRef.current = true;
     try {
       const users = await authApi.getUsers();
+      userListRef.current = users;
       setUserList(users);
-      cachedUsersTime = Date.now();
     } catch (err) {
       console.warn('[VillagesPage] Lỗi tải danh sách cán bộ:', err);
+    } finally {
+      cachedUsersTime = Date.now();
+      isFetchingUsersRef.current = false;
     }
-  }, [userList.length]);
+  }, []);
 
   useEffect(() => {
     fetchVillageStats();
