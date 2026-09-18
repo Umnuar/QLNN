@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { User, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Sprout, Lock, AlertCircle, Eye, EyeOff, ShieldCheck, User as UserIcon } from 'lucide-react';
 import { authApi } from '../../api/authApi';
 import { secureStorage } from '../../utils/secureStorage';
 import { useApp } from '../../AppContext';
 
 export const LoginView: React.FC = () => {
-  const { setUser, setActiveTab } = useApp();
+  const { setUser, setActiveTab, setSelectedVillageId } = useApp();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,16 +28,19 @@ export const LoginView: React.FC = () => {
         throw new Error('Phản hồi đăng nhập không hợp lệ.');
       }
       await secureStorage.setItem('accessToken', data.accessToken);
-      await secureStorage.setItem('refreshToken', data.refreshToken);
+      if (data.refreshToken) {
+        await secureStorage.setItem('refreshToken', data.refreshToken);
+      }
       await secureStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
       if (data.user.role === 'admin') {
+        setSelectedVillageId('');
         setActiveTab('villages');
       } else {
-        setActiveTab('analytics');
+        setSelectedVillageId(data.user.village_id || '');
+        setActiveTab('households');
       }
     } catch (err: any) {
-      console.error('Login error:', err);
       const msg =
         err.response?.data?.error ||
         err.message ||
@@ -53,21 +56,21 @@ export const LoginView: React.FC = () => {
       <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-xl border-t-4 border-t-emerald-600">
         {/* Header Branding */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-950/60 border-[3px] border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full mx-auto flex items-center justify-center mb-5 shadow-sm">
-            <User className="w-10 h-10" strokeWidth={2.5} />
+          <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-950/60 border-[3px] border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full mx-auto flex items-center justify-center mb-5 shadow-xs">
+            <Sprout className="w-10 h-10" strokeWidth={1.5} />
           </div>
           <h1 className="text-[28px] font-black text-slate-900 dark:text-white tracking-tight mb-1">
             Đăng nhập
           </h1>
           <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">
-            HỆ THỐNG QUẢN LÝ DỮ LIỆU
+            QUẢN LÝ NÔNG NGHIỆP & NÔNG THÔN MỚI — XÃ ĐĂK HÀ
           </p>
         </div>
 
         {/* Error Alert */}
         {error && (
           <div className="mb-6 p-3.5 bg-rose-950/40 border border-rose-800/60 rounded-xl flex items-start gap-3 text-rose-300 text-xs leading-relaxed">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" strokeWidth={1.5} />
             <span>{error}</span>
           </div>
         )}
@@ -80,7 +83,7 @@ export const LoginView: React.FC = () => {
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <User className="w-5 h-5" />
+                <UserIcon className="w-5 h-5" strokeWidth={1.5} />
               </div>
               <input
                 type="text"
@@ -100,7 +103,7 @@ export const LoginView: React.FC = () => {
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Lock className="w-5 h-5" />
+                <Lock className="w-5 h-5" strokeWidth={1.5} />
               </div>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -115,8 +118,9 @@ export const LoginView: React.FC = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
                 tabIndex={-1}
+                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <EyeOff className="w-5 h-5" strokeWidth={1.5} /> : <Eye className="w-5 h-5" strokeWidth={1.5} />}
               </button>
             </div>
           </div>
@@ -133,7 +137,16 @@ export const LoginView: React.FC = () => {
             )}
           </button>
         </form>
+
+        <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+          <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 font-medium">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" strokeWidth={1.5} />
+            <span>Bảo mật dữ liệu Nông nghiệp & Nông thôn mới Xã Đăk Hà</span>
+          </p>
+        </div>
       </div>
     </div>
   );
 };
+
+export default LoginView;

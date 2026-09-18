@@ -1,75 +1,115 @@
 import React from 'react';
 import {
   Settings as SettingsIcon,
-  Users,
+  Sprout,
   BarChart3,
   Map,
   ShieldCheck,
   Database,
   PanelLeftClose,
   PanelLeftOpen,
-  Trash2
+  Trash2,
+  History,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useApp } from '../../AppContext';
 
 export const Sidebar: React.FC = () => {
-  const { activeTab, setActiveTab, user, isSidebarCollapsed, toggleSidebar, selectedVillageId, setSelectedVillageId } = useApp();
+  const {
+    activeTab,
+    setActiveTab,
+    user,
+    isSidebarCollapsed,
+    toggleSidebar,
+    selectedVillageId,
+    setSelectedVillageId,
+    selectedVillageName,
+  } = useApp();
 
   let navItems: any[] = [];
 
   if (user?.role === 'admin') {
-    navItems.push({
-      id: 'villages',
-      label: 'Quản Lý Thôn',
-      icon: Map,
-      desc: 'Chọn thôn để quản lý'
-    });
-    navItems.push({
-      id: 'settings',
-      label: 'Cài Đặt Hệ Thống',
-      icon: SettingsIcon,
-      desc: 'Quản lý thôn và người dùng'
-    });
-
-    if (selectedVillageId) {
-      navItems.push({
-        id: 'analytics',
-        label: 'Thống Kê',
-        icon: BarChart3,
-        desc: '25 chỉ tiêu nông thôn mới',
-        badge: 'Chính',
-      });
-      navItems.push({
-        id: 'households',
-        label: 'Hộ Nông Nghiệp',
-        icon: Users,
-        desc: 'Quản lý 18 chỉ số hộ dân',
-      });
-    }
-  } else {
+    const villageScopeDesc = selectedVillageId ? (selectedVillageName || 'Thôn đã chọn') : 'Toàn xã Đăk Hà';
     navItems = [
+      {
+        id: 'villages',
+        label: 'Quản Lý Thôn',
+        icon: Map,
+        desc: 'Quản lý 7 thôn xã Đăk Hà',
+      },
       {
         id: 'analytics',
         label: 'Thống Kê',
         icon: BarChart3,
-        desc: '25 chỉ tiêu nông thôn mới',
+        desc: villageScopeDesc,
         badge: 'Chính',
       },
       {
         id: 'households',
         label: 'Hộ Nông Nghiệp',
-        icon: Users,
+        icon: Sprout,
+        desc: villageScopeDesc,
+      },
+      {
+        id: 'excel',
+        label: 'Nhập / Xuất Excel',
+        icon: FileSpreadsheet,
+        desc: 'Biểu mẫu 21 cột Smart-Upsert',
+      },
+      {
+        id: 'recycle-bin',
+        label: 'Thùng Rác',
+        icon: Trash2,
+        desc: 'Quản lý hộ dân đã xóa',
+      },
+      {
+        id: 'audit',
+        label: 'Nhật Ký Hoạt Động',
+        icon: History,
+        desc: 'Lịch sử biến động dữ liệu',
+      },
+      {
+        id: 'settings',
+        label: 'Cài Đặt Hệ Thống',
+        icon: SettingsIcon,
+        desc: 'Tài khoản & sao lưu CSDL',
+      },
+    ];
+  } else {
+    navItems = [
+      {
+        id: 'households',
+        label: 'Hộ Nông Nghiệp',
+        icon: Sprout,
         desc: 'Quản lý 18 chỉ số hộ dân',
-      }
+      },
+      {
+        id: 'analytics',
+        label: 'Thống Kê',
+        icon: BarChart3,
+        desc: '18 chỉ tiêu nông nghiệp',
+        badge: 'Chính',
+      },
+      {
+        id: 'excel',
+        label: 'Nhập / Xuất Excel',
+        icon: FileSpreadsheet,
+        desc: 'Biểu mẫu 21 cột Smart-Upsert',
+      },
+      {
+        id: 'recycle-bin',
+        label: 'Thùng Rác',
+        icon: Trash2,
+        desc: 'Quản lý hộ dân đã xóa',
+      },
+      {
+        id: 'audit',
+        label: 'Nhật Ký Hoạt Động',
+        icon: History,
+        desc: 'Lịch sử biến động dữ liệu',
+      },
     ];
   }
-  
-  navItems.push({
-    id: 'recycle-bin',
-    label: 'Thùng Rác',
-    icon: Trash2,
-    desc: 'Quản lý hộ dân đã xóa'
-  });
 
   return (
     <aside
@@ -81,15 +121,17 @@ export const Sidebar: React.FC = () => {
         {!isSidebarCollapsed ? (
           <>
             <div className="text-xs font-black text-slate-400 uppercase tracking-widest px-2 flex items-center gap-2 whitespace-nowrap overflow-hidden">
-              <Database className="w-4 h-4 text-emerald-400 shrink-0" />
+              <Database className="w-4 h-4 text-emerald-400 shrink-0" strokeWidth={1.5} />
               <span>DANH MỤC</span>
             </div>
             <button
               type="button"
               onClick={toggleSidebar}
               className="p-2 text-slate-400 hover:text-slate-100 hover:bg-slate-900 rounded-xl transition-all cursor-pointer shrink-0"
+              aria-label="Thu gọn thanh bên"
+              title="Thu gọn thanh bên"
             >
-              <PanelLeftClose className="w-4 h-4" />
+              <PanelLeftClose className="w-4 h-4" strokeWidth={1.5} />
             </button>
           </>
         ) : (
@@ -97,8 +139,10 @@ export const Sidebar: React.FC = () => {
             type="button"
             onClick={toggleSidebar}
             className="w-full flex items-center justify-center p-2 text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+            aria-label="Mở rộng thanh bên"
+            title="Mở rộng thanh bên"
           >
-            <PanelLeftOpen className="w-4 h-4" />
+            <PanelLeftOpen className="w-4 h-4" strokeWidth={1.5} />
           </button>
         )}
       </div>
@@ -114,11 +158,11 @@ export const Sidebar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                  if (item.id === 'villages') {
-                    setSelectedVillageId('');
-                  }
-                  setActiveTab(item.id);
-                }}
+                    if (item.id === 'villages') {
+                      setSelectedVillageId('');
+                    }
+                    setActiveTab(item.id);
+                  }}
                   className={`flex items-center gap-3 rounded-2xl transition-all duration-150 relative cursor-pointer overflow-hidden ${
                     isSidebarCollapsed ? 'w-12 h-12 justify-center shrink-0 mx-auto' : 'w-full py-2.5 px-3 min-h-[48px]'
                   } ${
@@ -127,7 +171,7 @@ export const Sidebar: React.FC = () => {
                       : 'text-slate-400 hover:text-emerald-400 hover:bg-slate-800/50'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : ''}`} />
+                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : ''}`} strokeWidth={1.5} />
 
                   <div
                     className={`overflow-hidden whitespace-nowrap transition-all duration-200 ease-out text-left ${
@@ -174,20 +218,22 @@ export const Sidebar: React.FC = () => {
         </nav>
       </div>
       
+      {/* Bottom Version Card matching QLHK */}
       <div className="p-3.5 border-t border-slate-900 bg-slate-950 text-xs text-slate-400 overflow-hidden">
         {!isSidebarCollapsed ? (
           <div className="space-y-1 whitespace-nowrap overflow-hidden">
             <div className="flex items-center gap-2 text-slate-200 font-bold text-xs">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" strokeWidth={1.5} />
               <span>QLNN v1.0.0</span>
             </div>
           </div>
         ) : (
           <div className="flex justify-center">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <ShieldCheck className="w-4 h-4 text-emerald-400" strokeWidth={1.5} />
           </div>
         )}
       </div>
     </aside>
   );
 };
+export default Sidebar;

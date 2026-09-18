@@ -87,3 +87,28 @@ export const updatePassword = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Lỗi đổi mật khẩu' });
   }
 };
+
+export const updateUser = async (req: AuthRequest, res: Response) => {
+  try {
+    if (req.user?.role !== 'admin') {
+      res.status(403).json({ error: 'Chỉ Admin mới có quyền' });
+      return;
+    }
+    const id = String(req.params.id);
+    const { role, village_id, password } = req.body;
+    const data: any = {};
+    if (role !== undefined) data.role = role;
+    if (village_id !== undefined) data.village_id = village_id || null;
+    if (password && typeof password === 'string' && password.trim() !== '') {
+      data.password = await bcrypt.hash(password.trim(), 10);
+    }
+    const updated = await prisma.users.update({
+      where: { id },
+      data,
+      select: { id: true, username: true, role: true, village_id: true, created_at: true }
+    });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi cập nhật thông tin cán bộ' });
+  }
+};

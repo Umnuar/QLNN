@@ -21,6 +21,19 @@ export const authApi = {
     return res.data.data || res.data;
   },
 
+  async createUser(data: { username: string; password: string; role: string; village_id: string | null }): Promise<User> {
+    const res = await apiClient.post('/users', data);
+    return res.data.data || res.data;
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    await apiClient.delete(`/users/${id}`);
+  },
+
+  async updatePassword(id: string, password: string): Promise<void> {
+    await apiClient.put(`/users/${id}/password`, { password });
+  },
+
   async logout(_refreshToken: string): Promise<void> {
     // Không cần gọi backend, token tự hủy
   },

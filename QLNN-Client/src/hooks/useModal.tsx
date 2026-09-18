@@ -132,7 +132,18 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 export const useModal = () => {
   const context = useContext(ModalContext);
   if (!context) {
-    throw new Error('useModal must be used within a ModalProvider');
+    return {
+      showModal: (config: ModalOptions) => {
+        if (config.onConfirm) {
+          if (window.confirm(config.message)) {
+            config.onConfirm();
+          }
+        } else {
+          alert(config.message);
+        }
+      },
+      hideModal: () => {},
+    };
   }
   return context;
 };

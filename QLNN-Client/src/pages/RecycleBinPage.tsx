@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { householdApi } from '../api/householdApi';
 import { HouseholdFlat } from '../types';
 import { useApp } from '../AppContext';
+import { useModal } from '../hooks/useModal';
 import { RecycleBinTable } from '../components/households/RecycleBinTable';
-import { RefreshCw, Trash2, RotateCcw } from 'lucide-react';
+import { RefreshCw, Trash2, RotateCcw, ArrowLeft } from 'lucide-react';
 
 export const RecycleBinPage: React.FC = () => {
-  const { user } = useApp();
+  const { user, setActiveTab } = useApp();
+  const { showModal } = useModal();
   const [households, setHouseholds] = useState<HouseholdFlat[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -20,7 +22,7 @@ export const RecycleBinPage: React.FC = () => {
       setPagination(res.pagination);
     } catch (error) {
       console.error('Failed to fetch deleted households', error);
-      alert('Lỗi tải danh sách đã xóa');
+      showModal({ title: 'Lỗi', message: 'Lỗi tải danh sách đã xóa', type: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -36,7 +38,11 @@ export const RecycleBinPage: React.FC = () => {
       setSelectedIds([]);
       fetchDeleted();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Lỗi khôi phục');
+      showModal({
+        title: 'Lỗi',
+        message: err.response?.data?.error || 'Lỗi khôi phục',
+        type: 'danger',
+      });
     }
   };
 
@@ -47,7 +53,11 @@ export const RecycleBinPage: React.FC = () => {
       setSelectedIds([]);
       fetchDeleted();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Lỗi xóa vĩnh viễn');
+      showModal({
+        title: 'Lỗi',
+        message: err.response?.data?.error || 'Lỗi xóa vĩnh viễn',
+        type: 'danger',
+      });
     }
   };
 
@@ -66,44 +76,62 @@ export const RecycleBinPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-6 animate-in fade-in pb-10">
+      {/* Top Banner matching QLHK */}
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-150">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Trash2 className="w-7 h-7 text-rose-500" />
-            Thùng Rác
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Danh sách các hộ nông nghiệp đã bị xóa
+          <div className="flex items-center gap-2.5">
+            <span className="px-3 py-1 rounded-xl text-xs font-black bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 uppercase tracking-wider">
+              Thùng Rác ({pagination.total})
+            </span>
+            <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Trash2 className="w-6 h-6 text-rose-600 dark:text-rose-400" strokeWidth={1.5} />
+              <span>Thùng Rác Hộ Nông Nghiệp</span>
+            </h2>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+            Quản lý các hộ dân đã xóa tạm, hỗ trợ khôi phục nguyên trạng hoặc xóa vĩnh viễn
           </p>
         </div>
-        
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-2.5 flex-wrap">
           <button
-            onClick={() => fetchDeleted()}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+            type="button"
+            onClick={() => setActiveTab('households')}
+            className="h-10 flex items-center justify-center gap-1.5 px-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all border border-slate-200 dark:border-slate-700 cursor-pointer active:scale-95"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Làm mới
+            <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
+            <span>Về danh sách Hộ Nông Nghiệp</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => fetchDeleted()}
+            className="h-10 flex items-center justify-center gap-1.5 px-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm cursor-pointer active:scale-95"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.5} />
+            <span>Làm mới</span>
           </button>
           
           {selectedIds.length > 0 && (
             <>
               <button
+                type="button"
                 onClick={() => handleRestore(selectedIds)}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors shadow-sm"
+                className="h-10 flex items-center gap-1.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 animate-in fade-in"
               >
-                <RotateCcw className="w-4 h-4" />
-                Khôi phục ({selectedIds.length})
+                <RotateCcw className="w-4 h-4" strokeWidth={1.5} />
+                <span>Khôi Phục ({selectedIds.length})</span>
               </button>
               
               {user?.role === 'admin' && (
                 <button
+                  type="button"
                   onClick={() => handleHardDelete(selectedIds)}
-                  className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-xl text-sm font-bold hover:bg-rose-700 transition-colors shadow-sm"
+                  className="h-10 flex items-center gap-1.5 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 animate-in fade-in"
                 >
-                  <Trash2 className="w-4 h-4" />
-                  Xóa vĩnh viễn ({selectedIds.length})
+                  <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                  <span>Xóa Vĩnh Viễn ({selectedIds.length})</span>
                 </button>
               )}
             </>
@@ -125,7 +153,7 @@ export const RecycleBinPage: React.FC = () => {
         onPageChange={(page) => fetchDeleted(page)}
         onLimitChange={(limit) => fetchDeleted(1, limit)}
         onEdit={() => {}}
-        onDelete={() => {}}
+        onDelete={(hh) => hh.id && handleHardDelete([hh.id])}
       />
     </div>
   );

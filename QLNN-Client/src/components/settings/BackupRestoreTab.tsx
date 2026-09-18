@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Database, Download, UploadCloud, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { secureStorage } from '../../utils/secureStorage';
 import { useModal } from '../../hooks/useModal';
+import { API_BASE_URL } from '../../api/apiClient';
 
 export const BackupRestoreTab: React.FC = () => {
   const { showModal } = useModal();
@@ -10,11 +11,15 @@ export const BackupRestoreTab: React.FC = () => {
     try {
       const token = await secureStorage.getItem('accessToken');
       if (!token) {
-        alert('Phiên đăng nhập đã hết hạn.');
+        showModal({
+          title: 'Thông báo',
+          message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+          type: 'danger',
+        });
         return;
       }
 
-      const response = await fetch('http://localhost:5001/api/backup/export', {
+      const response = await fetch(`${API_BASE_URL}/backup/export`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -35,11 +40,15 @@ export const BackupRestoreTab: React.FC = () => {
       document.body.removeChild(a);
     } catch (err) {
       console.error(err);
-      alert('Không thể tải bản sao lưu. Vui lòng kiểm tra quyền Admin hoặc kết nối máy chủ.');
+      showModal({
+        title: 'Lỗi',
+        message: 'Không thể tải bản sao lưu. Vui lòng kiểm tra quyền Admin hoặc kết nối máy chủ.',
+        type: 'danger',
+      });
     }
   };
 
-    const handleRestoreClick = () => {
+  const handleRestoreClick = () => {
     fileInputRef.current?.click();
   };
 
@@ -58,11 +67,15 @@ export const BackupRestoreTab: React.FC = () => {
 
           const token = await secureStorage.getItem('accessToken');
           if (!token) {
-            alert('Phiên đăng nhập đã hết hạn.');
+            showModal({
+              title: 'Thông báo',
+              message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+              type: 'danger',
+            });
             return;
           }
 
-          const response = await fetch('http://localhost:5001/api/backup/restore', {
+          const response = await fetch(`${API_BASE_URL}/backup/restore`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -76,11 +89,21 @@ export const BackupRestoreTab: React.FC = () => {
             throw new Error(errData.error || 'Lỗi khi khôi phục dữ liệu');
           }
 
-          alert('Phục hồi dữ liệu thành công. Vui lòng đăng nhập lại.');
-          window.dispatchEvent(new CustomEvent('auth:expired'));
+          showModal({
+            title: 'Thành công',
+            message: 'Phục hồi dữ liệu thành công. Vui lòng đăng nhập lại.',
+            type: 'info',
+            onConfirm: () => {
+              window.dispatchEvent(new CustomEvent('auth:expired'));
+            },
+          });
         } catch (err: any) {
           console.error(err);
-          alert(`Lỗi khôi phục: ${err.message}`);
+          showModal({
+            title: 'Lỗi',
+            message: `Lỗi khôi phục: ${err.message}`,
+            type: 'danger',
+          });
         }
       }
     });
@@ -96,7 +119,7 @@ export const BackupRestoreTab: React.FC = () => {
         {/* Header Title */}
         <div className="flex items-center gap-3 pb-5 border-b border-slate-100 dark:border-slate-800">
           <div className="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex items-center justify-center">
-            <Database className="w-5 h-5" />
+            <Database className="w-5 h-5" strokeWidth={1.5} />
           </div>
           <div>
             <h3 className="text-base font-black text-slate-900 dark:text-white">
@@ -112,7 +135,7 @@ export const BackupRestoreTab: React.FC = () => {
         <div className="p-5 border border-slate-200 dark:border-slate-700/80 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 space-y-3">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4" strokeWidth={1.5} />
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
@@ -130,7 +153,7 @@ export const BackupRestoreTab: React.FC = () => {
               onClick={handleExport}
               className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl font-bold text-xs cursor-pointer transition-all shadow-xs"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4" strokeWidth={1.5} />
               <span>Xuất Database (.json)</span>
             </button>
           </div>
@@ -140,7 +163,7 @@ export const BackupRestoreTab: React.FC = () => {
         <div className="p-5 border border-rose-200 dark:border-rose-900/60 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 space-y-3">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5">
-              <UploadCloud className="w-4 h-4" />
+              <UploadCloud className="w-4 h-4" strokeWidth={1.5} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -148,7 +171,7 @@ export const BackupRestoreTab: React.FC = () => {
                   Khôi phục Dữ liệu Hệ thống (Restore Database)
                 </h4>
                 <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-rose-200 dark:bg-rose-900 text-rose-800 dark:text-rose-200">
-                  <AlertTriangle className="w-3 h-3" /> Cảnh báo
+                  <AlertTriangle className="w-3 h-3" strokeWidth={1.5} /> Cảnh báo
                 </span>
               </div>
               <p className="text-xs text-rose-600/90 dark:text-rose-300/80 mt-1 leading-relaxed">
@@ -163,7 +186,7 @@ export const BackupRestoreTab: React.FC = () => {
               onClick={handleRestoreClick}
               className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl font-bold text-xs cursor-pointer transition-all shadow-xs"
             >
-              <UploadCloud className="w-4 h-4" />
+              <UploadCloud className="w-4 h-4" strokeWidth={1.5} />
               <span>Nhập Database (.json)</span>
             </button>
           </div>
@@ -171,7 +194,7 @@ export const BackupRestoreTab: React.FC = () => {
 
         {/* System Storage Note */}
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+          <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" strokeWidth={1.5} />
           <span>Dữ liệu được lưu trữ cục bộ an toàn trên Server. Tự động sao lưu mỗi ngày lúc 02:00 AM.</span>
         </div>
         <input type="file" accept=".json" ref={fileInputRef} className="hidden" onChange={handleFileChange} />

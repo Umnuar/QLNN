@@ -8,15 +8,16 @@ import {
   Edit3, 
   PlusCircle, 
   RefreshCw, 
-  Filter, 
   Search, 
   MapPin,
   AlertCircle,
-  ChevronDown,
-  Layers
+  Layers,
+  RotateCcw,
+  ArrowRight
 } from 'lucide-react';
 import { auditApi, AuditLog } from '../../api/auditApi';
 import { useApp } from '../../AppContext';
+import { CustomSelect } from '../common/CustomSelect';
 
 export interface AuditLogViewProps {
   villageId?: string;
@@ -98,6 +99,10 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
         return <Edit3 className="w-4 h-4 text-amber-600 dark:text-amber-400" />;
       case 'DELETE':
         return <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />;
+      case 'HARD_DELETE':
+        return <Trash2 className="w-4 h-4 text-red-700 dark:text-red-500" />;
+      case 'RESTORE':
+        return <RotateCcw className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
       case 'IMPORT':
         return <FileSpreadsheet className="w-4 h-4 text-sky-600 dark:text-sky-400" />;
       default:
@@ -125,6 +130,18 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
             XÓA BỎ
           </span>
         );
+      case 'HARD_DELETE':
+        return (
+          <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-md bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/60">
+            XÓA VĨNH VIỄN
+          </span>
+        );
+      case 'RESTORE':
+        return (
+          <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60">
+            KHÔI PHỤC
+          </span>
+        );
       case 'IMPORT':
         return (
           <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-md bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60">
@@ -146,6 +163,21 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
     }
 
     const action = log.action?.toUpperCase();
+
+    if (action === 'RESTORE' || action === 'HARD_DELETE') {
+      return (
+        <div className="text-xs mt-2 p-2.5 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800/80">
+          <p className="text-slate-700 dark:text-slate-300 mb-1">
+            <strong className="text-slate-900 dark:text-white font-bold">{log.details.message || 'Không rõ nội dung'}</strong>
+          </p>
+          {log.details.names && Array.isArray(log.details.names) && (
+            <p className="text-slate-600 dark:text-slate-400">
+              Hộ dân: {log.details.names.join(', ')}
+            </p>
+          )}
+        </div>
+      );
+    }
 
     if (action === 'IMPORT') {
       return (
@@ -183,7 +215,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
                   <span className="line-through text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">
                     {String(val.old ?? 'Trống')}
                   </span>
-                  <span className="text-slate-400">➔</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 inline shrink-0" strokeWidth={1.5} />
                   <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded">
                     {String(val.new ?? 'Trống')}
                   </span>
@@ -260,22 +292,16 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                   Đơn vị thôn
                 </label>
-                <div className="relative">
-                  <select
-                    value={selectedVillage}
-                    onChange={(e) => setSelectedVillage(e.target.value)}
-                    className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden appearance-none"
-                  >
-                    <option value="">-- Toàn xã --</option>
-                    {villages.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.name}
-                      </option>
-                    ))}
-                  </select>
-                  <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                <CustomSelect
+                  value={selectedVillage}
+                  onChange={(val) => setSelectedVillage(String(val))}
+                  size="sm"
+                  placeholder="-- Toàn xã --"
+                  options={[
+                    { value: '', label: '-- Toàn xã --' },
+                    ...villages.map((v) => ({ value: v.id, label: v.name }))
+                  ]}
+                />
               </div>
             )}
 
@@ -284,21 +310,20 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                 Loại thao tác
               </label>
-              <div className="relative">
-                <select
-                  value={selectedAction}
-                  onChange={(e) => setSelectedAction(e.target.value)}
-                  className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden appearance-none"
-                >
-                  <option value="ALL">Tất cả thao tác</option>
-                  <option value="CREATE">Thêm mới (CREATE)</option>
-                  <option value="UPDATE">Chỉnh sửa (UPDATE)</option>
-                  <option value="DELETE">Xóa bỏ (DELETE)</option>
-                  <option value="IMPORT">Nhập Excel (IMPORT)</option>
-                </select>
-                <Filter className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <CustomSelect
+                value={selectedAction}
+                onChange={(val) => setSelectedAction(String(val))}
+                size="sm"
+                options={[
+                  { value: 'ALL', label: 'Tất cả thao tác' },
+                  { value: 'CREATE', label: 'Thêm mới (CREATE)' },
+                  { value: 'UPDATE', label: 'Chỉnh sửa (UPDATE)' },
+                  { value: 'DELETE', label: 'Xóa bỏ (DELETE)' },
+                  { value: 'RESTORE', label: 'Khôi phục (RESTORE)' },
+                  { value: 'HARD_DELETE', label: 'Xóa vĩnh viễn (HARD_DELETE)' },
+                  { value: 'IMPORT', label: 'Nhập Excel (IMPORT)' },
+                ]}
+              />
             </div>
 
             {/* Search Input */}

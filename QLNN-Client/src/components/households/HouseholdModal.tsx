@@ -1,18 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
-  Save,
   Trees,
-  Dog,
+  PawPrint,
   Fish,
   AlertCircle,
-  Sparkles,
+  Flower2,
+  Plus,
+  Check,
 } from 'lucide-react';
 import { HouseholdFlat } from '../../types';
 import { householdApi } from '../../api/householdApi';
 import { useApp } from '../../AppContext';
 import { useModal } from '../../hooks/useModal';
 import { cryptoHelper } from '../../utils/cryptoHelper';
+import { CustomSelect } from '../common/CustomSelect';
+
+const inputClasses = "w-full px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all outline-hidden bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:bg-slate-800 dark:focus:border-emerald-500 dark:focus:ring-2 dark:focus:ring-emerald-500/20";
 
 interface HouseholdModalProps {
   isOpen: boolean;
@@ -33,6 +38,17 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
   const { showModal } = useModal();
 
   const [activeTab, setActiveTab] = useState<TabType>('crops');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
   const INITIAL_FORM_DATA = {
   villageId: '',
   fullName: '',
@@ -142,7 +158,11 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
     );
   }, [formData.buffalo, formData.cow, formData.pig, formData.poultry]);
 
-  if (!isOpen) return null;
+  const currentVillageName = useMemo(() => {
+    return villages.find((v) => v.id === formData.villageId)?.name;
+  }, [villages, formData.villageId]);
+
+  if (!isOpen || typeof document === 'undefined') return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,115 +255,78 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs select-none animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-150">
-        {/* Header */}
-        <div className="bg-slate-900 border-b border-slate-800 px-6 py-4.5 text-white flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <Trees className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-black text-base sm:text-lg tracking-tight">
-                {household ? 'Chỉnh Sửa Số Liệu Hộ Nông Nghiệp' : 'Thêm Mới Hộ Nông Nghiệp'}
-              </h3>
-              <p className="text-xs text-slate-400 font-medium">
-                Kê khai 18 chỉ số diện tích cây trồng, đàn vật nuôi và mặt nước thủy sản
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng cửa sổ"
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
-          {error && (
-            <div className="p-3.5 bg-rose-950/40 border border-rose-800/60 rounded-2xl flex items-start gap-2.5 text-rose-300 text-xs leading-relaxed">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* General Information Box */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-200/90 dark:border-slate-800">
-            <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                Họ và tên chủ hộ <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.fullName}
-                onChange={handleChange('fullName')}
-                placeholder="Ví dụ: A Đôi, Y Blui, Trần Văn Nam..."
-                required
-                className="w-full h-10 px-3.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden"
-              />
-            </div>
-
-            {user?.role === 'admin' ? (
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                  Thôn quản lý <span className="text-rose-500">*</span>
-                </label>
-                <select
-                  value={formData.villageId}
-                  onChange={handleChange('villageId')}
-                  required
-                  className="w-full h-10 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden cursor-pointer"
-                >
-                  {villages.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name}
-                    </option>
-                  ))}
-                </select>
+  return createPortal(
+    <div
+      className="fixed inset-0 !m-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="w-full max-w-3xl h-[88vh] max-h-[88vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-150 animate-in zoom-in-95 duration-150 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Top Bar cố định: Icon Trồng trọt/Chăn nuôi/Thủy sản, Tiêu đề Thêm/Sửa Hộ, Tên chủ hộ, Badge Thôn, Tab switch (Trồng trọt / Chăn nuôi / Thủy sản), nút đóng X */}
+        <div className="bg-slate-900 border-b border-slate-800 px-6 pt-5 pb-4 text-white shrink-0 space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div
+                className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
+                  activeTab === 'crops'
+                    ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                    : activeTab === 'livestock'
+                    ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400'
+                    : 'bg-sky-500/10 border border-sky-500/20 text-sky-400'
+                }`}
+              >
+                {activeTab === 'crops' && <Trees className="w-5 h-5" strokeWidth={1.5} />}
+                {activeTab === 'livestock' && <PawPrint className="w-5 h-5" strokeWidth={1.5} />}
+                {activeTab === 'aquaculture' && <Fish className="w-5 h-5" strokeWidth={1.5} />}
               </div>
-            ) : (
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                  Thôn quản lý
-                </label>
-                <div className="h-10 px-3.5 flex items-center bg-slate-200/60 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300">
-                  {villages.find((v) => v.id === formData.villageId)?.name || 'Thôn hiện tại'}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-black text-base tracking-tight text-white">
+                    {household ? 'Chỉnh Sửa Số Liệu Hộ Nông Nghiệp' : 'Thêm Mới Hộ Nông Nghiệp'}
+                  </h3>
+                  {household?.full_name && (
+                    <span className="px-2 py-0.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold truncate max-w-[160px]">
+                      {household.full_name}
+                    </span>
+                  )}
+                  {currentVillageName && (
+                    <span className="px-2 py-0.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs font-medium">
+                      {currentVillageName}
+                    </span>
+                  )}
                 </div>
+                <p className="text-xs text-slate-400 font-medium truncate mt-0.5">
+                  Kê khai 18 chỉ số diện tích cây trồng, đàn vật nuôi và mặt nước thủy sản
+                </p>
               </div>
-            )}
-
-            <div className="md:col-span-3">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                Ghi chú thêm (nếu có)
-              </label>
-              <input
-                type="text"
-                value={formData.notes}
-                onChange={handleChange('notes')}
-                placeholder="Ghi chú về nhận khoán, diện tích chuyển đổi, đề án nông thôn mới..."
-                className="w-full h-9 px-3.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden font-medium"
-              />
             </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Đóng cửa sổ"
+              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shrink-0"
+            >
+              <X className="w-5 h-5" strokeWidth={1.5} />
+            </button>
           </div>
 
-          {/* Segmented Control Tabs */}
-          <div className="flex bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl gap-1.5 border border-slate-200/90 dark:border-slate-800">
+          {/* Tab switch (Trồng trọt / Chăn nuôi / Thủy sản) */}
+          <div className="flex bg-slate-950/80 p-1.5 rounded-2xl gap-1.5 border border-slate-800">
             <button
               type="button"
               onClick={() => setActiveTab('crops')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'crops'
                   ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
               }`}
             >
-              <Trees className="w-4 h-4" />
-              <span>1. Cây Trồng (12 Chỉ Số)</span>
+              <Trees className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+              <span className="truncate">1. Cây Trồng (12 Chỉ Số)</span>
             </button>
 
             <button
@@ -352,11 +335,11 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'livestock'
                   ? 'bg-amber-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
               }`}
             >
-              <Dog className="w-4 h-4" />
-              <span>2. Vật Nuôi (4 Chỉ Số)</span>
+              <PawPrint className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+              <span className="truncate">2. Vật Nuôi (4 Chỉ Số)</span>
             </button>
 
             <button
@@ -365,13 +348,82 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'aquaculture'
                   ? 'bg-sky-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
               }`}
             >
-              <Fish className="w-4 h-4" />
-              <span>3. Thủy Sản (2 Chỉ Số)</span>
+              <Fish className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+              <span className="truncate">3. Thủy Sản (2 Chỉ Số)</span>
             </button>
           </div>
+        </div>
+
+        {/* Form Container */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* Body cuộn độc lập: flex-1 overflow-y-auto p-6 space-y-6 */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+            {error && (
+              <div className="p-3.5 bg-rose-950/40 border border-rose-800/60 rounded-2xl flex items-start gap-2.5 text-rose-300 text-xs leading-relaxed">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" strokeWidth={1.5} />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* General Information Box */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-200/90 dark:border-slate-800">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Họ và tên chủ hộ <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.fullName}
+                  onChange={handleChange('fullName')}
+                  placeholder="Ví dụ: A Đôi, Y Blui, Trần Văn Nam..."
+                  required
+                  className={inputClasses}
+                />
+              </div>
+
+              {user?.role === 'admin' ? (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Thôn quản lý <span className="text-rose-500">*</span>
+                  </label>
+                  <CustomSelect
+                    value={formData.villageId}
+                    onChange={(val) => setFormData((prev) => ({ ...prev, villageId: String(val) }))}
+                    options={villages.map((v) => ({
+                      value: v.id,
+                      label: v.name,
+                    }))}
+                    required
+                    size="md"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                    Thôn quản lý
+                  </label>
+                  <div className="h-10 px-3.5 flex items-center bg-slate-200/60 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300">
+                    {villages.find((v) => v.id === formData.villageId)?.name || 'Thôn hiện tại'}
+                  </div>
+                </div>
+              )}
+
+              <div className="md:col-span-3">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Ghi chú thêm (nếu có)
+                </label>
+                <input
+                  type="text"
+                  value={formData.notes}
+                  onChange={handleChange('notes')}
+                  placeholder="Ghi chú về nhận khoán, diện tích chuyển đổi, đề án nông thôn mới..."
+                  className={inputClasses}
+                />
+              </div>
+            </div>
 
           {/* TAB 1: CÂY TRỒNG */}
           {activeTab === 'crops' && (
@@ -553,7 +605,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
               <div className="p-4.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 rounded-2xl space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-teal-700 dark:text-teal-400 uppercase">
-                    <Sparkles className="w-4 h-4 text-teal-500" />
+                    <Flower2 className="w-4 h-4 text-teal-500" strokeWidth={1.5} />
                     <span>CÂY DƯỢC LIỆU ĐĂK HÀ (4 LOẠI CON)</span>
                   </div>
                 </div>
@@ -773,25 +825,31 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
             </div>
           )}
 
-          {/* Modal Footer Actions */}
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+          </div>
+
+          {/* Fixed Bottom Action Bar */}
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="h-10 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              className="h-10 px-4 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs transition-colors cursor-pointer active:scale-95"
             >
               Hủy bỏ
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="h-10 flex items-center gap-2 px-5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold rounded-xl text-xs shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="h-10 flex items-center gap-1.5 px-5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-2xl text-xs shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <Save className="w-4 h-4" />
+                  {household ? (
+                    <Check className="w-4 h-4" strokeWidth={1.5} />
+                  ) : (
+                    <Plus className="w-4 h-4" strokeWidth={1.5} />
+                  )}
                   <span>{household ? 'Cập Nhật Hồ Sơ' : 'Lưu Hộ Mới'}</span>
                 </>
               )}
@@ -799,6 +857,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

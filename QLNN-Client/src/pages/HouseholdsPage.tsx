@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Upload, Download, Users } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Upload, Download, Users, WifiOff, Trash2, Plus } from 'lucide-react';
 import { HouseholdFlat } from '../types';
 import { householdApi } from '../api/householdApi';
 import * as XLSX from 'xlsx';
@@ -11,11 +11,51 @@ import { getCache, setCache } from '../db/indexedDB';
 import { useModal } from '../hooks/useModal';
 import { HouseholdTable } from '../components/households/HouseholdTable';
 import { HouseholdModal } from '../components/households/HouseholdModal';
-import { HouseholdFilterBar } from '../components/households/HouseholdFilterBar';
+import {
+  HouseholdFilterBar,
+  ScaleFilter,
+  ProductionTypeFilter,
+  SortOption,
+} from '../components/households/HouseholdFilterBar';
+import { CustomSelect } from '../components/common/CustomSelect';
+import { useDebounce } from '../hooks/useDebounce';
 
+const computeTotalCrops = (hh: HouseholdFlat): number => {
+  return (
+    (Number(hh.cafe_household) || 0) +
+    (Number(hh.cafe_contracted) || 0) +
+    (Number(hh.rubber_household) || 0) +
+    (Number(hh.rubber_contracted) || 0) +
+    (Number(hh.fruit_tree) || 0) +
+    (Number(hh.macadamia) || 0) +
+    (Number(hh.herb_dinh_lang) || 0) +
+    (Number(hh.herb_gung) || 0) +
+    (Number(hh.herb_nghe) || 0) +
+    (Number(hh.herb_sa) || 0) +
+    (Number(hh.wet_rice) || 0) +
+    (Number(hh.other_annual_crops) || 0)
+  );
+};
+
+const computeTotalLivestock = (hh: HouseholdFlat): number => {
+  return (
+    (Number(hh.buffalo) || 0) +
+    (Number(hh.cow) || 0) +
+    (Number(hh.pig) || 0) +
+    (Number(hh.poultry) || 0)
+  );
+};
 
 export const HouseholdsPage: React.FC = () => {
-  const { user, selectedVillageId, selectedVillageName, isOnline, isBackendHealthy } = useApp();
+  const {
+    user,
+    selectedVillageId,
+    setSelectedVillageId,
+    selectedVillageName,
+    villages,
+    isOnline,
+    isBackendHealthy,
+  } = useApp();
   const isDisconnected = !isOnline || !isBackendHealthy;
   const { showModal } = useModal();
 
@@ -26,6 +66,23 @@ export const HouseholdsPage: React.FC = () => {
   const [limit, setLimit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
+  const [scaleFilter, setScaleFilter] = useState<ScaleFilter>('all');
+  const [typeFilter, setTypeFilter] = useState<ProductionTypeFilter>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('default');
+  const [isAllExpanded, setIsAllExpanded] = useState(false);
+
+  const handleToggleExpandAll = () => {
+    setIsAllExpanded((prev) => !prev);
+  };
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setScaleFilter('all');
+    setTypeFilter('all');
+    setSortBy('default');
+  };
+
   const [undoAction, setUndoAction] = useState<{ ids: string[] } | null>(null);
 
   useEffect(() => {
@@ -127,27 +184,95 @@ export const HouseholdsPage: React.FC = () => {
 
   const [selectedHouseholdIds, setSelectedHouseholdIds] = useState<string[]>([]);
 
+  const filteredAndSortedHouseholds = useMemo(() => {
+    const filtered = households.filter((hh) => {
+      // 1. Lọc theo Quy mô (Scale Filter)
+      if (scaleFilter !== 'all') {
+        const totalCrops = computeTotalCrops(hh);
+        const totalLivestock = computeTotalLivestock(hh);
+        const isLarge = totalCrops >= 2.0 || totalLivestock >= 15;
+        const isMedium = !isLarge && (totalCrops >= 0.5 || totalLivestock >= 5);
+
+        if (scaleFilter === 'large' && !isLarge) return false;
+        if (scaleFilter === 'medium' && !isMedium) return false;
+        if (scaleFilter === 'small' && (isLarge || isMedium)) return false;
+      }
+
+      // 2. Lọc theo Loại hình đặc thù (Production Type Filter)
+      if (typeFilter !== 'all') {
+        if (typeFilter === 'contracted') {
+          const hasContracted =
+            (Number(hh.cafe_contracted) || 0) > 0 ||
+            (Number(hh.rubber_contracted) || 0) > 0;
+          if (!hasContracted) return false;
+        } else if (typeFilter === 'herbs') {
+          const hasHerbs =
+            (Number(hh.herb_dinh_lang) || 0) > 0 ||
+            (Number(hh.herb_gung) || 0) > 0 ||
+            (Number(hh.herb_nghe) || 0) > 0 ||
+            (Number(hh.herb_sa) || 0) > 0;
+          if (!hasHerbs) return false;
+        } else if (typeFilter === 'livestock') {
+          const hasLivestock =
+            (Number(hh.buffalo) || 0) > 0 ||
+            (Number(hh.cow) || 0) > 0 ||
+            (Number(hh.pig) || 0) > 0 ||
+            (Number(hh.poultry) || 0) > 0;
+          if (!hasLivestock) return false;
+        } else if (typeFilter === 'aquaculture') {
+          const hasAquaculture =
+            (Number(hh.fish_pond) || 0) > 0 ||
+            (Number(hh.fish_cage) || 0) > 0;
+          if (!hasAquaculture) return false;
+        }
+      }
+
+      return true;
+    });
+
+    // 3. Sắp xếp (Sort By)
+    if (sortBy === 'default') {
+      return filtered;
+    }
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'crops_desc') {
+        return computeTotalCrops(b) - computeTotalCrops(a);
+      }
+      if (sortBy === 'livestock_desc') {
+        return computeTotalLivestock(b) - computeTotalLivestock(a);
+      }
+      if (sortBy === 'name_asc') {
+        return (a.full_name || '').localeCompare(b.full_name || '', 'vi');
+      }
+      if (sortBy === 'name_desc') {
+        return (b.full_name || '').localeCompare(a.full_name || '', 'vi');
+      }
+      return 0;
+    });
+  }, [households, scaleFilter, typeFilter, sortBy]);
+
   const onToggleSelect = (id: string) => {
     setSelectedHouseholdIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
   const onToggleSelectAll = () => {
-    if (households.length > 0 && selectedHouseholdIds.length === households.length) {
+    if (filteredAndSortedHouseholds.length > 0 && selectedHouseholdIds.length === filteredAndSortedHouseholds.length) {
       setSelectedHouseholdIds([]);
     } else {
-      setSelectedHouseholdIds(households.map(hh => hh.id as string));
+      setSelectedHouseholdIds(filteredAndSortedHouseholds.map(hh => hh.id as string));
     }
   };
 
 
-    const fetchHouseholds = useCallback(async () => {
+  const fetchHouseholds = useCallback(async () => {
     setLoading(true);
-    const targetVillage = user?.role === 'admin' ? selectedVillageId : undefined;
-    const cacheKey = `households_${targetVillage}_${page}_${limit}_${search.trim()}`;
+    const targetVillage = user?.role === 'admin' ? (selectedVillageId || undefined) : undefined;
+    const cacheKey = `households_${targetVillage || 'all'}_${page}_${limit}_${debouncedSearch.trim()}`;
     try {
       const res = await householdApi.getPage({
         villageId: targetVillage,
-        search: search.trim() || undefined,
+        search: debouncedSearch.trim() || undefined,
         page,
         limit,
       });
@@ -170,15 +295,19 @@ export const HouseholdsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedVillageId, search, page, limit, user?.role]);
+  }, [selectedVillageId, debouncedSearch, page, limit, user?.role]);
 
   useEffect(() => {
     fetchHouseholds();
   }, [fetchHouseholds]);
 
   useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, selectedVillageId]);
+
+  useEffect(() => {
     setSelectedHouseholdIds([]);
-  }, [page, limit, search, selectedVillageId]);
+  }, [page, limit, debouncedSearch, selectedVillageId, scaleFilter, typeFilter, sortBy]);
 
   // Lắng nghe sự kiện kết nối lại máy chủ để tự động đồng bộ lại danh sách
   useEffect(() => {
@@ -201,8 +330,8 @@ export const HouseholdsPage: React.FC = () => {
 
   const handleDelete = (hh: HouseholdFlat) => {
     showModal({
-      title: 'Xóa Hộ Nông Nghiệp',
-      message: `Bạn có chắc chắn muốn xóa dữ liệu của hộ "${hh.full_name}" thuộc ${hh.village_name || 'thôn'} không?\nHành động này không thể hoàn tác.`,
+      title: 'Chuyển vào Thùng Rác',
+      message: `Bạn có chắc chắn muốn xóa hộ "${hh.full_name}" thuộc ${hh.village_name || 'thôn'} không?\nHộ sẽ được chuyển vào Thùng rác và có thể khôi phục lại bất kỳ lúc nào.`,
       type: 'danger',
       confirmText: 'Xác Nhận Xóa',
       cancelText: 'Hủy Bỏ',
@@ -236,14 +365,30 @@ export const HouseholdsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                  {isUsingCachedData && <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full border border-amber-200">⚡ Ngoại tuyến</span>}
+                {isUsingCachedData && (
+                  <span className="inline-flex items-center gap-1 text-xs bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800 font-medium">
+                    <WifiOff className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    <span>Ngoại tuyến</span>
+                  </span>
+                )}
                 <span>Danh Sách Hộ Nông Nghiệp</span>
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-mono font-bold border border-emerald-200 dark:border-emerald-800">
                   {total} hộ
                 </span>
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                Phạm vi: <strong className="text-slate-700 dark:text-slate-200">{selectedVillageName || 'Toàn xã'}</strong> • Quản lý 18 chỉ số kê khai
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 flex items-center gap-1.5 flex-wrap">
+                <span>Phạm vi:</span>
+                <strong className="text-slate-700 dark:text-slate-200">{selectedVillageName || 'Toàn xã Đăk Hà'}</strong>
+                {user?.role === 'admin' && selectedVillageId && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedVillageId('')}
+                    className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-bold hover:underline cursor-pointer"
+                  >
+                    (← Xem toàn xã)
+                  </button>
+                )}
+                <span>• Quản lý 18 chỉ số kê khai</span>
               </p>
             </div>
           </div>
@@ -251,7 +396,23 @@ export const HouseholdsPage: React.FC = () => {
 
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* Admin Village Selector */}
-          
+          {user?.role === 'admin' && (
+            <div className="w-52">
+              <CustomSelect
+                value={selectedVillageId}
+                onChange={(val) => setSelectedVillageId(String(val))}
+                options={[
+                  { value: '', label: 'Toàn xã Đăk Hà' },
+                  ...villages.map((v) => ({
+                    value: v.id,
+                    label: v.name,
+                  })),
+                ]}
+                placeholder="Chọn thôn..."
+                size="sm"
+              />
+            </div>
+          )}
 
           <button
             type="button"
@@ -259,7 +420,7 @@ export const HouseholdsPage: React.FC = () => {
             disabled={exporting}
             className="h-10 flex items-center gap-1.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all disabled:opacity-50 active:scale-[0.99] cursor-pointer border border-slate-200 dark:border-slate-700"
           >
-            <Download className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+            <Download className="w-4 h-4 text-slate-500 dark:text-slate-400" strokeWidth={1.5} />
             <span>{exporting ? 'Đang xuất...' : 'Xuất Excel'}</span>
           </button>
 
@@ -270,7 +431,7 @@ export const HouseholdsPage: React.FC = () => {
             disabled={isDisconnected}
             className={`h-10 flex items-center gap-1.5 px-4 border rounded-2xl text-xs font-bold transition-all active:scale-[0.99] shadow-xs ${isDisconnected ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border-amber-200/80 dark:border-amber-800 cursor-pointer"}`}
           >
-            <Upload className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <Upload className="w-4 h-4 text-amber-600 dark:text-amber-400" strokeWidth={1.5} />
             <span>Nhập Excel</span>
           </button>
 
@@ -278,9 +439,9 @@ export const HouseholdsPage: React.FC = () => {
             type="button"
             onClick={handleAdd}
             disabled={isDisconnected}
-            className={`h-10 flex items-center gap-1.5 px-5 text-white rounded-2xl text-xs font-bold shadow-xs transition-all ${isDisconnected ? "bg-slate-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] cursor-pointer"}`}
+            className={`h-10 flex items-center gap-1.5 px-5 text-white rounded-2xl text-xs font-bold shadow-xs transition-all ${isDisconnected ? "bg-slate-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700 active:scale-95 cursor-pointer"}`}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" strokeWidth={1.5} />
             <span>Thêm Hộ Dân</span>
           </button>
         </div>
@@ -296,23 +457,23 @@ export const HouseholdsPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSelectedHouseholdIds([])}
-              className="px-4 py-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold shadow-sm"
+              className="px-4 py-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold shadow-sm cursor-pointer active:scale-95"
             >
               Bỏ chọn
             </button>
             <button
               onClick={() => setIsExportModalOpen(true)}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
-              <Download className="w-4 h-4" /> Xuất Excel
+              <Download className="w-4 h-4" strokeWidth={1.5} /> Xuất Excel
             </button>
             <button
               onClick={() => {
                 showModal({
-                  title: 'Xóa hàng loạt',
-                  message: `Bạn có chắc chắn muốn xóa ${selectedHouseholdIds.length} hộ đã chọn?`,
+                  title: 'Chuyển vào Thùng Rác hàng loạt',
+                  message: `Bạn có chắc chắn muốn xóa ${selectedHouseholdIds.length} hộ đã chọn?\nCác hộ sẽ được chuyển vào Thùng rác và có thể khôi phục lại.`,
                   type: 'danger',
-                  confirmText: 'Xóa',
+                  confirmText: 'Xác Nhận Xóa',
                   cancelText: 'Hủy',
                   onConfirm: async () => {
                     try {
@@ -327,9 +488,9 @@ export const HouseholdsPage: React.FC = () => {
                   }
                 });
               }}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5"
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
-              Xóa
+              <Trash2 className="w-4 h-4" strokeWidth={1.5} /> Xóa
             </button>
           </div>
         </div>
@@ -340,6 +501,15 @@ export const HouseholdsPage: React.FC = () => {
         setSearch={setSearch}
         loading={loading}
         onRefresh={fetchHouseholds}
+        scaleFilter={scaleFilter}
+        setScaleFilter={setScaleFilter}
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        isAllExpanded={isAllExpanded}
+        onToggleExpandAll={handleToggleExpandAll}
+        onResetFilters={handleResetFilters}
       />
 
       {/* Main Table */}
@@ -347,7 +517,7 @@ export const HouseholdsPage: React.FC = () => {
         selectedIds={selectedHouseholdIds}
         onToggleSelect={onToggleSelect}
         onToggleSelectAll={onToggleSelectAll}
-        households={households}
+        households={filteredAndSortedHouseholds}
         loading={loading}
         total={total}
         page={page}
@@ -360,6 +530,8 @@ export const HouseholdsPage: React.FC = () => {
         }}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        isAllExpanded={isAllExpanded}
+        onToggleExpandAll={handleToggleExpandAll}
       />
 
       {/* Modal Thêm / Sửa */}
@@ -398,7 +570,7 @@ export const HouseholdsPage: React.FC = () => {
                 setUndoAction(null);
                 fetchHouseholds();
               } catch (e) {
-                alert('Lỗi hoàn tác');
+                showModal({ title: 'Lỗi', message: 'Lỗi hoàn tác dữ liệu', type: 'danger' });
               }
             }}
             className="text-emerald-400 font-bold hover:text-emerald-300 transition-colors uppercase text-xs tracking-wider"

@@ -1,15 +1,19 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { FileSpreadsheet, UploadCloud, DownloadCloud, AlertCircle, ShieldCheck, Eye } from 'lucide-react';
+import { FileSpreadsheet, UploadCloud, DownloadCloud, AlertCircle, ShieldCheck, Eye, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useApp } from '../AppContext';
 import { excelApi } from '../api/excelApi';
 import { householdApi } from '../api/householdApi';
 import { useModal } from '../hooks/useModal';
 import { HouseholdFlat } from '../types';
+import { CustomSelect } from '../components/common/CustomSelect';
 
 export const ExcelPage: React.FC = () => {
   const { user, selectedVillageId, selectedVillageName } = useApp();
   const { showModal } = useModal();
+
+  // Drag-and-drop State
+  const [isDragging, setIsDragging] = useState(false);
 
   // Export State
   const [exporting, setExporting] = useState(false);
@@ -55,6 +59,7 @@ export const ExcelPage: React.FC = () => {
           hh.herb_sa,
           hh.wet_rice,
           hh.other_annual_crops,
+          hh.buffalo,
           hh.cow,
           hh.pig,
           hh.poultry,
@@ -67,11 +72,8 @@ export const ExcelPage: React.FC = () => {
     return [];
   };
 
-  // -- IMPORT PREVIEW LOGIC --
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
+  // -- IMPORT FILE PROCESSING --
+  const processSelectedFile = (file: File) => {
     if (!file.name.endsWith('.xls') && !file.name.endsWith('.xlsx')) {
       showModal({
         title: 'File không hợp lệ',
@@ -109,9 +111,55 @@ export const ExcelPage: React.FC = () => {
       }
     };
     reader.readAsBinaryString(file);
-    
-    // Reset input
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processSelectedFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processSelectedFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const downloadSampleTemplate = () => {
+    const headers = [
+      ['ỦY BAN NHÂN DÂN XÃ ĐĂK HÀ', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['THỐNG KÊ NÔNG NGHIỆP VÀ NÔNG THÔN MỚI', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['(Kèm theo hướng dẫn kê khai 18 chỉ số nông nghiệp)', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['Thời điểm thống kê: Năm 2026', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['STT', 'Họ và tên chủ hộ', 'Cà phê (ha)', '', 'Cao su (ha)', '', 'Cây ăn quả (ha)', 'Mắc ca (ha)', 'Cây dược liệu (ha)', '', '', '', 'Lúa nước (ha)', 'Cây hàng năm khác (ha)', 'Đàn Trâu (con)', 'Đàn Bò (con)', 'Đàn Heo (con)', 'Gia cầm (con)', 'Nuôi trồng thủy sản', '', 'Ghi chú'],
+      ['', '', 'Hộ GĐ', 'Nhận khoán', 'Hộ GĐ', 'Nhận khoán', '', '', 'Đinh lăng', 'Gừng', 'Nghệ', 'Sả', '', '', '', '', '', '', 'Cá ao hồ (ha)', 'Cá lồng bè (lồng)', ''],
+      ['(1)', '(2)', '(3)', '(4)', '(5)', '(6)', '(7)', '(8)', '(9)', '(10)', '(11)', '(12)', '(13)', '(14)', '(15)', '(16)', '(17)', '(18)', '(19)', '(20)', '(21)'],
+      [1, 'Nguyễn Văn A', 1.5, 0.5, 2.0, 0, 0.5, 0.2, 0.1, 0.05, 0.05, 0.05, 0.8, 0.3, 2, 4, 12, 150, 0.2, 2, 'Hộ mẫu chuẩn'],
+      [2, 'Trần Thị B', 0.8, 0, 0, 0, 1.2, 0, 0, 0, 0, 0, 0.5, 0, 0, 2, 6, 80, 0, 0, 'Hộ trồng cây ăn quả'],
+      [3, 'A Dũng', 2.2, 1.0, 1.5, 0.5, 0, 0.5, 0.2, 0.1, 0, 0, 1.0, 0.5, 3, 6, 20, 300, 0.5, 4, 'Hộ kinh doanh tổng hợp']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(headers);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'ThongKeNongNghiep');
+    XLSX.writeFile(wb, 'Bieu_mau_thong_ke_nong_nghiep_Dak_Ha.xlsx');
   };
 
   const handleImportSubmit = async () => {
@@ -213,7 +261,7 @@ export const ExcelPage: React.FC = () => {
       <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-150">
         <div>
           <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" strokeWidth={1.5} />
             <span>Nhập / Xuất Dữ Liệu Excel</span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
@@ -227,25 +275,34 @@ export const ExcelPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Import Box */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors duration-150 relative overflow-hidden">
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`p-6 rounded-3xl border shadow-sm flex flex-col justify-between transition-all duration-150 relative overflow-hidden ${
+            isDragging
+              ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/40 ring-4 ring-emerald-500/20 scale-[1.01]'
+              : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900'
+          }`}
+        >
           {previewMode === 'import' && (
             <div className="absolute inset-0 bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-emerald-500/50 rounded-3xl pointer-events-none z-10" />
           )}
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <UploadCloud className="w-6 h-6" />
+                <UploadCloud className="w-6 h-6" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="text-base font-black text-slate-900 dark:text-white">Nhập File Excel Thống Kê</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Áp dụng cho {selectedVillageName || 'thôn đã chọn'}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Kéo thả file hoặc duyệt từ máy tính</p>
               </div>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-              Chọn file Excel theo biểu mẫu quy định. Hệ thống sẽ tự động bỏ qua 9 dòng tiêu đề, lọc các dòng hợp lệ và hiển thị bảng xem trước ở bên dưới.
+              Chọn hoặc kéo thả file Excel theo biểu mẫu quy định. Hệ thống sẽ tự động bỏ qua 9 dòng tiêu đề, kiểm tra 21 chỉ số và hiển thị bảng xem trước.
             </p>
             <div className="p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 rounded-2xl text-slate-700 dark:text-slate-300 text-xs flex items-start gap-2.5 mb-4">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" strokeWidth={1.5} />
               <span>Chỉ những dòng có điền họ tên thật mới được nhập vào hệ thống. Các dòng trống bên dưới sẽ tự động bị loại trừ (chống hộ ma).</span>
             </div>
           </div>
@@ -262,8 +319,8 @@ export const ExcelPage: React.FC = () => {
             onClick={() => fileInputRef.current?.click()}
             className="h-11 w-full px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 text-xs cursor-pointer relative z-20"
           >
-            <UploadCloud className="w-4 h-4" />
-            <span>Chọn file Excel tải lên...</span>
+            <UploadCloud className="w-4 h-4" strokeWidth={1.5} />
+            <span>{isDragging ? 'Thả file vào đây...' : 'Chọn file Excel tải lên...'}</span>
           </button>
         </div>
 
@@ -275,7 +332,7 @@ export const ExcelPage: React.FC = () => {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center">
-                <DownloadCloud className="w-6 h-6" />
+                <DownloadCloud className="w-6 h-6" strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="text-base font-black text-slate-900 dark:text-white">Xuất file Excel</h3>
@@ -286,7 +343,7 @@ export const ExcelPage: React.FC = () => {
               Xuất toàn bộ danh sách hộ dân và 18 chỉ số ra file Excel với đầy đủ 3 dòng tiêu đề, ô gộp, công thức hàm SUM và phần ký duyệt Ban quản lý thôn.
             </p>
             <div className="p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 rounded-2xl text-slate-700 dark:text-slate-300 text-xs flex items-start gap-2.5 mb-4">
-              <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" strokeWidth={1.5} />
               <span>Dữ liệu xuất ra tương thích 100% với Microsoft Excel, LibreOffice và Google Sheets.</span>
             </div>
           </div>
@@ -297,7 +354,7 @@ export const ExcelPage: React.FC = () => {
               onClick={handleOpenExportPreview}
               className="h-11 flex-1 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/80 active:scale-[0.99] text-slate-700 dark:text-slate-200 font-bold rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 text-xs cursor-pointer"
             >
-              <Eye className="w-4 h-4 text-sky-500" />
+              <Eye className="w-4 h-4 text-sky-500" strokeWidth={1.5} />
               <span>Xem trước xuất</span>
             </button>
             <button
@@ -306,11 +363,29 @@ export const ExcelPage: React.FC = () => {
               disabled={exporting}
               className="h-11 flex-1 px-4 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 active:scale-[0.99] text-white font-bold rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 text-xs disabled:opacity-50 cursor-pointer"
             >
-              <DownloadCloud className="w-4 h-4" />
+              <DownloadCloud className="w-4 h-4" strokeWidth={1.5} />
               <span>{exporting ? 'Đang tạo...' : 'Tải Xuống'}</span>
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Thanh tải file mẫu chuẩn */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm text-xs">
+        <div className="flex items-center gap-2.5 text-slate-600 dark:text-slate-400">
+          <AlertCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" strokeWidth={1.5} />
+          <span>
+            Chưa có file mẫu chuẩn? Tải biểu mẫu 21 chỉ số nông nghiệp Đăk Hà để đối soát và điền dữ liệu.
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={downloadSampleTemplate}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-bold text-xs transition-colors shrink-0 cursor-pointer border border-slate-200/80 dark:border-slate-700"
+        >
+          <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" strokeWidth={1.5} />
+          <span>Tải file Excel mẫu</span>
+        </button>
       </div>
 
       {/* --- PREVIEW AREA --- */}
@@ -363,6 +438,7 @@ export const ExcelPage: React.FC = () => {
                         <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-teal-700 dark:text-teal-400">Sả</th>
                         <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400">Lúa nước</th>
                         <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400">Cây HN khác</th>
+                        <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-amber-700 dark:text-amber-400">Trâu (con)</th>
                         <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-amber-700 dark:text-amber-400">Bò (con)</th>
                         <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-amber-700 dark:text-amber-400">Heo (con)</th>
                         <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-amber-700 dark:text-amber-400">Gia cầm (con)</th>
@@ -393,12 +469,13 @@ export const ExcelPage: React.FC = () => {
                           <td className="py-2 px-3 text-right tabular-nums">{row[16] || '-'}</td>
                           <td className="py-2 px-3 text-right tabular-nums">{row[17] || '-'}</td>
                           <td className="py-2 px-3 text-right tabular-nums">{row[18] || '-'}</td>
-                          <td className="py-2 px-3 text-slate-500">{row[19] || ''}</td>
+                          <td className="py-2 px-3 text-right tabular-nums">{row[19] || '-'}</td>
+                          <td className="py-2 px-3 text-slate-500">{row[20] || ''}</td>
                         </tr>
                       ))}
                       {getDisplayData().length === 0 && (
                         <tr>
-                          <td colSpan={20} className="py-8 text-center text-slate-500">
+                          <td colSpan={21} className="py-8 text-center text-slate-500">
                             Không tìm thấy dữ liệu hợp lệ trong file
                           </td>
                         </tr>
@@ -412,11 +489,11 @@ export const ExcelPage: React.FC = () => {
                 <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-4 mt-2">
                   <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                     <span>Hiển thị</span>
-                    <select
-                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    <CustomSelect
+                      size="sm"
                       value={previewMode === 'export' ? exportLimit : importLimit}
-                      onChange={(e) => {
-                        const newLimit = Number(e.target.value);
+                      onChange={(val) => {
+                        const newLimit = Number(val);
                         if (previewMode === 'export') {
                           setExportLimit(newLimit);
                           setExportPage(1);
@@ -425,16 +502,18 @@ export const ExcelPage: React.FC = () => {
                           setImportPage(1);
                         }
                       }}
-                    >
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
+                      options={[
+                        { value: 20, label: '20' },
+                        { value: 50, label: '50' },
+                        { value: 100, label: '100' },
+                      ]}
+                      className="w-20"
+                    />
                     <span>/ {previewMode === 'export' ? exportTotal : importData.length} bản ghi</span>
                   </div>
                   
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         disabled={(previewMode === 'export' ? exportPage : importPage) === 1}
@@ -442,14 +521,15 @@ export const ExcelPage: React.FC = () => {
                           if (previewMode === 'export') setExportPage(p => Math.max(1, p - 1));
                           else setImportPage(p => Math.max(1, p - 1));
                         }}
-                        className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        aria-label="Trang trước"
+                        className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer active:scale-95"
                       >
-                        Trước
+                        <ChevronLeft className="w-4 h-4" strokeWidth={1.5} />
                       </button>
                       <div className="flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-300">
                         <input 
                           type="number"
-                          className="w-12 text-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md py-1 outline-none focus:ring-1 focus:ring-emerald-500"
+                          className="w-12 text-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-1 outline-hidden focus:ring-1 focus:ring-emerald-500 font-mono"
                           value={previewMode === 'export' ? exportPage : importPage}
                           onChange={(e) => {
                             let val = parseInt(e.target.value);
@@ -469,9 +549,10 @@ export const ExcelPage: React.FC = () => {
                           if (previewMode === 'export') setExportPage(p => p + 1);
                           else setImportPage(p => p + 1);
                         }}
-                        className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        aria-label="Trang tiếp theo"
+                        className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer active:scale-95"
                       >
-                        Sau
+                        <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
                       </button>
                     </div>
 
@@ -481,7 +562,7 @@ export const ExcelPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setPreviewMode(null)}
-                        className="h-10 px-5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                        className="h-10 px-5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs transition-colors cursor-pointer active:scale-95"
                       >
                         Hủy Bỏ
                       </button>
@@ -490,7 +571,7 @@ export const ExcelPage: React.FC = () => {
                           type="button"
                           onClick={handleImportSubmit}
                           disabled={importing || importData.length === 0}
-                          className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                          className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
                         >
                           {importing ? (
                             <>
@@ -499,7 +580,7 @@ export const ExcelPage: React.FC = () => {
                             </>
                           ) : (
                             <>
-                              <UploadCloud className="w-4 h-4" />
+                              <UploadCloud className="w-4 h-4" strokeWidth={1.5} />
                               <span>Xác Nhận Nhập Dữ Liệu</span>
                             </>
                           )}

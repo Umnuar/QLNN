@@ -365,27 +365,50 @@ export const updateHousehold = async (req: AuthRequest, res: Response) => {
         },
       });
 
-      // So sánh tạo diff
+      // So sánh tạo diff chi tiết từng field
       const diff: any = {};
-      if (existing.full_name !== hh.full_name) diff.full_name = { old: existing.full_name, new: hh.full_name };
-      if (existing.phone !== hh.phone) diff.phone = { old: existing.phone, new: hh.phone };
       
-      // Calculate diffs for production items
-      const sumArea = (items: any[]) => items.reduce((acc, item) => acc + (item.area || 0), 0);
-      const sumQuant = (items: any[]) => items.reduce((acc, item) => acc + (item.quantity || 0), 0);
-      const sumAqua = (items: any[]) => items.reduce((acc, item) => acc + (item.value || 0), 0);
+      const oldData = serializeHousehold(existing);
+      const newData = serializeHousehold(hh);
 
-      const oldCropsArea = sumArea(existing.crop_items);
-      const newCropsArea = sumArea(hh.crop_items);
-      if (oldCropsArea !== newCropsArea) diff['Tổng diện tích Trồng trọt'] = { old: oldCropsArea, new: newCropsArea };
+      const fieldLabels: Record<string, string> = {
+        full_name: 'Họ và tên',
+        phone: 'Số điện thoại',
+        address: 'Địa chỉ',
+        notes: 'Ghi chú',
+        stt: 'Số thứ tự',
+        cafe_household: 'Cà phê (Hộ gia đình) (ha)',
+        cafe_contracted: 'Cà phê (Nhận khoán) (ha)',
+        rubber_household: 'Cao su (Hộ gia đình) (ha)',
+        rubber_contracted: 'Cao su (Nhận khoán) (ha)',
+        fruit_tree: 'Cây ăn quả (ha)',
+        macadamia: 'Cây Mắc Ca (ha)',
+        herb_dinh_lang: 'Đinh lăng (ha)',
+        herb_gung: 'Gừng (ha)',
+        herb_nghe: 'Nghệ (ha)',
+        herb_sa: 'Sả (ha)',
+        wet_rice: 'Lúa nước (ha)',
+        other_annual_crops: 'Cây hàng năm khác (ha)',
+        buffalo: 'Trâu (con)',
+        cow: 'Bò (con)',
+        pig: 'Heo (con)',
+        poultry: 'Gia cầm (con)',
+        fish_pond: 'Nuôi cá ao (ha)',
+        fish_cage: 'Nuôi cá lồng bè (lồng)'
+      };
 
-      const oldLivestock = sumQuant(existing.livestock_items);
-      const newLivestock = sumQuant(hh.livestock_items);
-      if (oldLivestock !== newLivestock) diff['Tổng số lượng Chăn nuôi'] = { old: oldLivestock, new: newLivestock };
-
-      const oldAqua = sumAqua(existing.aquaculture_items);
-      const newAqua = sumAqua(hh.aquaculture_items);
-      if (oldAqua !== newAqua) diff['Tổng diện tích Thủy sản'] = { old: oldAqua, new: newAqua };
+      for (const [key, label] of Object.entries(fieldLabels)) {
+        const oldVal = (oldData as any)[key];
+        const newVal = (newData as any)[key];
+        
+        if (oldVal !== newVal) {
+          // Bỏ qua nếu cả 2 đều không có ý nghĩa thay đổi (null -> '', 0 -> null, v.v)
+          if ((!oldVal && !newVal) || (oldVal === 0 && !newVal) || (!oldVal && newVal === 0)) {
+            continue;
+          }
+          diff[label] = { old: oldVal ?? 'Trống', new: newVal ?? 'Trống' };
+        }
+      }
 
       // Ghi audit log
       await tx.audit_logs.create({
@@ -570,7 +593,7 @@ export const getDeletedHouseholds = async (req: AuthRequest, res: Response) => {
     });
   } catch (error: any) {
     console.error('getDeletedHouseholds error:', error);
-    res.status(500).json({ error: error.message || 'Lá»—i láº¥y danh sÃ¡ch há»™ Ä‘Ã£ xÃ³a' });
+    res.status(500).json({ error: error.message || 'Lỗi lấy danh sách hộ đã xóa' });
   }
 };
 
@@ -578,7 +601,7 @@ export const restoreHouseholds = async (req: AuthRequest, res: Response) => {
   try {
     const { ids } = req.body;
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      res.status(400).json({ error: 'Danh sÃ¡ch ID khÃ´ng há»£p lá»‡' });
+      res.status(400).json({ error: 'Danh sách ID không hợp lệ' });
       return;
     }
 
@@ -587,14 +610,14 @@ export const restoreHouseholds = async (req: AuthRequest, res: Response) => {
     });
 
     if (households.length === 0) {
-      res.status(404).json({ error: 'KhÃ´ng tÃ¬m tháº¥y há»™ nÃ´ng nghiá»‡p nÃ o Ä‘á»ƒ khÃ´i phá»¥c' });
+      res.status(404).json({ error: 'Không tìm thấy hộ nông nghiệp nào để khôi phục' });
       return;
     }
 
     if (req.user?.role === 'user' && req.user.village_id) {
       const invalid = households.some(hh => hh.village_id !== req.user!.village_id);
       if (invalid) {
-        res.status(403).json({ error: 'KhÃ´ng cÃ³ quyá»n khÃ´i phá»¥c dá»¯ liá»‡u thÃ´n khÃ¡c' });
+        res.status(403).json({ error: 'Không có quyền khôi phục dữ liệu thôn khác' });
         return;
       }
     }
@@ -620,15 +643,15 @@ export const restoreHouseholds = async (req: AuthRequest, res: Response) => {
             action: 'RESTORE',
             entity_type: 'households',
             entity_id: null,
-            details: JSON.stringify({ message: `KhÃ´i phá»¥c ${names.length} há»™ dÃ¢n`, names }),
+            details: JSON.stringify({ message: `Khôi phục ${names.length} hộ dân`, names }),
           },
         });
       }
     });
 
-    res.json({ status: 'ok', message: 'ÄÃ£ khÃ´i phá»¥c há»™ thÃ nh cÃ´ng' });
+    res.json({ status: 'ok', message: 'Đã khôi phục hộ thành công' });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Lá»—i khÃ´i phá»¥c há»™' });
+    res.status(500).json({ error: error.message || 'Lỗi khôi phục hộ' });
   }
 };
 
@@ -636,7 +659,7 @@ export const hardDeleteHouseholds = async (req: AuthRequest, res: Response) => {
   try {
     const { ids } = req.body;
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      res.status(400).json({ error: 'Danh sÃ¡ch ID khÃ´ng há»£p lá»‡' });
+      res.status(400).json({ error: 'Danh sách ID không hợp lệ' });
       return;
     }
 
@@ -650,7 +673,7 @@ export const hardDeleteHouseholds = async (req: AuthRequest, res: Response) => {
     });
 
     if (households.length === 0) {
-      res.status(404).json({ error: 'KhÃ´ng tÃ¬m tháº¥y há»™ nÃ´ng nghiá»‡p nÃ o trong thÃ¹ng rÃ¡c Ä‘á»ƒ xÃ³a vÄ©nh viá»…n' });
+      res.status(404).json({ error: 'Không tìm thấy hộ nông nghiệp nào trong thùng rác để xóa vĩnh viễn' });
       return;
     }
 
@@ -677,7 +700,7 @@ export const hardDeleteHouseholds = async (req: AuthRequest, res: Response) => {
             action: 'HARD_DELETE',
             entity_type: 'households',
             entity_id: null,
-            details: JSON.stringify({ message: `XÃ³a vÄ©nh viá»…n ${names.length} há»™ dÃ¢n`, names }),
+            details: JSON.stringify({ message: `Xóa vĩnh viễn ${names.length} hộ dân`, names }),
           },
         });
       }
@@ -685,7 +708,7 @@ export const hardDeleteHouseholds = async (req: AuthRequest, res: Response) => {
 
     res.json({ status: 'ok', message: 'ÄÃ£ xÃ³a vÄ©nh viá»…n há»™ thÃ nh cÃ´ng' });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Lá»—i xÃ³a vÄ©nh viá»…n há»™' });
+    res.status(500).json({ error: error.message || 'Lỗi xóa vĩnh viễn hộ' });
   }
 };
 

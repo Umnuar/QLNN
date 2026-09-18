@@ -13,6 +13,8 @@ import userRoutes from './routes/user.routes';
 import backupRoutes from './routes/backup.routes';
 import { initBackupCron } from './crons/backup.cron';
 import { authenticateToken, authorizeVillageScope, AuthRequest } from './middlewares/auth.middleware';
+import { requestLogger } from './middlewares/logger.middleware';
+import { startDashboard } from './utils/dashboard';
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -41,9 +43,15 @@ app.use(
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(requestLogger);
 
 // Health Check Endpoint (Bắt buộc theo quy chuẩn hệ sinh thái Đăk Hà)
 app.use('/api/health', healthRoutes);
+
+// Lightweight Ping Endpoint for EMA Latency Monitoring (204 No Content)
+app.get('/api/ping', (_req, res) => {
+  res.status(204).end();
+});
 
 // Test Authenticated Route (Verify Shared SSO Auth)
 app.get('/api/auth-test', authenticateToken, authorizeVillageScope, (req: AuthRequest, res: express.Response) => {
@@ -86,9 +94,10 @@ if (process.env.NODE_ENV !== 'test') {
   // Khởi chạy các tác vụ nền
 initBackupCron();
 
-app.listen(PORT, () => {
+  app.listen(PORT, () => {
     console.log(`[QLNN-Backend] Server running on http://localhost:${PORT}`);
     console.log(`[QLNN-Backend] Health check available at http://localhost:${PORT}/api/health`);
+    startDashboard();
   });
 }
 

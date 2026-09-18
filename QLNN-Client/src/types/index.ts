@@ -1,9 +1,11 @@
 export interface User {
   id: string;
   username: string;
+  full_name?: string;
   role: 'admin' | 'user';
   village_id: string | null;
   created_at?: string;
+  is_online?: boolean;
 }
 
 export interface Village {

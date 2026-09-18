@@ -56,7 +56,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // 1. Sidebar Collapsed State
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('qlnn_sidebar_collapsed') === 'true';
+      return (
+        localStorage.getItem('qlnn_sidebar_collapsed') === 'true' ||
+        localStorage.getItem('qlhk_sidebar_collapsed') === 'true'
+      );
     } catch {
       return false;
     }
@@ -67,6 +70,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const next = !prev;
       try {
         localStorage.setItem('qlnn_sidebar_collapsed', String(next));
+        localStorage.setItem('qlhk_sidebar_collapsed', String(next));
       } catch {
         // Ignore
       }
@@ -78,6 +82,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsSidebarCollapsed(collapsed);
     try {
       localStorage.setItem('qlnn_sidebar_collapsed', String(collapsed));
+      localStorage.setItem('qlhk_sidebar_collapsed', String(collapsed));
     } catch {
       // Ignore
     }
@@ -124,7 +129,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   useEffect(() => {
-    // Zoom qua IPC của Electron (thay vì CSS document.documentElement.style.zoom gây lỗi)
+    // Zoom qua IPC của Electron
     if (window.api?.app?.setZoom) {
       window.api.app.setZoom(zoomLevel);
     }
@@ -183,7 +188,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     logout();
   }, !!user);
 
-    const refreshVillages = useCallback(async () => {
+  // Stable references for preventing re-render infinite loops
+  const userRef = React.useRef<User | null>(user);
+  userRef.current = user;
+
+  const selectedVillageIdRef = React.useRef<string>(selectedVillageId);
+  selectedVillageIdRef.current = selectedVillageId;
+
+  const isBackendHealthyRef = React.useRef<boolean>(isBackendHealthy);
+  isBackendHealthyRef.current = isBackendHealthy;
+
+  const lastEmaLatencyRef = React.useRef<number | null>(null);
+
+  const refreshVillages = useCallback(async () => {
     try {
       let data: any[] = [];
       try {
@@ -191,17 +208,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         await setCache('villages', data);
       } catch (apiErr: any) {
         if (apiErr.message === 'Network Error' || (apiErr.response && apiErr.response.status >= 500)) {
-           console.warn('Offline mode: fetching villages from cache');
-           const cached = await getCache<Village[]>('villages');
-           if (cached) data = cached;
+          console.warn('Offline mode: fetching villages from cache');
+          const cached = await getCache<Village[]>('villages');
+          if (cached) data = cached;
         } else {
-           throw apiErr;
+          throw apiErr;
         }
       }
       setVillages(data);
-      if (data.length > 0 && !selectedVillageId) {
-        if (user?.role === 'user' && user.village_id) {
-          setSelectedVillageId(user.village_id);
+      const currentUser = userRef.current;
+      const currentSelected = selectedVillageIdRef.current;
+      if (data.length > 0 && !currentSelected) {
+        if (currentUser?.role === 'user' && currentUser.village_id) {
+          setSelectedVillageId(currentUser.village_id);
         } else {
           setSelectedVillageId('');
         }
@@ -209,17 +228,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (err) {
       console.warn('Loi tai danh muc thon:', err);
     }
-  }, [selectedVillageId, user]);
+  }, []);
 
+  // Đo ping thời gian thực làm mượt bằng thuật toán EMA alpha = 0.3
   const checkServerHealth = useCallback(async (): Promise<boolean> => {
     const t0 = performance.now();
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/health`, { timeout: 3000 });
-      const lat = Math.round(performance.now() - t0);
-      setLatency(lat);
-      if (res.status === 200) {
-        if (!isBackendHealthy) {
-          // Server vừa sống lại
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      let res;
+      try {
+        res = await axios.get(`${apiUrl}/ping`, { timeout: 3000 });
+      } catch (pingErr: any) {
+        if (pingErr.response && pingErr.response.status === 404) {
+          res = await axios.get(`${apiUrl}/health`, { timeout: 3000 });
+        } else {
+          throw pingErr;
+        }
+      }
+
+      const rawLatency = Math.round(performance.now() - t0);
+      const smoothed = lastEmaLatencyRef.current === null
+        ? rawLatency
+        : Math.round(0.3 * rawLatency + 0.7 * lastEmaLatencyRef.current);
+      lastEmaLatencyRef.current = smoothed;
+      setLatency(smoothed);
+
+      if (res.status === 200 || res.status === 204) {
+        if (!isBackendHealthyRef.current) {
+          // Server vừa phục hồi
           window.dispatchEvent(new CustomEvent('server:reconnected'));
         }
         setIsBackendHealthy(true);
@@ -230,12 +266,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       setIsBackendHealthy(false);
       setLatency(null);
+      lastEmaLatencyRef.current = null;
       return false;
     }
-  }, [isBackendHealthy]);
+  }, []);
 
+  // initAuth chạy độc lập duy nhất 1 lần khi app mount
   useEffect(() => {
-
     const initAuth = async () => {
       try {
         const token = await secureStorage.getItem('accessToken');
@@ -243,7 +280,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           try {
             const u = await authApi.getMe(token);
             setUser(u);
-            await secureStorage.setItem('user', JSON.stringify(u)); // C?p nh?t l?i local
+            await secureStorage.setItem('user', JSON.stringify(u));
             if (u.village_id) {
               setSelectedVillageId(u.village_id);
               setActiveTab('analytics');
@@ -252,7 +289,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           } catch (err: any) {
             if (err.message === 'Network Error' || (err.response && err.response.status >= 500)) {
-              console.warn('L?i m?ng khi ki?m tra token, dng User t? Cache.');
+              console.warn('Lỗi mạng khi kiểm tra token, dùng User từ Cache.');
               const cachedUserStr = await secureStorage.getItem('user');
               if (cachedUserStr) {
                 const u = JSON.parse(cachedUserStr);
@@ -265,7 +302,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 }
               }
             } else {
-              console.warn('Phin ??ng nh?p h?t h?n ho?c ch?a ??ng nh?p');
+              console.warn('Phiên đăng nhập hết hạn');
               await secureStorage.clear();
               setUser(null);
             }
@@ -280,6 +317,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     initAuth();
+  }, []);
+
+  // Heartbeat và listener mạng độc lập
+  useEffect(() => {
     checkServerHealth();
 
     const handleOnline = () => {
@@ -290,6 +331,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleOffline = () => {
       setIsOnline(false);
       setIsBackendHealthy(false);
+      setLatency(null);
     };
     const handleAuthExpired = () => logout();
 
@@ -297,7 +339,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     window.addEventListener('offline', handleOffline);
     window.addEventListener('auth:expired', handleAuthExpired);
 
-    // Heartbeat định kỳ kiểm tra sức khỏe backend
     const interval = setInterval(() => {
       if (navigator.onLine) {
         checkServerHealth();

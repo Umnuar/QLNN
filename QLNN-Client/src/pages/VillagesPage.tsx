@@ -1,29 +1,114 @@
-import React, { useState, useEffect } from 'react';
-import { MapPin, ArrowRight, Plus, Edit3, Trash2, Check, X, Search, BarChart3 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { MapPin, Edit3, Trash2, Check, X, Search, BarChart3, Plus, ArrowRight } from 'lucide-react';
 import { useApp } from '../AppContext';
+import { useModal } from '../hooks/useModal';
+import { User, OverviewAnalytics, VillageAnalytics } from '../types';
+import { analyticsApi } from '../api/analyticsApi';
 import { villageApi } from '../api/villageApi';
 import { authApi } from '../api/authApi';
-import { useModal } from '../hooks/useModal';
-import { User } from '../types';
+import { getCache, setCache } from '../db/indexedDB';
+import { cryptoHelper } from '../utils/cryptoHelper';
+
+let cachedStatsTime = 0;
+let cachedUsersTime = 0;
 
 export const VillagesPage: React.FC = () => {
   const { villages, setSelectedVillageId, setActiveTab, user, refreshVillages } = useApp();
   const { showModal } = useModal();
   const isAdmin = user?.role === 'admin';
 
-  const [usersList, setUsersList] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [userList, setUserList] = useState<User[]>([]);
+
+  // Thống kê động thời gian thực từ CSDL Backend kèm Offline Cache
+  const [overview, setOverview] = useState<OverviewAnalytics | null>(null);
+  const [villageStats, setVillageStats] = useState<Record<string, VillageAnalytics>>({});
+
+  const fetchVillageStats = useCallback(async (force = false) => {
+    if (!force && Date.now() - cachedStatsTime < 30000 && overview) {
+      return;
+    }
+    try {
+      const [overviewRes, byVillageRes] = await Promise.all([
+        analyticsApi.getOverview(),
+        analyticsApi.getByVillage(),
+      ]);
+
+      if (overviewRes?.data) {
+        setOverview(overviewRes.data);
+        await setCache('villages_overview', overviewRes.data);
+      }
+
+      if (Array.isArray(byVillageRes?.data)) {
+        const statsMap: Record<string, VillageAnalytics> = {};
+        byVillageRes.data.forEach((row) => {
+          if (row.village_id) statsMap[row.village_id] = row;
+          if (row.village_name) {
+            statsMap[row.village_name] = row;
+            statsMap[row.village_name.toLowerCase().trim()] = row;
+          }
+        });
+        setVillageStats(statsMap);
+        await setCache('villages_breakdown', byVillageRes.data);
+      }
+      cachedStatsTime = Date.now();
+    } catch (err) {
+      console.warn('[VillagesPage] Lỗi tải số liệu thống kê thời gian thực, nạp từ Offline Cache:', err);
+      try {
+        const cachedOverview = await getCache<OverviewAnalytics>('villages_overview');
+        const cachedBreakdown = await getCache<VillageAnalytics[]>('villages_breakdown');
+
+        if (cachedOverview) {
+          setOverview(cachedOverview);
+        }
+        if (Array.isArray(cachedBreakdown)) {
+          const statsMap: Record<string, VillageAnalytics> = {};
+          cachedBreakdown.forEach((row) => {
+            if (row.village_id) statsMap[row.village_id] = row;
+            if (row.village_name) {
+              statsMap[row.village_name] = row;
+              statsMap[row.village_name.toLowerCase().trim()] = row;
+            }
+          });
+          setVillageStats(statsMap);
+        }
+      } catch (cacheErr) {
+        console.error('[VillagesPage] Lỗi đọc Offline Cache:', cacheErr);
+      }
+    }
+  }, [overview]);
+
+  const fetchUsers = useCallback(async (force = false) => {
+    if (!force && Date.now() - cachedUsersTime < 30000 && userList.length > 0) {
+      return;
+    }
+    try {
+      const users = await authApi.getUsers();
+      setUserList(users);
+      cachedUsersTime = Date.now();
+    } catch (err) {
+      console.warn('[VillagesPage] Lỗi tải danh sách cán bộ:', err);
+    }
+  }, [userList.length]);
 
   useEffect(() => {
-    if (isAdmin) {
-      authApi.getUsers().then(users => setUsersList(users)).catch(console.error);
-    }
-  }, [isAdmin]);
+    fetchVillageStats();
+    fetchUsers();
+  }, [fetchVillageStats, fetchUsers]);
+
+  useEffect(() => {
+    const handleReconnected = () => {
+      fetchVillageStats(true);
+      fetchUsers(true);
+    };
+    window.addEventListener('server:reconnected', handleReconnected);
+    return () => window.removeEventListener('server:reconnected', handleReconnected);
+  }, [fetchVillageStats, fetchUsers]);
 
   const filteredVillages = villages.filter((v) =>
     v.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -31,7 +116,7 @@ export const VillagesPage: React.FC = () => {
 
   const handleVillageClick = (id: string) => {
     setSelectedVillageId(id);
-    setActiveTab('analytics');
+    setActiveTab('households');
   };
 
   const handleUpdate = async (id: string) => {
@@ -41,6 +126,7 @@ export const VillagesPage: React.FC = () => {
       await villageApi.update(id, editName.trim());
       setEditingId(null);
       await refreshVillages();
+      await fetchVillageStats(true);
       showModal({
         title: 'Thành công',
         message: 'Cập nhật tên thôn thành công',
@@ -60,15 +146,15 @@ export const VillagesPage: React.FC = () => {
   const handleDelete = (id: string, name: string) => {
     showModal({
       title: 'Xác nhận xóa thôn',
-      message: `Bạn có chắc muốn xóa "${name}" không?
-Thao tác này không thể hoàn tác.`,
+      message: `Bạn có chắc muốn xóa "${name}" không?\nThao tác này chỉ thực hiện được khi không còn hộ nào thuộc thôn.`,
       type: 'danger',
-      confirmText: 'Xóa',
+      confirmText: 'Xóa Thôn',
       cancelText: 'Hủy',
       onConfirm: async () => {
         try {
           await villageApi.delete(id);
           await refreshVillages();
+          await fetchVillageStats(true);
           showModal({
             title: 'Thành công',
             message: 'Đã xóa thôn thành công',
@@ -81,7 +167,7 @@ Thao tác này không thể hoàn tác.`,
             type: 'danger',
           });
         }
-      }
+      },
     });
   };
 
@@ -90,9 +176,11 @@ Thao tác này không thể hoàn tác.`,
     setLoading(true);
     try {
       await villageApi.create(newName.trim());
+      cachedStatsTime = 0;
+      await refreshVillages();
+      await fetchVillageStats(true);
       setIsAdding(false);
       setNewName('');
-      await refreshVillages();
       showModal({
         title: 'Thành công',
         message: 'Thêm thôn mới thành công',
@@ -115,53 +203,108 @@ Thao tác này không thể hoàn tác.`,
       <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <MapPin className="w-7 h-7 text-emerald-500" />
-            <span>Tất cả Thôn</span>
+            <MapPin className="w-7 h-7 text-emerald-500" strokeWidth={1.5} />
+            <span>{villages.length} Thôn Xã Đăk Hà</span>
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Chọn một thôn để quản lý số liệu Nông nghiệp
+            Chọn một thôn để quản lý số liệu 18 chỉ tiêu Nông nghiệp & Nông thôn mới
           </p>
         </div>
 
-        <div className="w-full sm:w-auto flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
-          <Search className="w-4 h-4 text-slate-400 ml-2 shrink-0" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm thôn..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full sm:w-64 px-2 py-1.5 bg-transparent text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-hidden"
-          />
-          {searchTerm && (
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="w-full sm:w-auto flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+            <Search className="w-4 h-4 text-slate-400 ml-2 shrink-0" strokeWidth={1.5} />
+            <input
+              type="text"
+              placeholder="Tìm kiếm thôn..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full sm:w-60 px-2 py-1.5 bg-transparent text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-hidden"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors mr-1 cursor-pointer"
+                aria-label="Xóa tìm kiếm"
+              >
+                <X strokeWidth={1.5} className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {isAdmin && (
             <button
               type="button"
-              onClick={() => setSearchTerm('')}
-              className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors mr-1"
+              onClick={() => setIsAdding(true)}
+              className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95"
             >
-              <X className="w-3.5 h-3.5" />
+              <Plus strokeWidth={1.5} className="w-4 h-4" />
+              <span>Thêm Thôn</span>
             </button>
           )}
         </div>
       </div>
+
+      {/* Form thêm thôn mới nếu mở */}
+      {isAdding && (
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border-2 border-emerald-500 shadow-lg space-y-4 animate-in fade-in">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Thêm Thôn Mới Vào Xã Đăk Hà</h3>
+            <button onClick={() => setIsAdding(false)} className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer" aria-label="Đóng form">
+              <X strokeWidth={1.5} className="w-4 h-4" />
+            </button>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-500 mb-1">Tên Thôn *</label>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Ví dụ: Thôn 8, Làng Mới..."
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-hidden"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setIsAdding(false)}
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={handleCreate}
+              disabled={loading || !newName.trim()}
+              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50"
+            >
+              Lưu Thôn Mới
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Toàn Xã Statistics Card */}
       {isAdmin && (
         <div className="mb-6">
           <div
             onClick={() => handleVillageClick('')}
-            className="bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white rounded-3xl p-6 transition-all cursor-pointer shadow-lg shadow-emerald-500/20 active:scale-[0.99] flex items-center justify-between group"
+            className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 hover:from-emerald-700 hover:to-teal-900 text-white rounded-3xl p-6 transition-all cursor-pointer shadow-lg shadow-emerald-600/20 active:scale-[0.99] flex items-center justify-between group"
           >
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-xs">
-                <BarChart3 className="w-7 h-7 text-white" />
+              <div className="w-10 h-10 bg-white/15 rounded-2xl flex items-center justify-center backdrop-blur-xs shrink-0">
+                <BarChart3 className="w-5 h-5 text-white" strokeWidth={1.5} />
               </div>
               <div>
-                <h3 className="text-xl font-black mb-1">Thống Kê Toàn Xã</h3>
-                <p className="text-emerald-100 text-sm font-medium">Xem tổng hợp số liệu của tất cả các thôn</p>
+                <h3 className="text-xl font-black mb-1">Thống Kê Toàn Xã Đăk Hà</h3>
+                <p className="text-emerald-100 text-sm font-medium">
+                  Tổng hợp số liệu {villages.length} thôn: {overview?.household_count ?? 0} hộ nông nghiệp • {cryptoHelper.formatArea(overview?.crops?.total_crops_area ?? 0)} cây trồng • {cryptoHelper.formatCount(overview?.livestock?.total_animals ?? 0, 'con')} vật nuôi
+                </p>
               </div>
             </div>
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight strokeWidth={1.5} className="w-5 h-5 text-white" />
             </div>
           </div>
         </div>
@@ -171,22 +314,26 @@ Thao tác này không thể hoàn tác.`,
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredVillages.map((village) => {
           const isEditing = editingId === village.id;
-          const manager = usersList?.find((u) => u.village_id === village.id);
+          const vStat = villageStats[village.id] || villageStats[village.name] || villageStats[village.name?.toLowerCase().trim()];
+          const householdCount = vStat?.household_count ?? 0;
+          const totalCropsArea = vStat?.crops?.total_crops_area ?? 0;
+          const totalAnimals = vStat?.livestock?.total_animals ?? 0;
+
+          const assignedOfficer =
+            userList.find((u) => u.village_id === village.id && u.role === 'user') ||
+            userList.find((u) => u.village_id === village.id);
 
           if (isEditing) {
             return (
               <div
                 key={village.id}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-slate-900 rounded-3xl p-5 border-2 border-emerald-500 shadow-lg shadow-emerald-500/10 flex flex-col justify-between min-h-[140px]"
+                className="bg-white dark:bg-slate-900 rounded-3xl p-5 border-2 border-emerald-500 shadow-lg shadow-emerald-500/10 flex flex-col justify-between min-h-[160px]"
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                       Đổi tên thôn
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-400">
-                      {village.id.substring(0, 8)}
                     </span>
                   </div>
                   <input
@@ -210,7 +357,7 @@ Thao tác này không thể hoàn tác.`,
                     disabled={loading}
                     className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X strokeWidth={1.5} className="w-3.5 h-3.5" />
                     <span>Hủy</span>
                   </button>
                   <button
@@ -219,7 +366,7 @@ Thao tác này không thể hoàn tác.`,
                     disabled={loading || !editName.trim()}
                     className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
                   >
-                    <Check className="w-3.5 h-3.5" />
+                    <Check strokeWidth={1.5} className="w-3.5 h-3.5" />
                     <span>Lưu</span>
                   </button>
                 </div>
@@ -231,151 +378,73 @@ Thao tác này không thể hoàn tác.`,
             <div
               key={village.id}
               onClick={() => handleVillageClick(village.id)}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-5 border-2 transition-all cursor-pointer group hover:scale-[1.02] active:scale-[0.98] border-slate-200 dark:border-slate-800 hover:border-emerald-500 hover:shadow-xl hover:shadow-emerald-500/10 min-h-[140px] flex flex-col justify-between"
+              className="bg-white dark:bg-slate-900 rounded-3xl p-5 border-2 transition-all cursor-pointer group hover:scale-[1.02] active:scale-[0.98] border-slate-200 dark:border-slate-800 hover:border-emerald-500 hover:shadow-xl hover:shadow-emerald-500/10 min-h-[160px] flex flex-col justify-between"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0">
-                  <MapPin className="w-6 h-6" />
-                </div>
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <MapPin className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" strokeWidth={1.5} />
+                    <h4 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors tracking-tight truncate">
+                      {village.name}
+                    </h4>
+                  </div>
 
-                <div className="flex items-center gap-1">
                   {isAdmin && (
-                    <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                    <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/50 dark:border-slate-700/50 shrink-0">
                       <button
                         type="button"
                         title="Đổi tên thôn"
+                        aria-label="Đổi tên thôn"
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingId(village.id);
                           setEditName(village.name);
                         }}
-                        className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors cursor-pointer"
+                        className="p-1 text-slate-400 hover:text-emerald-500 rounded-lg transition-colors cursor-pointer"
                       >
-                        <Edit3 className="w-4 h-4" />
+                        <Edit3 strokeWidth={1.5} className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
                         title="Xóa thôn"
+                        aria-label="Xóa thôn"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDelete(village.id, village.name);
                         }}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                        className="p-1 text-slate-400 hover:text-rose-500 rounded-lg transition-colors cursor-pointer"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 strokeWidth={1.5} className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )}
+                </div>
 
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/50 group-hover:text-emerald-500 transition-colors ml-1">
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
+                {/* Cán bộ phụ trách / Trưởng thôn */}
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  <span className="text-slate-400">•</span>
+                  <span>Trưởng thôn:</span>
+                  <span className={assignedOfficer ? "font-bold text-slate-700 dark:text-slate-200 truncate" : "italic text-slate-400"}>
+                    {assignedOfficer?.full_name || assignedOfficer?.username || 'Chưa phân công'}
+                  </span>
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                  {village.name}
-                </h3>
-                <p className="text-[11px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                  ID: {village.id.substring(0, 8)}
-                </p>
-                {isAdmin && (
-                  <p className="text-[11px] font-medium mt-1 text-slate-500 dark:text-slate-400">
-                    Quản lý: <span className="font-bold">{manager ? manager.username : 'Chưa phân công'}</span>
-                  </p>
-                )}
+              {/* Thống kê nhanh trong thẻ */}
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs mt-3">
+                <div className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-300">
+                  <span>{householdCount} Hộ</span>
+                </div>
+                <div className="font-mono text-slate-500 dark:text-slate-400 text-[11px] truncate">
+                  {totalCropsArea > 0 ? `${cryptoHelper.formatArea(totalCropsArea)} cây` : `${totalAnimals} vật nuôi`}
+                </div>
               </div>
             </div>
           );
         })}
-
-        {/* Nút / Khung Thêm Thôn Mới dành cho Admin */}
-        {isAdmin && (
-          isAdding ? (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="bg-emerald-50/50 dark:bg-emerald-950/20 rounded-3xl p-5 border-2 border-dashed border-emerald-400 dark:border-emerald-600 shadow-sm flex flex-col justify-between min-h-[140px] animate-in fade-in"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                    Thêm thôn mới
-                  </span>
-                </div>
-                <input
-                  autoFocus
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCreate();
-                    if (e.key === 'Escape') {
-                      setIsAdding(false);
-                      setNewName('');
-                    }
-                  }}
-                  placeholder="Nhập tên thôn mới..."
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden transition-all"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-emerald-200/60 dark:border-emerald-900/40">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAdding(false);
-                    setNewName('');
-                  }}
-                  disabled={loading}
-                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer border border-slate-200 dark:border-slate-700"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  <span>Hủy</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCreate}
-                  disabled={loading || !newName.trim()}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Tạo thôn</span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setIsAdding(true);
-                setNewName('');
-              }}
-              className="min-h-[140px] rounded-3xl p-5 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-400 bg-slate-50/50 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex flex-col items-center justify-center gap-2 transition-all group hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-200/60 dark:bg-slate-800 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                <Plus className="w-6 h-6" />
-              </div>
-              <span className="text-sm font-bold">Thêm Thôn Mới</span>
-            </button>
-          )
-        )}
       </div>
-
-      {/* Empty State */}
-      {filteredVillages.length === 0 && (
-        <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
-            <Search className="w-8 h-8" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
-            Không tìm thấy thôn nào
-          </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Không có kết quả phù hợp với từ khóa &ldquo;{searchTerm}&rdquo;
-          </p>
-        </div>
-      )}
     </div>
   );
 };
+
+export default VillagesPage;
