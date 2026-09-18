@@ -11,6 +11,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    port: 5174,
+    proxy: {
+      '/api': {
+        target: 'https://qlnn.dulieudakha.vn',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   plugins: [
     nodePolyfills({
       include: ['stream', 'buffer', 'util', 'events', 'process'],

@@ -2,11 +2,7 @@ import axios from 'axios';
 import { secureStorage } from '../utils/secureStorage';
 
 const isDev = import.meta.env.DEV;
-const envApiUrl = import.meta.env.VITE_API_URL;
-export const API_BASE_URL =
-  isDev && (!envApiUrl || envApiUrl.includes('dulieudakha.vn'))
-    ? 'http://localhost:5001/api'
-    : (envApiUrl || (isDev ? 'http://localhost:5001/api' : '/api'));
+export const API_BASE_URL = isDev ? '/api' : (import.meta.env.VITE_API_URL || 'https://qlnn.dulieudakha.vn/api');
 
 
 

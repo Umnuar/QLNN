@@ -80,13 +80,13 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
           </div>
         </div>
 
-        <div className="p-5 overflow-auto flex-1">
-          <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
-            <table className="w-full text-left border-collapse text-xs whitespace-nowrap">
+        <div className="p-5 overflow-x-auto overflow-y-auto flex-1">
+          <div className="border border-slate-200 dark:border-slate-800 rounded-2xl">
+            <table className="w-full min-w-[2000px] text-left border-collapse text-xs whitespace-nowrap">
               <thead className="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 font-bold">
                 <tr>
-                  <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-center">1. STT</th>
-                  <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800">2. Họ và Tên Chủ Hộ</th>
+                  <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-center sticky left-0 z-30 bg-slate-100 dark:bg-slate-950 w-14">1. STT</th>
+                  <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 sticky left-14 z-30 bg-slate-100 dark:bg-slate-950 min-w-[200px] border-r-2 border-slate-300 dark:border-slate-700 shadow-xs">2. Họ và Tên Chủ Hộ</th>
                   <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-right">3. Cà phê (Hộ)</th>
                   <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-right">4. Cà phê (Nhận k)</th>
                   <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-right">5. Cao su (Hộ)</th>
@@ -111,10 +111,12 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {displayData.map((row, idx) => (
                   <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
-                    <td className="py-2 px-3 font-mono text-slate-500 text-center">
+                    <td className="py-2 px-3 text-center sticky left-0 z-20 bg-white dark:bg-slate-900 w-14 font-mono text-slate-500">
                       {row[0] || (importPage - 1) * importLimit + idx + 1}
                     </td>
-                    <td className="py-2 px-3 font-bold text-slate-800 dark:text-slate-200">{row[1]}</td>
+                    <td className="py-2 px-3 sticky left-14 z-20 bg-white dark:bg-slate-900 min-w-[200px] font-bold text-slate-800 dark:text-slate-200 border-r-2 border-slate-300 dark:border-slate-700 shadow-xs">
+                      {row[1]}
+                    </td>
                     <td className="py-2 px-3 text-right tabular-nums font-mono">{formatCell(row[2])}</td>
                     <td className="py-2 px-3 text-right tabular-nums font-mono">{formatCell(row[3])}</td>
                     <td className="py-2 px-3 text-right tabular-nums font-mono">{formatCell(row[4])}</td>

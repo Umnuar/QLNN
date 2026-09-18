@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { MapPin, Edit3, Trash2, Check, X, Search, BarChart3, Plus, ArrowRight } from 'lucide-react';
+import { MapPin, Edit3, Trash2, Check, X, Search, Plus, ArrowRight, Users, Trees, PawPrint } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { useModal } from '../hooks/useModal';
 import { User, OverviewAnalytics, VillageAnalytics } from '../types';
@@ -222,15 +222,114 @@ export const VillagesPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in pb-10">
-      {/* Header Panel */}
+      {/* Hero Banner Xanh Ngọc Đậm */}
+      <div className="bg-gradient-to-r from-emerald-800 via-emerald-900 to-teal-950 text-white p-6 sm:p-7 rounded-3xl border border-emerald-700/50 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-700/50 border border-emerald-500/30 text-xs font-bold text-emerald-200 uppercase tracking-wider">
+            <span>UBND XÃ ĐĂK HÀ • Địa Bàn 7 Thôn & Làng Bản</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            Tổng Quan Nông Nghiệp & Nông Thôn Mới Toàn Xã
+          </h1>
+          <p className="text-emerald-100/90 text-sm font-medium">
+            Tổng số: {overview?.household_count ?? 0} hộ nông nghiệp • Cây trồng: {cryptoHelper.formatArea(overview?.crops?.total_crops_area ?? 0)} • Vật nuôi: {cryptoHelper.formatCount(overview?.livestock?.total_animals ?? 0, 'con')}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => handleVillageClick('')}
+          className="bg-white hover:bg-emerald-50 text-emerald-950 font-bold px-5 py-2.5 rounded-full shadow-md text-sm flex items-center gap-2 transition-all shrink-0 cursor-pointer active:scale-95 group"
+        >
+          <span>Xem Thống Kê Toàn Xã</span>
+          <ArrowRight className="w-4 h-4 text-emerald-900 group-hover:translate-x-0.5 transition-transform" strokeWidth={2} />
+        </button>
+      </div>
+
+      {/* 4 Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        {/* Card 1: Địa bàn quản lý */}
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/50 dark:border-emerald-800/50">
+            <MapPin className="w-6 h-6 text-emerald-500" strokeWidth={1.5} />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+              ĐỊA BÀN QUẢN LÝ
+            </span>
+            <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+              {villages.length} Thôn
+            </div>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate block mt-0.5">
+              Toàn địa bàn Xã Đăk Hà
+            </span>
+          </div>
+        </div>
+
+        {/* Card 2: Hộ nông nghiệp */}
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/50 dark:border-blue-800/50">
+            <Users className="w-6 h-6 text-blue-500" strokeWidth={1.5} />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+              HỘ NÔNG NGHIỆP
+            </span>
+            <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+              {overview?.household_count ?? 0} Hộ
+            </div>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate block mt-0.5">
+              Đã kê khai 18 chỉ số
+            </span>
+          </div>
+        </div>
+
+        {/* Card 3: Tổng diện tích cây trồng */}
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-200/50 dark:border-teal-800/50">
+            <Trees className="w-6 h-6 text-teal-500" strokeWidth={1.5} />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+              TỔNG DIỆN TÍCH CÂY TRỒNG
+            </span>
+            <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5 truncate">
+              {cryptoHelper.formatArea(overview?.crops?.total_crops_area ?? 0)}
+            </div>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate block mt-0.5">
+              Cà phê, cao su, dược liệu...
+            </span>
+          </div>
+        </div>
+
+        {/* Card 4: Tổng đàn vật nuôi */}
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/50 dark:border-amber-800/50">
+            <PawPrint className="w-6 h-6 text-amber-500" strokeWidth={1.5} />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+              TỔNG ĐÀN VẬT NUÔI
+            </span>
+            <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5 truncate">
+              {cryptoHelper.formatCount(overview?.livestock?.total_animals ?? 0, 'con')}
+            </div>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate block mt-0.5">
+              Trâu, bò, heo, gia cầm...
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Thanh Danh Sách Thôn */}
       <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <MapPin className="w-7 h-7 text-emerald-500" strokeWidth={1.5} />
-            <span>{villages.length} Thôn Xã Đăk Hà</span>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <MapPin className="w-6 h-6 text-emerald-500" strokeWidth={1.5} />
+            <span>Danh Sách Thôn Xã Đăk Hà</span>
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Chọn một thôn để quản lý số liệu 18 chỉ tiêu Nông nghiệp & Nông thôn mới
+            Bấm vào thẻ thôn để chuyển nhanh đến màn hình làm việc của thôn đó
           </p>
         </div>
 
@@ -304,31 +403,6 @@ export const VillagesPage: React.FC = () => {
             >
               Lưu Thôn Mới
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Toàn Xã Statistics Card */}
-      {isAdmin && (
-        <div className="mb-6">
-          <div
-            onClick={() => handleVillageClick('')}
-            className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 hover:from-emerald-700 hover:to-teal-900 text-white rounded-3xl p-6 transition-all cursor-pointer shadow-lg shadow-emerald-600/20 active:scale-[0.99] flex items-center justify-between group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-white/15 rounded-2xl flex items-center justify-center backdrop-blur-xs shrink-0">
-                <BarChart3 className="w-5 h-5 text-white" strokeWidth={1.5} />
-              </div>
-              <div>
-                <h3 className="text-xl font-black mb-1">Thống Kê Toàn Xã Đăk Hà</h3>
-                <p className="text-emerald-100 text-sm font-medium">
-                  Tổng hợp số liệu {villages.length} thôn: {overview?.household_count ?? 0} hộ nông nghiệp • {cryptoHelper.formatArea(overview?.crops?.total_crops_area ?? 0)} cây trồng • {cryptoHelper.formatCount(overview?.livestock?.total_animals ?? 0, 'con')} vật nuôi
-                </p>
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-              <ArrowRight strokeWidth={1.5} className="w-5 h-5 text-white" />
-            </div>
           </div>
         </div>
       )}

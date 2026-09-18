@@ -17,7 +17,6 @@ import {
   ProductionTypeFilter,
   SortOption,
 } from '../components/households/HouseholdFilterBar';
-import { CustomSelect } from '../components/common/CustomSelect';
 import { useDebounce } from '../hooks/useDebounce';
 
 const computeTotalCrops = (hh: HouseholdFlat): number => {
@@ -50,9 +49,7 @@ export const HouseholdsPage: React.FC = () => {
   const {
     user,
     selectedVillageId,
-    setSelectedVillageId,
     selectedVillageName,
-    villages,
     isOnline,
     isBackendHealthy,
   } = useApp();
@@ -379,15 +376,6 @@ export const HouseholdsPage: React.FC = () => {
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 flex items-center gap-1.5 flex-wrap">
                 <span>Phạm vi:</span>
                 <strong className="text-slate-700 dark:text-slate-200">{selectedVillageName || 'Toàn xã Đăk Hà'}</strong>
-                {user?.role === 'admin' && selectedVillageId && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedVillageId('')}
-                    className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-bold hover:underline cursor-pointer"
-                  >
-                    (← Xem toàn xã)
-                  </button>
-                )}
                 <span>• Quản lý 18 chỉ số kê khai</span>
               </p>
             </div>
@@ -395,25 +383,6 @@ export const HouseholdsPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Admin Village Selector */}
-          {user?.role === 'admin' && (
-            <div className="w-52">
-              <CustomSelect
-                value={selectedVillageId}
-                onChange={(val) => setSelectedVillageId(String(val))}
-                options={[
-                  { value: '', label: 'Toàn xã Đăk Hà' },
-                  ...villages.map((v) => ({
-                    value: v.id,
-                    label: v.name,
-                  })),
-                ]}
-                placeholder="Chọn thôn..."
-                size="sm"
-              />
-            </div>
-          )}
-
           <input type="file" ref={fileInputRef} hidden accept=".xls,.xlsx" onChange={handleFileParse} />
           <button
             type="button"
