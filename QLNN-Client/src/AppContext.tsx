@@ -45,7 +45,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('households');
+  const [activeTab, setActiveTab] = useState<string>('villages');
   const [selectedVillageId, setSelectedVillageId] = useState<string>('');
   const [villages, setVillages] = useState<Village[]>([]);
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);

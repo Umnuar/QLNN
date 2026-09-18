@@ -29,66 +29,131 @@ export const Sidebar: React.FC = () => {
   let navItems: any[] = [];
 
   if (user?.role === 'admin') {
-    const villageScopeDesc = selectedVillageId ? (selectedVillageName || 'Thôn đã chọn') : 'Toàn xã Đăk Hà';
-    navItems = [
-      {
-        id: 'villages',
-        label: 'Quản Lý Thôn',
-        icon: Map,
-        desc: 'Quản lý 7 thôn xã Đăk Hà',
-      },
-      {
-        id: 'analytics',
-        label: 'Thống Kê',
-        icon: BarChart3,
-        desc: villageScopeDesc,
-        badge: 'Chính',
-      },
-      {
-        id: 'households',
-        label: 'Hộ Nông Nghiệp',
-        icon: Sprout,
-        desc: villageScopeDesc,
-      },
-      {
-        id: 'excel',
-        label: 'Nhập / Xuất Excel',
-        icon: FileSpreadsheet,
-        desc: 'Biểu mẫu 21 cột Smart-Upsert',
-      },
-      {
-        id: 'recycle-bin',
-        label: 'Thùng Rác',
-        icon: Trash2,
-        desc: 'Quản lý hộ dân đã xóa',
-      },
-      {
-        id: 'audit',
-        label: 'Nhật Ký Hoạt Động',
-        icon: History,
-        desc: 'Lịch sử biến động dữ liệu',
-      },
-      {
-        id: 'settings',
-        label: 'Cài Đặt Hệ Thống',
-        icon: SettingsIcon,
-        desc: 'Tài khoản & sao lưu CSDL',
-      },
-    ];
+    if (!selectedVillageId) {
+      if (activeTab === 'analytics') {
+        navItems = [
+          {
+            id: 'villages',
+            label: 'Quản Lý Thôn',
+            icon: Map,
+            desc: 'Quản lý 7 thôn xã Đăk Hà',
+          },
+          {
+            id: 'analytics',
+            label: 'Thống Kê',
+            icon: BarChart3,
+            desc: 'Toàn xã Đăk Hà',
+            badge: 'Chính',
+          },
+          {
+            id: 'recycle-bin',
+            label: 'Thùng Rác',
+            icon: Trash2,
+            desc: 'Quản lý hộ dân đã xóa',
+          },
+          {
+            id: 'audit',
+            label: 'Nhật Ký Hoạt Động',
+            icon: History,
+            desc: 'Lịch sử biến động dữ liệu',
+          },
+          {
+            id: 'settings',
+            label: 'Cài Đặt Hệ Thống',
+            icon: SettingsIcon,
+            desc: 'Tài khoản & sao lưu CSDL',
+          },
+        ];
+      } else {
+        navItems = [
+          {
+            id: 'villages',
+            label: 'Quản Lý Thôn',
+            icon: Map,
+            desc: 'Quản lý 7 thôn xã Đăk Hà',
+          },
+          {
+            id: 'recycle-bin',
+            label: 'Thùng Rác',
+            icon: Trash2,
+            desc: 'Quản lý hộ dân đã xóa',
+          },
+          {
+            id: 'audit',
+            label: 'Nhật Ký Hoạt Động',
+            icon: History,
+            desc: 'Lịch sử biến động dữ liệu',
+          },
+          {
+            id: 'settings',
+            label: 'Cài Đặt Hệ Thống',
+            icon: SettingsIcon,
+            desc: 'Tài khoản & sao lưu CSDL',
+          },
+        ];
+      }
+    } else {
+      const villageScopeDesc = selectedVillageName || 'Thôn đã chọn';
+      navItems = [
+        {
+          id: 'villages',
+          label: 'Quản Lý Thôn',
+          icon: Map,
+          desc: 'Quay lại danh sách thôn',
+        },
+        {
+          id: 'analytics',
+          label: 'Thống Kê',
+          icon: BarChart3,
+          desc: villageScopeDesc,
+          badge: 'Chính',
+        },
+        {
+          id: 'households',
+          label: 'Hộ Nông Nghiệp',
+          icon: Sprout,
+          desc: villageScopeDesc,
+        },
+        {
+          id: 'excel',
+          label: 'Nhập / Xuất Excel',
+          icon: FileSpreadsheet,
+          desc: 'Biểu mẫu 21 cột Smart-Upsert',
+        },
+        {
+          id: 'recycle-bin',
+          label: 'Thùng Rác',
+          icon: Trash2,
+          desc: 'Quản lý hộ dân đã xóa',
+        },
+        {
+          id: 'audit',
+          label: 'Nhật Ký Hoạt Động',
+          icon: History,
+          desc: 'Lịch sử biến động dữ liệu',
+        },
+        {
+          id: 'settings',
+          label: 'Cài Đặt Hệ Thống',
+          icon: SettingsIcon,
+          desc: 'Tài khoản & sao lưu CSDL',
+        },
+      ];
+    }
   } else {
     navItems = [
-      {
-        id: 'households',
-        label: 'Hộ Nông Nghiệp',
-        icon: Sprout,
-        desc: 'Quản lý 18 chỉ số hộ dân',
-      },
       {
         id: 'analytics',
         label: 'Thống Kê',
         icon: BarChart3,
         desc: '18 chỉ tiêu nông nghiệp',
         badge: 'Chính',
+      },
+      {
+        id: 'households',
+        label: 'Hộ Nông Nghiệp',
+        icon: Sprout,
+        desc: 'Quản lý 18 chỉ số hộ dân',
       },
       {
         id: 'excel',
@@ -160,8 +225,10 @@ export const Sidebar: React.FC = () => {
                   onClick={() => {
                     if (item.id === 'villages') {
                       setSelectedVillageId('');
+                      setActiveTab('villages');
+                    } else {
+                      setActiveTab(item.id);
                     }
-                    setActiveTab(item.id);
                   }}
                   className={`flex items-center gap-3 rounded-2xl transition-all duration-150 relative cursor-pointer overflow-hidden ${
                     isSidebarCollapsed ? 'w-12 h-12 justify-center shrink-0 mx-auto' : 'w-full py-2.5 px-3 min-h-[48px]'

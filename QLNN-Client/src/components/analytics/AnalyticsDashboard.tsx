@@ -137,7 +137,7 @@ const ProgressBar: React.FC<{
 };
 
 export const AnalyticsDashboard: React.FC = () => {
-  const { user, selectedVillageId, setActiveTab } = useApp();
+  const { user, selectedVillageId, setSelectedVillageId, setActiveTab } = useApp();
 
   const [loading, setLoading] = useState<boolean>(true);
   const [overview, setOverview] = useState<OverviewAnalytics | null>(null);
@@ -285,7 +285,10 @@ export const AnalyticsDashboard: React.FC = () => {
           {user?.role === 'admin' && (
             <button
               type="button"
-              onClick={() => setActiveTab('villages')}
+              onClick={() => {
+                setSelectedVillageId('');
+                setActiveTab('villages');
+              }}
               className="h-10 flex items-center gap-1.5 px-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700"
             >
               <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />

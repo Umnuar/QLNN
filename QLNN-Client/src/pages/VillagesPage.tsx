@@ -116,7 +116,7 @@ export const VillagesPage: React.FC = () => {
 
   const handleVillageClick = (id: string) => {
     setSelectedVillageId(id);
-    setActiveTab('households');
+    setActiveTab('analytics');
   };
 
   const handleUpdate = async (id: string) => {
