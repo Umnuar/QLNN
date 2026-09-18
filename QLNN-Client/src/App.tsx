@@ -4,7 +4,6 @@ import { AppLayout } from './components/Layout/AppLayout';
 import { LoginView } from './components/auth/LoginView';
 import { HouseholdsPage } from './pages/HouseholdsPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
-import { ExcelPage } from './pages/ExcelPage';
 import { VillagesPage } from './pages/VillagesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { RecycleBinPage } from './pages/RecycleBinPage';
@@ -33,7 +32,6 @@ export const App: React.FC = () => {
       {activeTab === 'villages' && <VillagesPage />}
       {activeTab === 'households' && <HouseholdsPage />}
       {activeTab === 'analytics' && <AnalyticsPage />}
-      {activeTab === 'excel' && <ExcelPage />}
       {activeTab === 'recycle-bin' && <RecycleBinPage />}
       {activeTab === 'audit' && <AuditLogView />}
       {activeTab === 'settings' && <SettingsPage />}

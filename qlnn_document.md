@@ -185,7 +185,7 @@ QLNN-Client/
     │   ├── Layout/
     │   │   ├── AppLayout.tsx           # Khung bố cục chuẩn (Sidebar cố định bên trái, Header trên, Content chính)
     │   │   ├── Header.tsx              # Thanh tiêu đề, thông tin cán bộ đăng nhập, nút đổi theme, nút đăng xuất
-    │   │   └── Sidebar.tsx             # Menu điều hướng các chức năng: Hộ dân, Thống kê, Excel, Thùng rác, Lịch sử...
+    │   │   └── Sidebar.tsx             # Menu điều hướng các chức năng: Thôn, Thống kê, Hộ dân, Thùng rác, Lịch sử...
     │   ├── network/
     │   │   ├── ConnectionBanner.tsx    # Banner màu vàng cảnh báo khi mất kết nối mạng hoặc Backend dừng
     │   │   └── ServerStatusModal.tsx   # Hộp thoại chi tiết trạng thái kết nối máy chủ và thời gian trễ (latency)
@@ -203,7 +203,6 @@ QLNN-Client/
     ├── pages/                          # Các màn hình chức năng chính
     │   ├── HouseholdsPage.tsx          # Màn hình chính quản lý danh sách hộ nông nghiệp và 18 chỉ tiêu
     │   ├── AnalyticsPage.tsx           # Màn hình báo cáo trực quan, biểu đồ tăng trưởng cây trồng - vật nuôi
-    │   ├── ExcelPage.tsx               # Màn hình tải file mẫu, kéo thả nhập file Excel và xuất dữ liệu
     │   ├── RecycleBinPage.tsx          # Màn hình quản lý thùng rác (dành cho cả User và Admin)
     │   ├── VillagesPage.tsx            # Màn hình quản lý danh mục thôn (chỉ dành cho Admin)
     │   └── SettingsPage.tsx            # Màn hình cài đặt hệ thống, cấu hình và sao lưu dữ liệu

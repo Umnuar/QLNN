@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Upload, Download, Users, WifiOff, Trash2, Plus } from 'lucide-react';
+import { FileSpreadsheet, Download, Users, WifiOff, Trash2, Plus } from 'lucide-react';
 import { HouseholdFlat } from '../types';
 import { householdApi } from '../api/householdApi';
 import * as XLSX from 'xlsx';
@@ -414,32 +414,32 @@ export const HouseholdsPage: React.FC = () => {
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => setIsExportModalOpen(true)}
-            disabled={exporting}
-            className="h-10 flex items-center gap-1.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all disabled:opacity-50 active:scale-[0.99] cursor-pointer border border-slate-200 dark:border-slate-700"
-          >
-            <Download className="w-4 h-4 text-slate-500 dark:text-slate-400" strokeWidth={1.5} />
-            <span>{exporting ? 'Đang xuất...' : 'Xuất Excel'}</span>
-          </button>
-
           <input type="file" ref={fileInputRef} hidden accept=".xls,.xlsx" onChange={handleFileParse} />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isDisconnected}
-            className={`h-10 flex items-center gap-1.5 px-4 border rounded-2xl text-xs font-bold transition-all active:scale-[0.99] shadow-xs ${isDisconnected ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border-amber-200/80 dark:border-amber-800 cursor-pointer"}`}
+            className="h-10 flex items-center gap-1.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all disabled:opacity-50 active:scale-[0.99] cursor-pointer border border-slate-200 dark:border-slate-700 shadow-xs"
           >
-            <Upload className="w-4 h-4 text-amber-600 dark:text-amber-400" strokeWidth={1.5} />
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" strokeWidth={1.5} />
             <span>Nhập Excel</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsExportModalOpen(true)}
+            disabled={exporting}
+            className="h-10 flex items-center gap-1.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all disabled:opacity-50 active:scale-[0.99] cursor-pointer border border-slate-200 dark:border-slate-700 shadow-xs"
+          >
+            <Download className="w-4 h-4 text-blue-600 dark:text-blue-400" strokeWidth={1.5} />
+            <span>{exporting ? 'Đang xuất...' : 'Xuất Excel'}</span>
           </button>
 
           <button
             type="button"
             onClick={handleAdd}
             disabled={isDisconnected}
-            className={`h-10 flex items-center gap-1.5 px-5 text-white rounded-2xl text-xs font-bold shadow-xs transition-all ${isDisconnected ? "bg-slate-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700 active:scale-95 cursor-pointer"}`}
+            className="h-10 flex items-center gap-1.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
           >
             <Plus className="w-4 h-4" strokeWidth={1.5} />
             <span>Thêm Hộ Dân</span>
@@ -549,6 +549,7 @@ export const HouseholdsPage: React.FC = () => {
         parsedData={importData}
         onConfirm={handleImportConfirm}
         importing={importing}
+        onChangeFile={() => fileInputRef.current?.click()}
       />
       
       <ExportSettingsModal

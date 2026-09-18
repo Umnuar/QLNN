@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import { ImportPreviewModal } from '../../components/excel/ImportPreviewModal';
 
 describe('Excel 21 Columns Preview Verification', () => {
@@ -31,7 +31,7 @@ describe('Excel 21 Columns Preview Verification', () => {
     'Hộ mẫu đạt chuẩn NTM', // 20: Ghi chú
   ];
 
-  it('1. Render đầy đủ 21 tiêu đề cột chính xác theo đúng thứ tự', () => {
+  it('1. Render đầy đủ 21 tiêu đề cột chính xác theo đúng thứ tự (đánh số phẳng)', () => {
     render(
       <ImportPreviewModal
         isOpen={true}
@@ -44,27 +44,27 @@ describe('Excel 21 Columns Preview Verification', () => {
     );
 
     const expectedHeaders = [
-      'STT',
-      'Họ và Tên',
-      'Cà phê (Hộ)',
-      'Cà phê (Nhận k)',
-      'Cao su (Hộ)',
-      'Cao su (Nhận k)',
-      'Cây ăn quả',
-      'Macca',
-      'Đinh lăng',
-      'Gừng',
-      'Nghệ',
-      'Sả',
-      'Lúa nước',
-      'Cây HN khác',
-      'Trâu (con)',
-      'Bò (con)',
-      'Heo (con)',
-      'Gia cầm (con)',
-      'Ao cá (ha)',
-      'Lồng bè',
-      'Ghi chú',
+      '1. STT',
+      '2. Họ và Tên Chủ Hộ',
+      '3. Cà phê (Hộ)',
+      '4. Cà phê (Nhận k)',
+      '5. Cao su (Hộ)',
+      '6. Cao su (Nhận k)',
+      '7. Cây ăn quả',
+      '8. Macca',
+      '9. Đinh lăng',
+      '10. Gừng',
+      '11. Nghệ',
+      '12. Sả',
+      '13. Lúa nước',
+      '14. Cây HN khác',
+      '15. Trâu (con)',
+      '16. Bò (con)',
+      '17. Heo (con)',
+      '18. Gia cầm (con)',
+      '19. Ao cá (ha)',
+      '20. Lồng bè',
+      '21. Ghi chú',
     ];
 
     const thElements = screen.getAllByRole('columnheader');
@@ -127,5 +127,59 @@ describe('Excel 21 Columns Preview Verification', () => {
     const emptyCell = screen.getByText('Không tìm thấy dữ liệu hợp lệ trong file');
     expect(emptyCell).toBeInTheDocument();
     expect(emptyCell).toHaveAttribute('colspan', '21');
+  });
+
+  it('4. Header hiển thị đúng thông tin, badge trạng thái hợp lệ và nút Đổi Tệp Khác gọi onChangeFile', () => {
+    const mockOnChangeFile = vi.fn();
+    render(
+      <ImportPreviewModal
+        isOpen={true}
+        onClose={() => {}}
+        file={sampleFile}
+        parsedData={[sampleRow]}
+        onConfirm={() => {}}
+        importing={false}
+        onChangeFile={mockOnChangeFile}
+      />
+    );
+
+    expect(
+      screen.getByText('Preview Bảng Đối Soát 21 Cột – File test_import.xlsx')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Tổng cộng 1 dòng dữ liệu/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Hợp lệ: 1 hộ nông nghiệp')
+    ).toBeInTheDocument();
+
+    const changeFileBtn = screen.getByRole('button', { name: /Đổi Tệp Khác/i });
+    expect(changeFileBtn).toBeInTheDocument();
+    fireEvent.click(changeFileBtn);
+    expect(mockOnChangeFile).toHaveBeenCalledTimes(1);
+  });
+
+  it('5. Footer hiển thị phân trang Trước/Sau và nút xác nhận kèm số lượng hợp lệ', () => {
+    const mockOnConfirm = vi.fn();
+    render(
+      <ImportPreviewModal
+        isOpen={true}
+        onClose={() => {}}
+        file={sampleFile}
+        parsedData={[sampleRow]}
+        onConfirm={mockOnConfirm}
+        importing={false}
+      />
+    );
+
+    expect(screen.getByText('Trước')).toBeInTheDocument();
+    expect(screen.getByText('Sau')).toBeInTheDocument();
+
+    const confirmBtn = screen.getByRole('button', {
+      name: /Xác Nhận Nhập \(1 Hợp Lệ\)/i,
+    });
+    expect(confirmBtn).toBeInTheDocument();
+    fireEvent.click(confirmBtn);
+    expect(mockOnConfirm).toHaveBeenCalledWith(sampleFile);
   });
 });

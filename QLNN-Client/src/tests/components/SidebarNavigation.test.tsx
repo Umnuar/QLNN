@@ -71,7 +71,7 @@ describe('SidebarNavigation Contextual Filtering', () => {
     expect(screen.queryByText('Nhập / Xuất Excel')).not.toBeInTheDocument();
   });
 
-  it('3. Trạng thái chọn 1 thôn: Admin có selectedVillageId = "v1" -> render đúng 7 nút với Thống Kê là mục chính đầu tiên', () => {
+  it('3. Trạng thái chọn 1 thôn: Admin có selectedVillageId = "v1" -> render đúng 6 nút với Thống Kê là mục chính đầu tiên', () => {
     (useApp as any).mockReturnValue({
       user: { id: '1', username: 'admin', role: 'admin' },
       activeTab: 'analytics',
@@ -85,27 +85,25 @@ describe('SidebarNavigation Contextual Filtering', () => {
 
     render(<Sidebar />);
 
-    // Kiểm tra đủ 7 nút
+    // Kiểm tra đủ 6 nút (không có Nhập / Xuất Excel)
     expect(screen.getByText('Quản Lý Thôn')).toBeInTheDocument();
     expect(screen.getByText('Quay lại danh sách thôn')).toBeInTheDocument();
     expect(screen.getByText('Thống Kê')).toBeInTheDocument();
     expect(screen.getAllByText('Thôn Kon Đào').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Hộ Nông Nghiệp')).toBeInTheDocument();
-    expect(screen.getByText('Nhập / Xuất Excel')).toBeInTheDocument();
     expect(screen.getByText('Thùng Rác')).toBeInTheDocument();
     expect(screen.getByText('Nhật Ký Hoạt Động')).toBeInTheDocument();
     expect(screen.getByText('Cài Đặt Hệ Thống')).toBeInTheDocument();
+    expect(screen.queryByText('Nhập / Xuất Excel')).not.toBeInTheDocument();
 
     // Kiểm tra thứ tự các buttons trong nav
     const buttonTexts = screen.getAllByRole('button').map(b => b.textContent);
     const villagesIdx = buttonTexts.findIndex(t => t?.includes('Quản Lý Thôn'));
     const analyticsIdx = buttonTexts.findIndex(t => t?.includes('Thống Kê'));
     const householdsIdx = buttonTexts.findIndex(t => t?.includes('Hộ Nông Nghiệp'));
-    const excelIdx = buttonTexts.findIndex(t => t?.includes('Nhập / Xuất Excel'));
 
     expect(villagesIdx).toBeLessThan(analyticsIdx);
     expect(analyticsIdx).toBeLessThan(householdsIdx);
-    expect(householdsIdx).toBeLessThan(excelIdx);
   });
 
   it('4. Tương tác click "Quản Lý Thôn" -> gọi setSelectedVillageId("") và setActiveTab("villages")', () => {
@@ -146,9 +144,9 @@ describe('SidebarNavigation Contextual Filtering', () => {
     // Thống Kê là mục chính đầu tiên
     expect(screen.getByText('Thống Kê')).toBeInTheDocument();
     expect(screen.getByText('Hộ Nông Nghiệp')).toBeInTheDocument();
-    expect(screen.getByText('Nhập / Xuất Excel')).toBeInTheDocument();
     expect(screen.getByText('Thùng Rác')).toBeInTheDocument();
     expect(screen.getByText('Nhật Ký Hoạt Động')).toBeInTheDocument();
+    expect(screen.queryByText('Nhập / Xuất Excel')).not.toBeInTheDocument();
 
     // Không có Quản Lý Thôn và Cài Đặt Hệ Thống
     expect(screen.queryByText('Quản Lý Thôn')).not.toBeInTheDocument();

@@ -10,7 +10,6 @@ import {
   PanelLeftOpen,
   Trash2,
   History,
-  FileSpreadsheet,
 } from 'lucide-react';
 import { useApp } from '../../AppContext';
 
@@ -115,12 +114,6 @@ export const Sidebar: React.FC = () => {
           desc: villageScopeDesc,
         },
         {
-          id: 'excel',
-          label: 'Nhập / Xuất Excel',
-          icon: FileSpreadsheet,
-          desc: 'Biểu mẫu 21 cột Smart-Upsert',
-        },
-        {
           id: 'recycle-bin',
           label: 'Thùng Rác',
           icon: Trash2,
@@ -154,12 +147,6 @@ export const Sidebar: React.FC = () => {
         label: 'Hộ Nông Nghiệp',
         icon: Sprout,
         desc: 'Quản lý 18 chỉ số hộ dân',
-      },
-      {
-        id: 'excel',
-        label: 'Nhập / Xuất Excel',
-        icon: FileSpreadsheet,
-        desc: 'Biểu mẫu 21 cột Smart-Upsert',
       },
       {
         id: 'recycle-bin',
