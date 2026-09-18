@@ -664,7 +664,7 @@ export const hardDeleteHouseholds = async (req: AuthRequest, res: Response) => {
     }
 
     if (req.user?.role !== 'admin') {
-      res.status(403).json({ error: 'Chá»‰ Admin má»›i cÃ³ quyá»n xÃ³a vÄ©nh viá»…n' });
+      res.status(403).json({ error: 'Chỉ Admin mới có quyền xóa vĩnh viễn' });
       return;
     }
 
@@ -706,9 +706,8 @@ export const hardDeleteHouseholds = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    res.json({ status: 'ok', message: 'ÄÃ£ xÃ³a vÄ©nh viá»…n há»™ thÃ nh cÃ´ng' });
+    res.json({ status: 'ok', message: 'Đã xóa vĩnh viễn hộ thành công' });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Lỗi xóa vĩnh viễn hộ' });
   }
 };
-

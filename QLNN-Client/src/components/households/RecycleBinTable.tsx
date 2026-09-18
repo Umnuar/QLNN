@@ -23,12 +23,10 @@ interface HouseholdTableProps {
   onDelete: (hh: HouseholdFlat) => void;
 }
 
-
 export const RecycleBinTable: React.FC<HouseholdTableProps> = ({
   selectedIds = [],
   onToggleSelect,
   onToggleSelectAll,
-
   readOnly = false,
   households,
   total,
@@ -40,7 +38,6 @@ export const RecycleBinTable: React.FC<HouseholdTableProps> = ({
   onEdit,
   onDelete,
 }) => {
-    
   const villageColorMap: Record<string, string> = {
     'Thôn 1': 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800',
     'Thôn 2': 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800',
@@ -137,7 +134,6 @@ export const RecycleBinTable: React.FC<HouseholdTableProps> = ({
                   </tr>
                 ))}
               </tbody>
-          
         </table>
       </div>
 

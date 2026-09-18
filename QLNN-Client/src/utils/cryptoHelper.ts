@@ -1,8 +1,21 @@
 
+import {
+  formatNumber,
+  formatCurrency,
+  formatArea,
+  formatCount,
+  numberFormatters,
+} from './formatters';
+
+// Tương thích ngược: re-export các tiện ích định dạng từ formatters.ts
+export { formatNumber, formatCurrency, formatArea, formatCount, numberFormatters };
+
 const MASTER_KEY_STORAGE_KEY = 'qlnn_client_master_key';
 
-// Derive or get Master CryptoKey
-async function getMasterKey(): Promise<CryptoKey> {
+/**
+ * Tạo hoặc lấy Master CryptoKey từ Web Crypto API (AES-GCM 256-bit)
+ */
+export async function getMasterKey(): Promise<CryptoKey> {
   let rawKeyHex = localStorage.getItem(MASTER_KEY_STORAGE_KEY);
   if (!rawKeyHex) {
     const rawKey = window.crypto.getRandomValues(new Uint8Array(32));
@@ -87,23 +100,12 @@ export async function decryptData(encryptedText: string): Promise<any> {
 }
 
 /**
- * Helper định dạng số liệu diện tích, đàn vật nuôi, tiền tệ
+ * Object tiện ích định dạng số liệu, duy trì để đảm bảo tương thích ngược 100%
+ * với các component đang sử dụng `cryptoHelper.formatArea(...)`, `cryptoHelper.formatCount(...)`, etc.
  */
 export const cryptoHelper = {
-  formatCurrency(val: number | null | undefined): string {
-    if (val === null || val === undefined) return '0';
-    return new Intl.NumberFormat('vi-VN').format(val);
-  },
-
-  formatArea(val: number | null | undefined, withUnit: boolean = true): string {
-    if (val === null || val === undefined || val === 0) return withUnit ? '0 ha' : '0';
-    const formatted = Number(val).toLocaleString('vi-VN', { maximumFractionDigits: 3 });
-    return withUnit ? `${formatted} ha` : formatted;
-  },
-
-  formatCount(val: number | null | undefined, unit?: string): string {
-    if (val === null || val === undefined || val === 0) return unit ? `0 ${unit}` : '0';
-    const formatted = Number(val).toLocaleString('vi-VN');
-    return unit ? `${formatted} ${unit}` : formatted;
-  },
+  formatNumber,
+  formatCurrency,
+  formatArea,
+  formatCount,
 };

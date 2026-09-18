@@ -1,16 +1,7 @@
 import { apiClient } from './apiClient';
+import { AuditLog } from '../types';
 
-export interface AuditLog {
-  id: string;
-  village_id: string;
-  user_id: string;
-  username: string;
-  action: string;
-  entity_type: string;
-  entity_id: string;
-  details: any;
-  created_at: string;
-}
+export type { AuditLog };
 
 export const auditApi = {
   getLogs: async (villageId?: string, limit: number = 50, offset: number = 0) => {

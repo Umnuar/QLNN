@@ -1,24 +1,7 @@
 import { apiClient } from './apiClient';
+import { ExcelPreviewItem, ExcelPreviewResponse } from '../types';
 
-export interface ExcelPreviewItem {
-  stt: number;
-  full_name: string;
-  action: 'create' | 'update';
-  existingId: string | null;
-  cropCount: number;
-  livestockCount: number;
-  aquaCount: number;
-  notes?: string;
-}
-
-export interface ExcelPreviewResponse {
-  status: string;
-  villageName: string;
-  totalRowsParsed: number;
-  createCount: number;
-  updateCount: number;
-  previewList: ExcelPreviewItem[];
-}
+export type { ExcelPreviewItem, ExcelPreviewResponse };
 
 export const excelApi = {
   async previewExcel(file: File, villageId?: string): Promise<ExcelPreviewResponse> {

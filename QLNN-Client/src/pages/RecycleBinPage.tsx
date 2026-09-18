@@ -140,7 +140,6 @@ export const RecycleBinPage: React.FC = () => {
       </div>
 
       <RecycleBinTable
-        
         households={households}
         loading={loading}
         total={pagination.total}

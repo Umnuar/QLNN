@@ -85,8 +85,6 @@ model aquaculture_items {
   @@index([aquaculture_type], map: "idx_aqua_type")
 }
 
-
-
 model users {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   username   String    @unique @db.VarChar(50)
@@ -96,10 +94,6 @@ model users {
   created_at DateTime? @default(now()) @db.Timestamptz
   village    villages? @relation(fields: [village_id], references: [id])
 }
-
-
-
-
 
 model audit_logs {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

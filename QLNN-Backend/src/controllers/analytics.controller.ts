@@ -291,7 +291,6 @@ export const exportAnalyticsExcel = async (req: AuthRequest, res: Response) => {
       '', '', 'Cà Phê', 'Cao Su', 'Cây Ăn Quả', 'Dược Liệu', 'Tổng Cây',
       'Trâu Bò', 'Heo', 'Gia Cầm', 'Cá Ao (ha)', 'Cá Lồng (lồng)'
     ];
-    const headerRow = worksheet.getRow(5);
     subHeaders.forEach((h, i) => {
       if (h) worksheet.getCell(5, i + 1).value = h;
     });

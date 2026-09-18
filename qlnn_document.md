@@ -87,14 +87,9 @@ QLNN-Backend/
 ├── CLAUDE.md                           # Quy tắc bất biến dự án, cấm tạo file vá tạm, quy chuẩn mã nguồn
 ├── prisma/
 │   └── schema.prisma                   # Khai báo 7 models CSDL (households, 3 bảng con, villages, users, audit_logs)
-├── scripts/                            # Scripts kiểm thử, kiểm toán dữ liệu và khởi tạo hệ thống
+├── scripts/                            # Scripts khởi tạo hệ thống và kiểm thử ca biên
 │   ├── seed-villages.ts                # Khởi tạo danh mục 7 thôn/làng xã Đăk Hà
 │   ├── seed-users.ts                   # Khởi tạo tài khoản admin và cán bộ 7 thôn
-│   ├── test-login-all.ts               # Kiểm thử đăng nhập hàng loạt tài khoản
-│   ├── test-analytics-api.ts           # Kiểm thử độ chính xác API tính toán 18 chỉ tiêu
-│   ├── test-import-upsert.ts           # Kiểm thử cơ chế Smart-Upsert từ file Excel thực tế
-│   ├── test-parser.ts                  # Kiểm thử bóc tách file Excel 21 cột
-│   ├── inspect-actual-file.ts          # Thẩm tra cấu trúc file Excel biểu mẫu thực tế
 │   └── verify-excel-parser-edge-cases.ts # Kiểm thử các ca biên: dòng trống, dữ liệu âm, chuỗi lỗi
 ├── test-fixtures/
 │   └── test_dulieu_thon1_dien_that.xlsx # File Excel mẫu thực tế chứa dữ liệu thôn 1 để chạy kiểm thử
@@ -177,7 +172,6 @@ QLNN-Client/
     │   │   ├── HouseholdTable.tsx      # Bảng hiển thị 18 chỉ tiêu nông nghiệp, phân trang, nút xem/sửa/xóa
     │   │   ├── HouseholdModal.tsx      # Modal Nổi Trung Tâm (Centered Floating Dialog) bọc qua createPortal, fixed header với tab switch (Cây trồng, Vật nuôi, Thủy sản), scrollable body 18 chỉ tiêu, fixed footer, phát hiện trùng tên hộ 409
     │   │   ├── HouseholdFilterBar.tsx  # Thanh lọc theo thôn, ô tìm kiếm tiếng Việt không dấu, nút xuất dữ liệu
-    │   │   ├── AuditLogModal.tsx       # Hộp thoại hiển thị lịch sử sửa đổi của riêng 1 hộ nông dân
     │   │   └── RecycleBinTable.tsx     # Bảng dữ liệu thùng rác, nút khôi phục, nút xóa vĩnh viễn (Admin)
     │   ├── analytics/                  # CÁC COMPONENT BÁO CÁO THỐNG KÊ
     │   │   └── AnalyticsDashboard.tsx  # Dashboard biểu đồ Recharts (cơ cấu cây trồng, đàn gia súc, so sánh giữa 7 thôn)

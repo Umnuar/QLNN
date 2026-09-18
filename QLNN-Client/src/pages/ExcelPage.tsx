@@ -217,7 +217,6 @@ export const ExcelPage: React.FC = () => {
       setExportTotalPages(res.pagination.totalPages);
     } catch (err) {
       console.error('Fetch export preview error:', err);
-    } finally {
     }
   }, [previewMode, selectedVillageId, exportPage, exportLimit, user?.role]);
 

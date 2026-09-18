@@ -144,10 +144,8 @@ export const AnalyticsDashboard: React.FC = () => {
   const [scopeName, setScopeName] = useState<string>('Toàn xã');
   const [villageData, setVillageData] = useState<VillageAnalytics[]>([]);
   const [isUsingCachedData, setIsUsingCachedData] = useState(false);
-  
-  
 
-    const loadData = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
       const targetVillage = user?.role === 'admin' ? selectedVillageId : undefined;
@@ -220,8 +218,6 @@ export const AnalyticsDashboard: React.FC = () => {
     );
   }
 
-
-  
   const handleExportComparisonExcel = async () => {
     try {
       const token = await secureStorage.getItem('accessToken');
