@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FileSpreadsheet, Download, Users, WifiOff, Trash2, Plus } from 'lucide-react';
+import { FileSpreadsheet, Download, Users, WifiOff, Plus } from 'lucide-react';
 import { HouseholdFlat } from '../types';
 import { householdApi } from '../api/householdApi';
 import * as XLSX from 'xlsx';
@@ -351,6 +351,28 @@ export const HouseholdsPage: React.FC = () => {
     });
   };
 
+  const handleBatchDelete = () => {
+    if (selectedHouseholdIds.length === 0) return;
+    showModal({
+      title: 'Chuyển vào Thùng Rác hàng loạt',
+      message: `Bạn có chắc chắn muốn xóa ${selectedHouseholdIds.length} hộ đã chọn?\nCác hộ sẽ được chuyển vào Thùng rác và có thể khôi phục lại.`,
+      type: 'danger',
+      confirmText: 'Xác Nhận Xóa',
+      cancelText: 'Hủy',
+      onConfirm: async () => {
+        try {
+          const deletedIds = [...selectedHouseholdIds];
+          await householdApi.bulkDelete(selectedHouseholdIds);
+          setSelectedHouseholdIds([]);
+          setUndoAction({ ids: deletedIds });
+          fetchHouseholds();
+        } catch (err) {
+          showModal({ title: 'Lỗi', message: 'Không thể xóa hàng loạt.', type: 'danger' });
+        }
+      },
+    });
+  };
+
   return (
     <div className="space-y-5 animate-in fade-in duration-150">
       {/* Top Banner & Main Actions */}
@@ -416,55 +438,6 @@ export const HouseholdsPage: React.FC = () => {
         </div>
       </div>
 
-
-      {/* Sticky Action Bar */}
-      {selectedHouseholdIds.length > 0 && (
-        <div className="sticky top-4 z-50 bg-emerald-50 dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-3 flex items-center justify-between shadow-lg">
-          <div className="text-emerald-800 dark:text-emerald-300 font-bold text-sm">
-            Đã chọn {selectedHouseholdIds.length} hộ
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSelectedHouseholdIds([])}
-              className="px-4 py-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold shadow-sm cursor-pointer active:scale-95"
-            >
-              Bỏ chọn
-            </button>
-            <button
-              onClick={() => setIsExportModalOpen(true)}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95"
-            >
-              <Download className="w-4 h-4" strokeWidth={1.5} /> Xuất Excel
-            </button>
-            <button
-              onClick={() => {
-                showModal({
-                  title: 'Chuyển vào Thùng Rác hàng loạt',
-                  message: `Bạn có chắc chắn muốn xóa ${selectedHouseholdIds.length} hộ đã chọn?\nCác hộ sẽ được chuyển vào Thùng rác và có thể khôi phục lại.`,
-                  type: 'danger',
-                  confirmText: 'Xác Nhận Xóa',
-                  cancelText: 'Hủy',
-                  onConfirm: async () => {
-                    try {
-                      const deletedIds = [...selectedHouseholdIds];
-                      await householdApi.bulkDelete(selectedHouseholdIds);
-                      setSelectedHouseholdIds([]);
-                      setUndoAction({ ids: deletedIds });
-                      fetchHouseholds();
-                    } catch (err) {
-                      showModal({ title: 'Lỗi', message: 'Không thể xóa hàng loạt.', type: 'danger' });
-                    }
-                  }
-                });
-              }}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95"
-            >
-              <Trash2 className="w-4 h-4" strokeWidth={1.5} /> Xóa
-            </button>
-          </div>
-        </div>
-      )}
-
       <HouseholdFilterBar
         search={search}
         setSearch={setSearch}
@@ -479,6 +452,10 @@ export const HouseholdsPage: React.FC = () => {
         isAllExpanded={isAllExpanded}
         onToggleExpandAll={handleToggleExpandAll}
         onResetFilters={handleResetFilters}
+        selectedCount={selectedHouseholdIds.length}
+        onDeselectAll={() => setSelectedHouseholdIds([])}
+        onExportSelected={() => handleExportConfirm('selected')}
+        onDeleteSelected={handleBatchDelete}
       />
 
       {/* Main Table */}

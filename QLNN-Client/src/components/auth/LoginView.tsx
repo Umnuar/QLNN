@@ -69,8 +69,8 @@ export const LoginView: React.FC = () => {
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-6 p-3.5 bg-rose-950/40 border border-rose-800/60 rounded-xl flex items-start gap-3 text-rose-300 text-xs leading-relaxed">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" strokeWidth={1.5} />
+          <div className="mb-6 p-3.5 bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-950/40 dark:border-rose-800/60 dark:text-rose-300 rounded-xl flex items-start gap-3 text-xs leading-relaxed">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" strokeWidth={1.5} />
             <span>{error}</span>
           </div>
         )}

@@ -287,7 +287,7 @@ export const SettingsPage: React.FC = () => {
             }`}
           >
             <Users className="w-4 h-4" strokeWidth={1.5} />
-            <span>Quản Lý Cán Bộ 7 Thôn</span>
+            <span>Quản Lý Cán Bộ Thôn</span>
           </button>
         )}
 

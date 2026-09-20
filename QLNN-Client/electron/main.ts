@@ -26,6 +26,7 @@ function createWindow() {
     height: 850,
     minWidth: 1024,
     minHeight: 650,
+    autoHideMenuBar: true,
     title: 'Quản Lý Nông Nghiệp - Xã Đăk Hà',
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
@@ -33,6 +34,21 @@ function createWindow() {
       nodeIntegration: false,
     },
   })
+
+  win.removeMenu()
+
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.type === 'keyDown') {
+      if (input.key === 'F12' || (input.control && input.shift && input.key.toLowerCase() === 'i')) {
+        win?.webContents.toggleDevTools();
+        event.preventDefault();
+      }
+      if (input.key === 'F5' || (input.control && !input.shift && input.key.toLowerCase() === 'r')) {
+        win?.webContents.reload();
+        event.preventDefault();
+      }
+    }
+  });
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)

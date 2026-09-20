@@ -64,8 +64,8 @@ describe('AuditLogView UI (Phần 2.4)', () => {
       expect(screen.getByText('Khôi phục 1 hộ dân')).toBeInTheDocument();
     });
 
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'RESTORE' } });
+    const restorePill = screen.getByRole('button', { name: 'Khôi Phục' });
+    fireEvent.click(restorePill);
 
     // Cà phê (UPDATE) sẽ bị ẩn đi
     expect(screen.queryByText('Cà phê (Hộ gia đình) (ha):')).not.toBeInTheDocument();
