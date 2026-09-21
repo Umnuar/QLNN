@@ -17,14 +17,20 @@ export interface Village {
 
 export interface AuditLog {
   id: string;
-  village_id: string;
-  user_id: string;
+  village_id?: string | null;
+  user_id?: string | null;
   username: string;
   action: string;
   entity_type: string;
-  entity_id: string;
-  details: any;
+  entity_id?: string | null;
+  details?: any;
   created_at: string;
+  old_values?: any;
+  new_values?: any;
+  full_name?: string | null;
+  village_name?: string | null;
+  ip_address?: string | null;
+  description?: string | null;
 }
 
 export interface CropItem {

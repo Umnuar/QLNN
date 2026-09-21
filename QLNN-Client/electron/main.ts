@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import Store from 'electron-store'
@@ -36,6 +36,8 @@ function createWindow() {
   })
 
   win.removeMenu()
+  win.setMenu(null)
+  win.setMenuBarVisibility(false)
 
   win.webContents.on('before-input-event', (event, input) => {
     if (input.type === 'keyDown') {
@@ -113,4 +115,7 @@ ipcMain.handle('app:set-zoom', (_e, level: number) => {
   }
 })
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  Menu.setApplicationMenu(null)
+  createWindow()
+})

@@ -11,6 +11,12 @@ vi.mock('../../api/auditApi', () => ({
   },
 }));
 
+vi.mock('../../api/authApi', () => ({
+  authApi: {
+    getUsers: vi.fn().mockResolvedValue([]),
+  },
+}));
+
 const mockLogs = {
   data: [
     {

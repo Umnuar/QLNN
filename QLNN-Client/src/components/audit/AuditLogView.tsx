@@ -1,22 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   History,
-  Clock,
-  User as UserIcon,
-  FileSpreadsheet,
-  Trash2,
   Plus,
   RefreshCw,
-  Search,
-  MapPin,
-  AlertCircle,
+  Trash2,
   RotateCcw,
+  FileSpreadsheet,
+  Search,
   Filter,
+  User as UserIcon,
+  UserCheck,
+  MapPin,
+  Clock,
+  Shield,
   ArrowDownCircle,
+  AlertCircle,
 } from 'lucide-react';
-import { auditApi, AuditLog } from '../../api/auditApi';
 import { useApp } from '../../AppContext';
+import { auditApi, AuditLog } from '../../api/auditApi';
+import { authApi } from '../../api/authApi';
+import { User } from '../../types';
 import { CustomSelect } from '../common/CustomSelect';
+import { TablePagination } from '../common/TablePagination';
 
 export interface AuditLogViewProps {
   villageId?: string;
@@ -25,11 +30,90 @@ export interface AuditLogViewProps {
   className?: string;
 }
 
-function formatVal(val: any): string {
-  if (val === null || val === undefined || val === '') return 'Trống';
+const FIELD_LABELS: Record<string, string> = {
+  // 1. Nhóm Chỉ tiêu Nông Nghiệp
+  cafe_household: 'Cà phê (Hộ gia đình) (ha)',
+  cafe_contracted: 'Cà phê (Liên kết) (ha)',
+  rubber_household: 'Cao su (Hộ gia đình) (ha)',
+  rubber_contracted: 'Cao su (Liên kết) (ha)',
+  fruit_tree: 'Cây ăn quả (ha)',
+  macadamia: 'Mắc ca (ha)',
+  wet_rice: 'Lúa nước (ha)',
+  other_annual_crops: 'Cây hàng năm khác (ha)',
+  herb_dinh_lang: 'Đinh lăng (ha)',
+  herb_gung: 'Gừng (ha)',
+  herb_nghe: 'Nghệ (ha)',
+  herb_sa: 'Sả (ha)',
+  buffalo: 'Trâu (con)',
+  cow: 'Bò (con)',
+  pig: 'Heo / Lợn (con)',
+  poultry: 'Gia cầm (con)',
+  fish_pond: 'Ao hồ thủy sản (ha)',
+  fish_cage: 'Lồng bè nuôi cá (lồng)',
+
+  // 2. Nhóm Thông tin Hộ & Nhân khẩu
+  full_name: 'Họ và tên / Chủ hộ',
+  head_name: 'Chủ hộ',
+  head_cccd: 'Số CCCD chủ hộ',
+  book_number: 'Mã định danh hộ',
+  code: 'Mã định danh',
+  phone: 'Số điện thoại',
+  address: 'Địa chỉ',
+  status: 'Trạng thái',
+  notes: 'Ghi chú',
+  village_name: 'Thôn',
+  village_id: 'Mã thôn',
+  relationship: 'Quan hệ với chủ hộ',
+  dob: 'Ngày sinh',
+  gender: 'Giới tính',
+  cccd: 'Số CCCD',
+  cccd_last4: '4 số cuối CCCD',
+  ethnicity: 'Dân tộc',
+  religion: 'Tôn giáo',
+  occupation: 'Nghề nghiệp',
+  members_count: 'Số nhân khẩu',
+  is_head: 'Là chủ hộ',
+  is_deleted: 'Đã xóa',
+  deleted_at: 'Thời điểm xóa',
+  restored_at: 'Thời điểm khôi phục',
+  reason: 'Lý do',
+
+  // 3. Nhóm Nhập xuất Excel
+  file_name: 'Tên tệp Excel',
+  imported_households: 'Số hộ đã nhập',
+  imported_citizens: 'Số nhân khẩu đã nhập',
+  inserted: 'Số bản ghi thêm mới',
+  updated: 'Số bản ghi cập nhật',
+};
+
+const IGNORED_FIELDS = new Set([
+  'id',
+  'version',
+  'created_at',
+  'updated_at',
+  'is_deleted',
+  'deleted_at',
+  'village_id',
+  'household_id',
+  'name_unaccented',
+  'cccd_hash',
+  'stt',
+  'village',
+  'citizens',
+  'citizens_count',
+  'user_id',
+  'ip_address',
+  'password_hash',
+  'added_members',
+  'updated_members',
+  'removed_members',
+]);
+
+function formatValue(val: any): string {
+  if (val === null || val === undefined || val === '') return '(Trống)';
   if (typeof val === 'boolean') return val ? 'Có' : 'Không';
   if (typeof val === 'object') {
-    if (Array.isArray(val)) return val.join(', ');
+    if (Array.isArray(val)) return `${val.length} mục`;
     return JSON.stringify(val);
   }
   return String(val);
@@ -41,281 +125,478 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
   showFilters = true,
   className = '',
 }) => {
-  const { villages, user, selectedVillageId, setSelectedVillageId } = useApp();
+  const { user, villages, selectedVillageId, setSelectedVillageId } = useApp();
   const isAdmin = user?.role === 'admin';
-
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [offset, setOffset] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [error, setError] = useState<string | null>(null);
 
   // Filters state
   const [actionFilter, setActionFilter] = useState<string>('ALL');
   const [villageFilter, setVillageFilter] = useState<string>(initialVillageId || selectedVillageId || '');
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [userFilter, setUserFilter] = useState<string>('');
+  const [search, setSearch] = useState<string>('');
 
-  const limit = 30;
-
-  // Đồng bộ bộ lọc Thôn khi chọn trên header/sidebar
+  // Synchronize village filter with header/sidebar
   useEffect(() => {
     if (selectedVillageId !== undefined) {
-      setVillageFilter(selectedVillageId);
+      setVillageFilter(selectedVillageId || '');
     }
   }, [selectedVillageId]);
 
-  const fetchLogs = useCallback(async (currentOffset: number = 0, append: boolean = false) => {
-    try {
+  // Data & Pagination
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [total, setTotal] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userList, setUserList] = useState<User[]>([]);
+
+  // Tải danh sách cán bộ để phục vụ bộ lọc
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const users = await authApi.getUsers();
+        setUserList(users || []);
+      } catch (err) {
+        console.warn('Lỗi tải danh sách người dùng:', err);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  // Truy vấn Audit Logs từ API
+  const fetchLogs = useCallback(
+    async (currentPage: number, append = false) => {
       setLoading(true);
       setError(null);
+      try {
+        const res = await auditApi.getLogs({
+          page: currentPage,
+          limit,
+          villageId: villageFilter && villageFilter !== 'ALL' && villageFilter !== '' ? villageFilter : undefined,
+          action: actionFilter !== 'ALL' ? actionFilter : undefined,
+          userId: userFilter || undefined,
+          search: search.trim() || undefined,
+        });
 
-      const targetVillage = villageFilter && villageFilter !== 'ALL' && villageFilter !== '' ? villageFilter : undefined;
-      const res = await auditApi.getLogs(targetVillage, limit, currentOffset);
-
-      if (res && Array.isArray(res.data)) {
+        const items: AuditLog[] = res?.data || [];
         if (append) {
-          setLogs(prev => [...prev, ...res.data]);
+          setLogs((prev) => [...prev, ...items]);
         } else {
-          setLogs(res.data);
+          setLogs(items);
         }
-        setTotal(res.pagination?.total ?? res.data.length);
-      } else {
-        if (!append) setLogs([]);
-        setTotal(0);
-      }
-    } catch (err: any) {
-      console.error('Failed to load audit logs', err);
-      setError(err.response?.data?.error || err.message || 'Không thể tải dữ liệu nhật ký');
-      if (!append) setLogs([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [villageFilter]);
 
-  // Refetch when village filter changes
+        const totalItems = res?.pagination?.total ?? items.length;
+        setTotal(totalItems);
+        setTotalPages(res?.pagination?.totalPages || Math.ceil(totalItems / limit) || 1);
+      } catch (err: any) {
+        console.error('Lỗi khi tải nhật ký hoạt động:', err);
+        setError(err.response?.data?.error || err.message || 'Không thể tải dữ liệu nhật ký');
+        if (!append) setLogs([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [actionFilter, villageFilter, userFilter, search, limit]
+  );
+
   useEffect(() => {
-    setOffset(0);
-    fetchLogs(0, false);
+    setPage(1);
+    fetchLogs(1, false);
   }, [fetchLogs]);
 
+  // Nút Tải thêm dữ liệu
   const handleLoadMore = () => {
-    const nextOffset = offset + limit;
-    setOffset(nextOffset);
-    fetchLogs(nextOffset, true);
+    if (page < totalPages && !loading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchLogs(nextPage, true);
+    }
   };
 
   const handleRefresh = () => {
-    setOffset(0);
-    fetchLogs(0, false);
+    setPage(1);
+    fetchLogs(1, false);
   };
 
+  // Cấu hình nhãn & màu sắc theo từng loại Action
   const getActionConfig = (action: string) => {
-    const act = action?.toUpperCase();
+    const act = (action || '').toUpperCase();
     switch (act) {
       case 'CREATE':
         return {
           label: 'Thêm Mới',
-          colorBadge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+          colorBadge:
+            'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
           dotBg: 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-950',
           icon: Plus,
         };
       case 'UPDATE':
         return {
           label: 'Cập Nhật',
-          colorBadge: 'bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+          colorBadge:
+            'bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border-blue-200 dark:border-blue-800',
           dotBg: 'bg-blue-500 ring-blue-100 dark:ring-blue-950',
           icon: RefreshCw,
         };
       case 'DELETE':
       case 'HARD_DELETE':
         return {
-          label: act === 'HARD_DELETE' ? 'Xóa Vĩnh Viễn' : 'Xóa Dữ Liệu',
-          colorBadge: 'bg-rose-50 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+          label: act === 'HARD_DELETE' ? 'Xóa Vĩnh Viễn' : 'Xóa',
+          colorBadge:
+            'bg-rose-50 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-200 dark:border-rose-800',
           dotBg: 'bg-rose-500 ring-rose-100 dark:ring-rose-950',
           icon: Trash2,
         };
       case 'RESTORE':
         return {
           label: 'Khôi Phục',
-          colorBadge: 'bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+          colorBadge:
+            'bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border-purple-200 dark:border-purple-800',
           dotBg: 'bg-purple-500 ring-purple-100 dark:ring-purple-950',
           icon: RotateCcw,
         };
       case 'IMPORT':
         return {
           label: 'Nhập Excel',
-          colorBadge: 'bg-amber-50 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+          colorBadge:
+            'bg-amber-50 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border-amber-200 dark:border-amber-800',
           dotBg: 'bg-amber-500 ring-amber-100 dark:ring-amber-950',
           icon: FileSpreadsheet,
         };
       default:
         return {
           label: action,
-          colorBadge: 'bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+          colorBadge:
+            'bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700',
           dotBg: 'bg-slate-500 ring-slate-100 dark:ring-slate-900',
           icon: History,
         };
     }
   };
 
-  const renderFriendlyDiff = (log: AuditLog) => {
-    if (!log.details) {
-      return <span className="text-slate-400 dark:text-slate-500 italic text-xs">Không có chi tiết</span>;
-    }
+  // Helper dịch JSON diff thân thiện
+  const renderFriendlyDiff = (item: AuditLog) => {
+    const act = (item.action || '').toUpperCase();
 
-    const action = log.action?.toUpperCase();
+    if (act === 'UPDATE') {
+      const oldVals = (typeof item.old_values === 'object' && item.old_values)
+        ? item.old_values
+        : (typeof item.details?.old_values === 'object' ? item.details.old_values : {});
+      const newVals = (typeof item.new_values === 'object' && item.new_values)
+        ? item.new_values
+        : (typeof item.details?.new_values === 'object' ? item.details.new_values : {});
 
-    if (action === 'CREATE') {
-      const name = log.details.name || log.details.full_name || 'Hộ nông nghiệp mới';
-      return (
-        <div className="mt-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-800 dark:text-emerald-200 space-y-1">
-          <div>
-            Khởi tạo hộ nông nghiệp: <strong className="text-slate-900 dark:text-white font-bold">{name}</strong>
+      // 1. Kiểm tra hành động đặc biệt: Tra cứu CCCD
+      if (newVals.action === 'REVEAL_CCCD') {
+        return (
+          <div className="mt-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+            <Shield className="w-4 h-4 text-amber-600 shrink-0" strokeWidth={1.5} />
+            <span>Tra cứu & hiển thị số Căn cước công dân (Yêu cầu quyền hạn & đã ghi vết kiểm soát)</span>
           </div>
-          {log.details.village_name && (
-            <div className="text-[11px] text-emerald-700 dark:text-emerald-300">
-              Thôn: <strong>{log.details.village_name}</strong>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    if (action === 'DELETE' || action === 'HARD_DELETE') {
-      return (
-        <div className="mt-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-800 dark:text-rose-200 space-y-1">
-          <div className="font-bold">
-            {action === 'HARD_DELETE' ? 'Đã xóa vĩnh viễn khỏi hệ thống:' : 'Đã chuyển vào Thùng rác:'}
-          </div>
-          {log.details.message && <p>{log.details.message}</p>}
-          {log.details.names && Array.isArray(log.details.names) && (
-            <p>Danh sách hộ: <strong>{log.details.names.join(', ')}</strong></p>
-          )}
-          {log.details.name && (
-            <p>Hộ nông nghiệp: <strong>{log.details.name}</strong></p>
-          )}
-          {log.details.reason && (
-            <div className="text-[11px] text-rose-600 dark:text-rose-400 italic">
-              Lý do: {log.details.reason}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    if (action === 'RESTORE') {
-      return (
-        <div className="mt-2 p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs text-purple-800 dark:text-purple-200 space-y-1">
-          {log.details.message ? (
-            <strong className="text-slate-900 dark:text-white font-bold">{log.details.message}</strong>
-          ) : (
-            <span>
-              Khôi phục hộ: <strong>{log.details.name || log.entity_id}</strong>
-            </span>
-          )}
-          {log.details.names && Array.isArray(log.details.names) && (
-            <p className="text-purple-700 dark:text-purple-300">
-              Các hộ: {log.details.names.join(', ')}
-            </p>
-          )}
-        </div>
-      );
-    }
-
-    if (action === 'IMPORT') {
-      return (
-        <div className="mt-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-1 text-slate-800 dark:text-slate-200">
-          <div className="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-            <FileSpreadsheet className="w-4 h-4 shrink-0" strokeWidth={1.5} />
-            <span>Tệp Excel: {log.details.file_name || 'NongNghiep.xlsx'}</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
-            <div>Thêm mới: <strong className="text-slate-900 dark:text-white">{log.details.inserted ?? log.details.createdCount ?? 0}</strong> hộ</div>
-            <div>Cập nhật: <strong className="text-slate-900 dark:text-white">{log.details.updated ?? log.details.updatedCount ?? 0}</strong> hộ</div>
-          </div>
-        </div>
-      );
-    }
-
-    if (action === 'UPDATE') {
-      const keys = Object.keys(log.details);
-      if (keys.length === 0) {
-        return <div className="text-xs text-slate-500 italic">Dữ liệu đã được đồng bộ lại.</div>;
+        );
       }
 
-      const changes: { label: string; oldVal: any; newVal: any }[] = [];
-      keys.forEach(k => {
-        const val = log.details[k];
-        if (val && typeof val === 'object' && ('old' in val || 'new' in val)) {
-          changes.push({ label: k, oldVal: val.old, newVal: val.new });
-        }
-      });
+      // 2. Kiểm tra trực tiếp dạng { [field]: { old: any, new: any } } trong details
+      const detailChanges: { label: string; oldVal: string; newVal: string }[] = [];
+      if (item.details && typeof item.details === 'object') {
+        Object.entries(item.details).forEach(([k, val]: [string, any]) => {
+          if (val && typeof val === 'object' && ('old' in val || 'new' in val)) {
+            detailChanges.push({
+              label: FIELD_LABELS[k] || k,
+              oldVal: formatValue(val.old),
+              newVal: formatValue(val.new),
+            });
+          }
+        });
+      }
 
-      if (changes.length > 0) {
+      // 3. Biến động thuộc tính cơ bản từ oldVals / newVals
+      const basicKeys = Array.from(
+        new Set([...Object.keys(oldVals), ...Object.keys(newVals)])
+      ).filter(
+        (k) => !IGNORED_FIELDS.has(k) &&
+               typeof oldVals[k] !== 'object' &&
+               typeof newVals[k] !== 'object'
+      );
+
+      const basicChanges = basicKeys
+        .filter((k) => {
+          const v1 = oldVals[k] !== undefined && oldVals[k] !== null ? String(oldVals[k]).trim() : '';
+          const v2 = newVals[k] !== undefined && newVals[k] !== null ? String(newVals[k]).trim() : '';
+          return v1 !== v2;
+        })
+        .map((k) => ({
+          label: FIELD_LABELS[k] || k,
+          oldVal: formatValue(oldVals[k]),
+          newVal: formatValue(newVals[k]),
+        }));
+
+      const allChanges = [...detailChanges, ...basicChanges];
+
+      // 4. Biến động Nhân khẩu / Thành viên
+      const addedMembers: any[] = Array.isArray(newVals.added_members) ? newVals.added_members : [];
+      const updatedMembers: any[] = Array.isArray(newVals.updated_members) ? newVals.updated_members : [];
+      const removedMembers: any[] = Array.isArray(newVals.removed_members) ? newVals.removed_members : [];
+      const hasMemberChanges = addedMembers.length > 0 || updatedMembers.length > 0 || removedMembers.length > 0;
+
+      if (allChanges.length === 0 && !hasMemberChanges) {
         return (
-          <div className="space-y-1.5 mt-2">
-            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Thay đổi thông tin:
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {changes.map(c => (
-                <div
-                  key={c.label}
-                  className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60 text-xs flex flex-col justify-between"
-                >
-                  <span className="font-bold text-slate-700 dark:text-slate-300">{c.label}:</span>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <span className="line-through text-rose-500/90 dark:text-rose-400 font-medium">
-                      {formatVal(c.oldVal)}
-                    </span>
-                    <span className="text-slate-400 font-bold font-mono">→</span>
-                    <span className="font-black text-emerald-600 dark:text-emerald-400">
-                      {formatVal(c.newVal)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 italic">
+            Thông tin đã được đồng bộ lại.
           </div>
         );
       }
 
       return (
-        <pre className="text-[10px] mt-2 p-2 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800 overflow-x-auto text-slate-600 dark:text-slate-400 font-mono">
-          {JSON.stringify(log.details, null, 2)}
-        </pre>
+        <div className="space-y-3 mt-2">
+          {/* Biến động thuộc tính cơ bản */}
+          {allChanges.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Thay đổi thông tin:
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {allChanges.map((c, idx) => (
+                  <div
+                    key={`${c.label}-${idx}`}
+                    className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60 text-xs flex flex-col justify-between"
+                  >
+                    <span className="font-bold text-slate-700 dark:text-slate-300">{c.label}:</span>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <span className="line-through text-rose-500/90 dark:text-rose-400 font-medium">
+                        {c.oldVal}
+                      </span>
+                      <span className="text-slate-400 font-bold font-mono">→</span>
+                      <span className="font-black text-emerald-600 dark:text-emerald-400">
+                        {c.newVal}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Biến động thành viên */}
+          {hasMemberChanges && (
+            <div className="space-y-2">
+              <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Biến động thành viên:
+              </div>
+
+              {/* Thêm thành viên */}
+              {addedMembers.map((m: any, idx: number) => (
+                <div
+                  key={`add-${idx}`}
+                  className="p-2.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 text-xs flex items-center justify-between gap-2 flex-wrap"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md font-bold text-[11px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                      + Thêm
+                    </span>
+                    <strong className="text-slate-900 dark:text-white">{m.full_name}</strong>
+                    <span className="text-slate-500 dark:text-slate-400">({m.relationship || 'Thành viên'})</span>
+                  </div>
+                </div>
+              ))}
+
+              {/* Cập nhật thành viên */}
+              {updatedMembers.map((m: any, idx: number) => (
+                <div
+                  key={`upd-${idx}`}
+                  className="p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 text-xs space-y-1.5"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md font-bold text-[11px] bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
+                      Cập nhật
+                    </span>
+                    <strong className="text-slate-900 dark:text-white">{m.full_name}</strong>
+                    <span className="text-slate-500 dark:text-slate-400">({m.relationship || 'Thành viên'})</span>
+                  </div>
+                </div>
+              ))}
+
+              {/* Xóa thành viên */}
+              {removedMembers.map((m: any, idx: number) => (
+                <div
+                  key={`rem-${idx}`}
+                  className="p-2.5 rounded-xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 text-xs flex items-center justify-between gap-2 flex-wrap"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md font-bold text-[11px] bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300">
+                      Gỡ bỏ
+                    </span>
+                    <strong className="text-slate-900 dark:text-white line-through">{m.full_name}</strong>
+                    <span className="text-slate-500 dark:text-slate-400">({m.relationship || 'Thành viên'})</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       );
     }
 
-    return (
-      <pre className="text-[10px] mt-2 p-2 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800 overflow-x-auto text-slate-600 dark:text-slate-400 font-mono">
-        {JSON.stringify(log.details, null, 2)}
-      </pre>
-    );
+    if (act === 'CREATE') {
+      const vals = (typeof item.new_values === 'object' && item.new_values)
+        ? item.new_values
+        : (typeof item.details === 'object' ? item.details : {});
+      const name = vals.full_name || vals.name || vals.head_name || 'Hộ nông nghiệp mới';
+
+      return (
+        <div className="space-y-2 mt-2">
+          <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+            Dữ liệu khởi tạo:
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="p-2 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-800/40 text-xs flex flex-col">
+              <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">Chủ hộ / Đại diện</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 mt-0.5">{name}</span>
+            </div>
+            {vals.village_name && (
+              <div className="p-2 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-800/40 text-xs flex flex-col">
+                <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">Thôn</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100 mt-0.5">{vals.village_name}</span>
+              </div>
+            )}
+            {vals.address && (
+              <div className="p-2 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-800/40 text-xs flex flex-col">
+                <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">Địa chỉ</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100 mt-0.5">{vals.address}</span>
+              </div>
+            )}
+            {vals.phone && (
+              <div className="p-2 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-800/40 text-xs flex flex-col">
+                <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">Số điện thoại</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100 mt-0.5">{vals.phone}</span>
+              </div>
+            )}
+            {vals.book_number && (
+              <div className="p-2 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-800/40 text-xs flex flex-col">
+                <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">Mã định danh</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100 mt-0.5">{vals.book_number}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (act === 'IMPORT') {
+      const vals = (typeof item.new_values === 'object' && item.new_values)
+        ? item.new_values
+        : (typeof item.details === 'object' ? item.details : {});
+
+      return (
+        <div className="mt-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-1 text-slate-800 dark:text-slate-200">
+          <div className="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+            <FileSpreadsheet className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+            <span>Tệp Excel: {vals.file_name || 'NongNghiep.xlsx'}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
+            <div>Thêm mới: <strong className="text-slate-900 dark:text-white">{vals.inserted ?? vals.createdCount ?? vals.imported_households ?? 0}</strong> bản ghi</div>
+            <div>Cập nhật: <strong className="text-slate-900 dark:text-white">{vals.updated ?? vals.updatedCount ?? vals.imported_citizens ?? 0}</strong> bản ghi</div>
+          </div>
+        </div>
+      );
+    }
+
+    if (act === 'DELETE' || act === 'HARD_DELETE') {
+      const vals = (typeof item.old_values === 'object' && item.old_values)
+        ? item.old_values
+        : (typeof item.details === 'object' ? item.details : {});
+      const newVals = (typeof item.new_values === 'object' && item.new_values)
+        ? item.new_values
+        : (typeof item.details === 'object' ? item.details : {});
+
+      return (
+        <div className="mt-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-800 dark:text-rose-200 space-y-1">
+          <div className="font-bold">
+            {act === 'HARD_DELETE' ? 'Đã xóa vĩnh viễn khỏi hệ thống:' : 'Đã chuyển vào Thùng rác:'}
+          </div>
+          {vals.message && <div>{vals.message}</div>}
+          {vals.names && Array.isArray(vals.names) && (
+            <div>Danh sách hộ: <strong>{vals.names.join(', ')}</strong></div>
+          )}
+          {vals.name && <div>Hộ nông nghiệp: <strong>{vals.name}</strong></div>}
+          {vals.head_name && <div>Chủ hộ: <strong>{vals.head_name}</strong></div>}
+          {(newVals.reason || vals.reason) && (
+            <div className="text-[11px] text-rose-600 dark:text-rose-400 italic">
+              Lý do: {newVals.reason || vals.reason}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (act === 'RESTORE') {
+      const vals = (typeof item.new_values === 'object' && item.new_values)
+        ? item.new_values
+        : (typeof item.details === 'object' ? item.details : {});
+
+      return (
+        <div className="mt-2 p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs text-purple-800 dark:text-purple-200 space-y-1">
+          {vals.message ? (
+            <strong className="text-slate-900 dark:text-white font-bold">{vals.message}</strong>
+          ) : (
+            <span>
+              Khôi phục bản ghi: <strong>{vals.book_number || vals.full_name || vals.name || item.entity_id}</strong>
+            </span>
+          )}
+          {vals.names && Array.isArray(vals.names) && (
+            <div className="text-[11px] text-purple-700 dark:text-purple-300">
+              Các hộ: {vals.names.join(', ')}
+            </div>
+          )}
+          {vals.notes && (
+            <div className="text-[11px] mt-1 text-purple-600 dark:text-purple-400">{vals.notes}</div>
+          )}
+        </div>
+      );
+    }
+
+    return null;
   };
 
-  // Client-side filtering by householdId, action, and search term
-  const filteredLogs = logs.filter((log) => {
-    if (householdId) {
-      const matchEntity = log.entity_id === householdId;
-      const matchDetails = log.details?.id === householdId || log.details?.household_id === householdId;
-      if (!matchEntity && !matchDetails) return false;
-    }
-    if (actionFilter !== 'ALL' && log.action?.toUpperCase() !== actionFilter) {
-      return false;
-    }
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      const usernameMatch = log.username?.toLowerCase().includes(term);
-      const detailsMatch = JSON.stringify(log.details || {}).toLowerCase().includes(term);
-      return usernameMatch || detailsMatch;
-    }
-    return true;
-  });
+  // Client-side filtering for fast interactive feedback & test compatibility
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      if (householdId) {
+        const matchEntity = log.entity_id === householdId;
+        const matchDetails = log.details?.id === householdId || log.details?.household_id === householdId;
+        if (!matchEntity && !matchDetails) return false;
+      }
+      if (actionFilter !== 'ALL') {
+        const act = (log.action || '').toUpperCase();
+        if (act !== actionFilter && !(actionFilter === 'DELETE' && act === 'HARD_DELETE')) {
+          return false;
+        }
+      }
+      if (userFilter) {
+        const u = userFilter.toLowerCase();
+        const matchUser = (log.username || '').toLowerCase() === u || (log.user_id || '').toLowerCase() === u;
+        if (!matchUser) return false;
+      }
+      if (search.trim()) {
+        const term = search.trim().toLowerCase();
+        const usernameMatch = (log.username || '').toLowerCase().includes(term);
+        const nameMatch = (log.full_name || '').toLowerCase().includes(term);
+        const descMatch = (log.description || '').toLowerCase().includes(term);
+        const detailsMatch = JSON.stringify(log.details || {}).toLowerCase().includes(term);
+        const oldMatch = JSON.stringify(log.old_values || {}).toLowerCase().includes(term);
+        const newMatch = JSON.stringify(log.new_values || {}).toLowerCase().includes(term);
+        if (!usernameMatch && !nameMatch && !descMatch && !detailsMatch && !oldMatch && !newMatch) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [logs, householdId, actionFilter, userFilter, search]);
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      {/* 1. Header Banner */}
+    <div className={`space-y-6 animate-in fade-in pb-12 ${className}`}>
+      {/* 1. Banner Tiêu Đề */}
       <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-150">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -345,7 +626,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Thanh lọc sự kiện nhanh (Pills) */}
+      {/* 2. Thanh Bộ Lọc Sự Kiện Nhanh */}
       <div className="flex flex-wrap items-center gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
         <span className="text-xs font-bold text-slate-500 dark:text-slate-400 px-3 flex items-center gap-1.5">
           <Filter className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -378,17 +659,17 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
         })}
       </div>
 
-      {/* 3. Thanh tìm kiếm & lọc thôn */}
+      {/* 3. Thanh Tìm Kiếm & Lọc Chi Tiết */}
       {showFilters && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Input tìm kiếm rộng */}
-          <div className="relative sm:col-span-2">
+          {/* Tìm kiếm từ khóa */}
+          <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" strokeWidth={1.5} />
             <input
               type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm theo nội dung, cán bộ, tên hộ, chỉ số..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Tìm theo nội dung, tên chủ hộ, tên cán bộ..."
               className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:bg-slate-800 rounded-2xl text-xs font-medium focus:outline-hidden"
             />
           </div>
@@ -422,8 +703,10 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
                 { value: '', label: 'Toàn xã (Tất cả thôn)' },
                 ...villages.map((v) => ({ value: v.id, label: v.name })),
               ]}
-              placeholder="Toàn xã (Tất cả thôn)"
-              size="sm"
+              placeholder="Địa bàn thôn"
+              icon={<MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" strokeWidth={1.5} />}
+              clearable={Boolean(villageFilter)}
+              onClear={() => setVillageFilter('')}
               className="rounded-2xl text-xs font-bold"
             />
           ) : (
@@ -431,6 +714,25 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
               <span>Đơn vị: {villages.find((v) => v.id === user?.village_id)?.name || 'Thôn phụ trách'}</span>
             </div>
           )}
+
+          {/* Lọc theo người thực hiện */}
+          <CustomSelect
+            value={userFilter}
+            onChange={(val) => setUserFilter(String(val))}
+            options={[
+              { value: '', label: 'Tất cả cán bộ thực hiện' },
+              ...userList.map((u) => ({
+                value: u.username,
+                label: u.full_name ? `${u.full_name} (${u.username})` : u.username,
+              })),
+            ]}
+            searchable
+            placeholder="Cán bộ thực hiện"
+            icon={<UserCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" strokeWidth={1.5} />}
+            clearable={Boolean(userFilter)}
+            onClear={() => setUserFilter('')}
+            className="rounded-2xl text-xs font-bold"
+          />
         </div>
       )}
 
@@ -440,7 +742,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span className="flex-1">{error}</span>
           <button
-            onClick={() => fetchLogs(0, false)}
+            onClick={() => fetchLogs(1, false)}
             className="font-bold underline hover:no-underline cursor-pointer"
           >
             Thử lại
@@ -448,14 +750,14 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
         </div>
       )}
 
-      {/* 4. Dòng Thời Gian Timeline */}
+      {/* 4. Dòng Thời Gian Timeline Chuẩn QLHK/QLNN */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 shadow-sm">
         <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-2">
             <Clock className="w-4 h-4 text-emerald-500" strokeWidth={1.5} />
             <span>Dòng thời gian biến động ({total} sự kiện)</span>
           </div>
-          <span className="text-xs font-mono text-slate-400">Hiển thị {filteredLogs.length} / {total} sự kiện</span>
+          <span className="text-xs font-mono text-slate-400">Trang {page} / {totalPages}</span>
         </div>
 
         {loading && logs.length === 0 ? (
@@ -477,7 +779,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
                 ? `${dateObj.toLocaleTimeString('vi-VN')} • ${dateObj.toLocaleDateString('vi-VN')}`
                 : item.created_at;
 
-              const villageName = villages.find((v) => v.id === item.village_id)?.name;
+              const villageName = item.village_name || villages.find((v) => v.id === item.village_id)?.name;
 
               return (
                 <div key={item.id} className="relative pl-6 group">
@@ -500,7 +802,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
                         </span>
 
                         <span className="text-xs font-black text-slate-800 dark:text-slate-100">
-                          {cfg.label} đối tượng {item.entity_type}
+                          {item.description || `${cfg.label} đối tượng ${item.entity_type}`}
                         </span>
                       </div>
 
@@ -513,12 +815,12 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
                     {/* Dịch JSON Diff Thân Thiện */}
                     {renderFriendlyDiff(item)}
 
-                    {/* Footer Thẻ: Người thực hiện, Đơn vị */}
+                    {/* Footer Thẻ: Người thực hiện, IP, Đơn vị */}
                     <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 flex-wrap gap-2">
                       <div className="flex items-center gap-3">
                         <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
                           <UserIcon className="w-3.5 h-3.5 text-emerald-500" strokeWidth={1.5} />
-                          <span>{item.username || 'Hệ thống'}</span>
+                          <span>{item.full_name || item.username || 'Hệ thống'}</span>
                         </span>
 
                         {villageName && (
@@ -528,6 +830,10 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
                           </span>
                         )}
                       </div>
+
+                      {item.ip_address && (
+                        <span className="font-mono text-slate-400">IP: {item.ip_address}</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -537,7 +843,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
         )}
 
         {/* 5. Nút Tải thêm dữ liệu */}
-        {logs.length < total && (
+        {page < totalPages && (
           <div className="pt-6 flex justify-center border-t border-slate-100 dark:border-slate-800 mt-4">
             <button
               type="button"
@@ -550,8 +856,28 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
             </button>
           </div>
         )}
+
+        {/* 6. Thanh phân trang tiêu chuẩn */}
+        {total > 0 && (
+          <div className="mt-4">
+            <TablePagination
+              itemCount={filteredLogs.length}
+              total={total}
+              page={page}
+              limit={limit}
+              totalPages={totalPages}
+              onPageChange={(p) => {
+                setPage(p);
+                fetchLogs(p, false);
+              }}
+              onLimitChange={(l) => {
+                setLimit(l);
+                setPage(1);
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 };
-

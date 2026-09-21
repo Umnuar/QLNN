@@ -20,6 +20,10 @@ export interface CustomSelectProps<T = string | number> {
   required?: boolean;
   searchable?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  icon?: React.ReactNode;
+  clearable?: boolean;
+  onClear?: () => void;
+  isActive?: boolean;
   className?: string;
   containerClassName?: string;
   dropdownClassName?: string;
@@ -38,6 +42,10 @@ export function CustomSelect<T extends string | number = string | number>({
   required = false,
   searchable = false,
   size = 'md',
+  icon,
+  clearable = false,
+  onClear,
+  isActive = false,
   className = '',
   containerClassName = '',
   dropdownClassName = '',
@@ -238,9 +246,11 @@ export function CustomSelect<T extends string | number = string | number>({
         aria-expanded={isOpen}
         onClick={toggleDropdown}
         className={`w-full flex items-center justify-between gap-2 font-medium transition-all outline-hidden cursor-pointer select-none text-left
-          bg-slate-50 border border-slate-300 text-slate-900
-          dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-100
-          hover:border-slate-400 dark:hover:border-slate-600
+          ${
+            isActive || (selectedOption && selectedOption.value !== '' && selectedOption.value !== 'ALL')
+              ? 'border-emerald-500/80 bg-emerald-50/50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700'
+              : 'bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-100 hover:border-slate-400 dark:hover:border-slate-600'
+          }
           focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
           ${isOpen ? 'border-emerald-500 dark:border-emerald-500 ring-2 ring-emerald-500/20' : ''}
           ${error ? 'border-rose-500 dark:border-rose-500 focus:ring-rose-500/20' : ''}
@@ -250,11 +260,21 @@ export function CustomSelect<T extends string | number = string | number>({
         `}
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          {selectedOption ? (
+          {icon && (
+            <span
+              className={`shrink-0 flex items-center ${
+                selectedOption && selectedOption.value !== '' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
+              }`}
+            >
+              {icon}
+            </span>
+          )}
+
+          {selectedOption && selectedOption.value !== '' ? (
             <span className="truncate block font-medium">
               {selectedOption.label}
             </span>
-          ) : size === 'sm' ? (
+          ) : size === 'sm' || Boolean(icon) ? (
             <span className="truncate block font-bold text-slate-700 dark:text-slate-200">
               {placeholder}
             </span>
@@ -271,12 +291,40 @@ export function CustomSelect<T extends string | number = string | number>({
           )}
         </div>
 
-        <ChevronDown
-          className={`shrink-0 text-slate-400 dark:text-slate-400 transition-transform duration-200 ${
-            isOpen ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : ''
-          } ${sizeStyles.icon}`}
-          strokeWidth={1.5}
-        />
+        <div className="flex items-center shrink-0">
+          {clearable && selectedOption && selectedOption.value !== '' && !disabled && (
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="Xóa lựa chọn"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onClear) {
+                  onClear();
+                } else {
+                  onChange('' as any);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.stopPropagation();
+                  if (onClear) onClear();
+                  else onChange('' as any);
+                }
+              }}
+              className="p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer mr-1"
+            >
+              <X className="w-3.5 h-3.5" />
+            </span>
+          )}
+
+          <ChevronDown
+            className={`shrink-0 text-slate-400 dark:text-slate-400 transition-transform duration-200 ${
+              isOpen ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : ''
+            } ${sizeStyles.icon}`}
+            strokeWidth={1.5}
+          />
+        </div>
       </button>
 
       {error && (
