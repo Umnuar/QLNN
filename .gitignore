@@ -17,4 +17,9 @@ patch*
 fix*
 temp*
 test_*.js
-
+# Graphify & CodeGraph local index
+.graphify/
+GRAPH_REPORT.md
+.codegraph/
+*.codegraph.db
+graphify-out/

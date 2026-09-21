@@ -250,10 +250,10 @@ export const VillagesPage: React.FC = () => {
           <button
             type="button"
             onClick={() => handleVillageClick('')}
-            className="bg-white hover:bg-emerald-50 text-emerald-950 font-bold px-5 py-2.5 rounded-full shadow-md text-sm flex items-center gap-2 transition-all shrink-0 cursor-pointer active:scale-95 group"
+            className="h-10 px-4 rounded-2xl bg-white text-emerald-900 hover:bg-emerald-50 text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer active:scale-95 group"
           >
             <span>Xem Thống Kê Toàn Xã</span>
-            <ArrowRight className="w-4 h-4 text-emerald-900 group-hover:translate-x-0.5 transition-transform" strokeWidth={2} />
+            <ArrowRight className="w-4 h-4 text-emerald-900 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.5} />
           </button>
         </div>
       </div>
@@ -266,13 +266,13 @@ export const VillagesPage: React.FC = () => {
             <MapPin className="w-6 h-6 text-emerald-500" strokeWidth={1.5} />
           </div>
           <div className="min-w-0">
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
               ĐỊA BÀN QUẢN LÝ
             </span>
-            <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+            <div className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1">
               {villages.length} Thôn
             </div>
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate block mt-0.5">
+            <span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5">
               Toàn địa bàn Xã Đăk Hà
             </span>
           </div>
@@ -284,13 +284,13 @@ export const VillagesPage: React.FC = () => {
             <Users className="w-6 h-6 text-blue-500" strokeWidth={1.5} />
           </div>
           <div className="min-w-0">
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
               HỘ NÔNG NGHIỆP
             </span>
-            <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+            <div className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1">
               {overview?.household_count ?? 0} Hộ
             </div>
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate block mt-0.5">
+            <span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold truncate block mt-0.5">
               Đã kê khai 18 chỉ số
             </span>
           </div>
@@ -302,13 +302,13 @@ export const VillagesPage: React.FC = () => {
             <Trees className="w-6 h-6 text-teal-500" strokeWidth={1.5} />
           </div>
           <div className="min-w-0">
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
               TỔNG DIỆN TÍCH CÂY TRỒNG
             </span>
-            <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5 truncate">
+            <div className="text-2xl font-black font-mono tabular-nums text-teal-600 dark:text-teal-400 mt-1 truncate">
               {cryptoHelper.formatArea(overview?.crops?.total_crops_area ?? 0)}
             </div>
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate block mt-0.5">
+            <span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5">
               Cà phê, cao su, dược liệu...
             </span>
           </div>
@@ -320,13 +320,13 @@ export const VillagesPage: React.FC = () => {
             <PawPrint className="w-6 h-6 text-amber-500" strokeWidth={1.5} />
           </div>
           <div className="min-w-0">
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
               TỔNG ĐÀN VẬT NUÔI
             </span>
-            <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5 truncate">
+            <div className="text-2xl font-black font-mono tabular-nums text-amber-600 dark:text-amber-400 mt-1 truncate">
               {cryptoHelper.formatCount(overview?.livestock?.total_animals ?? 0, 'con')}
             </div>
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate block mt-0.5">
+            <span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5">
               Trâu, bò, heo, gia cầm...
             </span>
           </div>
@@ -541,11 +541,12 @@ export const VillagesPage: React.FC = () => {
 
               {/* Thống kê nhanh trong thẻ */}
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs mt-3">
-                <div className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-300">
-                  <span>{householdCount} Hộ</span>
+                <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300">
+                  <span className="font-mono font-black text-slate-900 dark:text-white">{householdCount}</span>
+                  <span className="font-bold">Hộ</span>
                 </div>
-                <div className="font-mono text-slate-500 dark:text-slate-400 text-[11px] truncate">
-                  {totalCropsArea > 0 ? `${cryptoHelper.formatArea(totalCropsArea)} cây` : `${totalAnimals} vật nuôi`}
+                <div className="font-mono tabular-nums text-slate-500 dark:text-slate-400 text-xs truncate">
+                  {totalCropsArea > 0 ? `${cryptoHelper.formatArea(totalCropsArea)}` : `${totalAnimals} con`}
                 </div>
               </div>
             </div>

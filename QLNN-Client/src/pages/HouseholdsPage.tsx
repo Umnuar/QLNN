@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FileSpreadsheet, Download, Users, WifiOff, Plus } from 'lucide-react';
+import { FileSpreadsheet, Download, Users, Plus, ArrowLeft } from 'lucide-react';
 import { HouseholdFlat } from '../types';
 import { householdApi } from '../api/householdApi';
 import * as XLSX from 'xlsx';
@@ -49,7 +49,9 @@ export const HouseholdsPage: React.FC = () => {
   const {
     user,
     selectedVillageId,
+    setSelectedVillageId,
     selectedVillageName,
+    setActiveTab,
     isOnline,
     isBackendHealthy,
   } = useApp();
@@ -378,33 +380,46 @@ export const HouseholdsPage: React.FC = () => {
       {/* Top Banner & Main Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-150">
         <div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-              <Users className="w-5.5 h-5.5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                {isUsingCachedData && (
-                  <span className="inline-flex items-center gap-1 text-xs bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800 font-medium">
-                    <WifiOff className="w-3.5 h-3.5" strokeWidth={1.5} />
-                    <span>Ngoại tuyến</span>
-                  </span>
-                )}
-                <span>Danh Sách Hộ Nông Nghiệp</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-mono font-bold border border-emerald-200 dark:border-emerald-800">
-                  {total} hộ
-                </span>
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 flex items-center gap-1.5 flex-wrap">
-                <span>Phạm vi:</span>
-                <strong className="text-slate-700 dark:text-slate-200">{selectedVillageName || 'Toàn xã Đăk Hà'}</strong>
-                <span>• Quản lý 18 chỉ số kê khai</span>
-              </p>
-            </div>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="px-3 py-1 rounded-xl text-xs font-black bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 uppercase tracking-wider">
+              {selectedVillageName || 'Toàn xã Đăk Hà'}
+            </span>
+
+            {isUsingCachedData && (
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 rounded-xl text-xs font-bold shadow-xs animate-in fade-in">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse inline-block mr-1.5" />
+                <span>Ngoại tuyến (Offline Cache)</span>
+              </div>
+            )}
+
+            <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Users className="w-6 h-6 text-emerald-600 dark:text-emerald-400" strokeWidth={1.5} />
+              <span>Danh Sách Hộ Nông Nghiệp</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-mono tabular-nums font-bold border border-emerald-200 dark:border-emerald-800">
+                {total} hộ
+              </span>
+            </h2>
           </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+            Quản lý 18 chỉ số kê khai nông nghiệp, diện tích cây trồng và đàn vật nuôi xã Đăk Hà
+          </p>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          {user?.role === 'admin' && selectedVillageId && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedVillageId('');
+                setActiveTab('villages');
+              }}
+              className="h-10 flex items-center justify-center gap-1.5 px-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-[0.99] cursor-pointer border border-slate-200 dark:border-slate-700"
+            >
+              <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
+              <span>Đổi thôn</span>
+            </button>
+          )}
+
           <input type="file" ref={fileInputRef} hidden accept=".xls,.xlsx" onChange={handleFileParse} />
           <button
             type="button"

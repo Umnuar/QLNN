@@ -83,7 +83,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
         <div className="p-5 overflow-x-auto overflow-y-auto flex-1">
           <div className="border border-slate-200 dark:border-slate-800 rounded-2xl">
             <table className="w-full min-w-[2000px] text-left border-collapse text-xs whitespace-nowrap">
-              <thead className="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 font-bold">
+              <thead className="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-[11px] font-black uppercase tracking-wider">
                 <tr>
                   <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-center sticky left-0 z-30 bg-slate-100 dark:bg-slate-950 w-14">1. STT</th>
                   <th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 sticky left-14 z-30 bg-slate-100 dark:bg-slate-950 min-w-[200px] border-r-2 border-slate-300 dark:border-slate-700 shadow-xs">2. Họ và Tên Chủ Hộ</th>

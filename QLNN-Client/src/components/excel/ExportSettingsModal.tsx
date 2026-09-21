@@ -22,14 +22,15 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl w-full max-w-md flex flex-col overflow-hidden">
         <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-600 dark:bg-sky-900/50 dark:text-sky-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center">
               <DownloadCloud className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-800 dark:text-white">Cài đặt Xuất Excel</h2>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">Cài Đặt Xuất File Excel</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Xuất biểu mẫu 21 chỉ số nông nghiệp chuẩn Xã Đăk Hà</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-800 rounded-xl transition-colors">
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -37,7 +38,7 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
         <div className="p-5 space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Phạm vi xuất</label>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {isAdmin ? 'Đang xuất theo thôn đã chọn (hoặc toàn xã nếu chọn Tất cả).' : 'Đang xuất dữ liệu của thôn hiện tại.'}
             </p>
           </div>
@@ -50,12 +51,12 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
                   name="exportScope"
                   checked={exportScope === 'all'}
                   onChange={() => setExportScope('all')}
-                  className="peer w-5 h-5 appearance-none border-2 border-slate-300 dark:border-slate-600 rounded-full checked:border-sky-500 checked:border-[6px] transition-all"
+                  className="peer w-5 h-5 appearance-none border-2 border-slate-300 dark:border-slate-600 rounded-full checked:border-emerald-500 checked:border-[6px] transition-all cursor-pointer"
                 />
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors">Toàn bộ hộ trong phạm vi</p>
-                <p className="text-xs text-slate-500">Xuất toàn bộ các hộ hiện thị.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Xuất toàn bộ các hộ hiển thị theo phạm vi đang chọn.</p>
               </div>
             </label>
             <label className={`flex items-start gap-3 ${selectedCount === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer group'}`}>
@@ -66,25 +67,25 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
                   disabled={selectedCount === 0}
                   checked={exportScope === 'selected'}
                   onChange={() => setExportScope('selected')}
-                  className="peer w-5 h-5 appearance-none border-2 border-slate-300 dark:border-slate-600 rounded-full checked:border-sky-500 checked:border-[6px] transition-all disabled:cursor-not-allowed"
+                  className="peer w-5 h-5 appearance-none border-2 border-slate-300 dark:border-slate-600 rounded-full checked:border-emerald-500 checked:border-[6px] transition-all disabled:cursor-not-allowed cursor-pointer"
                 />
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors">Chỉ xuất {selectedCount} hộ đã chọn</p>
-                <p className="text-xs text-slate-500">Chỉ xuất các hộ đã được tích chọn trong bảng.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Chỉ xuất các hộ đã được tích chọn trong bảng.</p>
               </div>
             </label>
           </div>
         </div>
 
         <div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-end gap-3">
-          <button onClick={onClose} className="h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 font-bold rounded-xl text-xs transition-colors">
+          <button onClick={onClose} className="h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer">
             Hủy
           </button>
           <button
             onClick={() => onExport(exportScope)}
             disabled={exporting}
-            className="h-10 px-6 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all flex items-center gap-2 disabled:opacity-50"
+            className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
           >
             {exporting ? 'Đang tạo...' : 'Bắt đầu Xuất'}
           </button>

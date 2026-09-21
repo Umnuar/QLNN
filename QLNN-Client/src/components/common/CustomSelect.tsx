@@ -254,6 +254,10 @@ export function CustomSelect<T extends string | number = string | number>({
             <span className="truncate block font-medium">
               {selectedOption.label}
             </span>
+          ) : size === 'sm' ? (
+            <span className="truncate block font-bold text-slate-700 dark:text-slate-200">
+              {placeholder}
+            </span>
           ) : (
             <span className="truncate block text-slate-400 dark:text-slate-500 font-normal">
               {placeholder}
