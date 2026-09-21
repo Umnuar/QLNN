@@ -42,7 +42,7 @@ export const SettingsPage: React.FC = () => {
   const [showPasswordOwn, setShowPasswordOwn] = useState(false);
   const [loadingOwnPassword, setLoadingOwnPassword] = useState(false);
 
-  // --- TAB 2: QUẢN LÝ CÁN BỘ 7 THÔN ---
+  // --- TAB 2: QUẢN LÝ CÁN BỘ THÔN ---
   const [usersList, setUsersList] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
@@ -464,7 +464,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 2: QUẢN LÝ CÁN BỘ 7 THÔN (ADMIN) */}
+      {/* TAB 2: QUẢN LÝ CÁN BỘ THÔN (ADMIN) */}
       {activeTab === 'users' && isAdmin && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

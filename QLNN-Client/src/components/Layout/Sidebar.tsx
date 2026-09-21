@@ -35,7 +35,7 @@ export const Sidebar: React.FC = () => {
             id: 'villages',
             label: 'Quản Lý Thôn',
             icon: Map,
-            desc: 'Quản lý 7 thôn xã Đăk Hà',
+            desc: 'Quản lý các thôn xã Đăk Hà',
           },
           {
             id: 'analytics',
@@ -69,7 +69,7 @@ export const Sidebar: React.FC = () => {
             id: 'villages',
             label: 'Quản Lý Thôn',
             icon: Map,
-            desc: 'Quản lý 7 thôn xã Đăk Hà',
+            desc: 'Quản lý các thôn xã Đăk Hà',
           },
           {
             id: 'recycle-bin',

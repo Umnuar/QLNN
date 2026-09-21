@@ -233,7 +233,9 @@ export const VillagesPage: React.FC = () => {
               <span className="px-2.5 py-0.5 rounded-full bg-white/15 border border-white/20 text-[11px] font-bold text-white tracking-wider uppercase">
                 UBND XÃ ĐĂK HÀ
               </span>
-              <span className="text-xs font-bold text-emerald-200">Địa Bàn 7 Thôn &amp; Làng Bản</span>
+              <span className="text-xs font-bold text-emerald-200">
+                {villages.length > 0 ? `Địa Bàn ${villages.length} Thôn & Làng Bản` : 'Địa Bàn Các Thôn & Làng Bản'}
+              </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">
               Tổng Quan Nông Nghiệp &amp; Nông Thôn Mới Toàn Xã

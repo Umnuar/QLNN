@@ -15,7 +15,7 @@ Hệ thống chuyển đổi số và quản lý dữ liệu xã Đăk Hà vận
 > **"ĐỘC LẬP CHUYÊN NGÀNH – ĐỊNH DANH RIÊNG BIỆT – HỢP NHẤT DỮ LIỆU"**  
 > *(Specialized Independence – Separate Identity – Unified Data)*
 
-- **Nhiệm vụ chuyên môn của phân hệ QLNN:** Thống kê, giám sát và quản lý biến động **18 chỉ tiêu nông nghiệp** (12 cây trồng, 4 chăn nuôi, 2 thủy sản) của từng hộ dân nông nghiệp trên địa bàn 7 thôn/làng trực thuộc xã Đăk Hà. Cung cấp công cụ xuất/nhập Excel 21 cột thông minh (Smart-Upsert), cảnh báo xung đột dữ liệu tức thời (OCC), và phân tích biểu đồ trực quan phục vụ công tác chỉ đạo nông nghiệp, nông thôn mới của UBND xã.
+- **Nhiệm vụ chuyên môn của phân hệ QLNN:** Thống kê, giám sát và quản lý biến động **18 chỉ tiêu nông nghiệp** (12 cây trồng, 4 chăn nuôi, 2 thủy sản) của từng hộ dân nông nghiệp trên địa bàn các thôn/làng trực thuộc xã Đăk Hà. Cung cấp công cụ xuất/nhập Excel 21 cột thông minh (Smart-Upsert), cảnh báo xung đột dữ liệu tức thời (OCC), và phân tích biểu đồ trực quan phục vụ công tác chỉ đạo nông nghiệp, nông thôn mới của UBND xã.
 - **Cổng Hợp nhất (Unified Portal):** Người dùng có thể điều hướng từ Landing Portal trung tâm `dulieudakha.vn` hoặc chạy trực tiếp phần mềm Desktop chuyên dụng trên máy trạm của cán bộ nông nghiệp xã và các trưởng thôn.
 
 ### 1.2. Các Quy chuẩn Bất biến Toàn Hệ sinh thái (Architectural Invariants)
@@ -38,7 +38,7 @@ Hệ thống chuyển đổi số và quản lý dữ liệu xã Đăk Hà vận
    }
    ```
 4. **Cô lập Dữ liệu Cấp Thôn (Village Scoping RBAC Contract):**
-   - **Role `admin` (Cán bộ Xã):** Xem toàn bộ 7 thôn, lọc thôn tùy biến, có quyền xóa vĩnh viễn và quản lý sao lưu.
+   - **Role `admin` (Cán bộ Xã):** Xem toàn bộ các thôn, lọc thôn tùy biến, có quyền xóa vĩnh viễn và quản lý sao lưu.
    - **Role `user` (Trưởng thôn):** Backend bắt buộc cưỡng chế lọc dữ liệu theo `req.user.village_id` trích xuất từ JWT. Client tuyệt đối không gửi `village_id` của thôn khác lên server (vi phạm sẽ bị chặn `403 Forbidden`).
 
 ### 1.3. Sơ đồ Topology 2 Tầng của Phân hệ QLNN
@@ -88,8 +88,8 @@ QLNN-Backend/
 ├── prisma/
 │   └── schema.prisma                   # Khai báo 7 models CSDL (households, 3 bảng con, villages, users, audit_logs)
 ├── scripts/                            # Scripts khởi tạo hệ thống và kiểm thử ca biên
-│   ├── seed-villages.ts                # Khởi tạo danh mục 7 thôn/làng xã Đăk Hà
-│   ├── seed-users.ts                   # Khởi tạo tài khoản admin và cán bộ 7 thôn
+│   ├── seed-villages.ts                # Khởi tạo danh mục các thôn/làng xã Đăk Hà
+│   ├── seed-users.ts                   # Khởi tạo tài khoản admin và cán bộ các thôn
 │   └── verify-excel-parser-edge-cases.ts # Kiểm thử các ca biên: dòng trống, dữ liệu âm, chuỗi lỗi
 ├── test-fixtures/
 │   └── test_dulieu_thon1_dien_that.xlsx # File Excel mẫu thực tế chứa dữ liệu thôn 1 để chạy kiểm thử
@@ -174,7 +174,7 @@ QLNN-Client/
     │   │   ├── HouseholdFilterBar.tsx  # Thanh lọc theo thôn, ô tìm kiếm tiếng Việt không dấu, nút xuất dữ liệu
     │   │   └── RecycleBinTable.tsx     # Bảng dữ liệu thùng rác, nút khôi phục, nút xóa vĩnh viễn (Admin)
     │   ├── analytics/                  # CÁC COMPONENT BÁO CÁO THỐNG KÊ
-    │   │   └── AnalyticsDashboard.tsx  # Dashboard biểu đồ Recharts (cơ cấu cây trồng, đàn gia súc, so sánh giữa 7 thôn)
+    │   │   └── AnalyticsDashboard.tsx  # Dashboard biểu đồ Recharts (cơ cấu cây trồng, đàn gia súc, so sánh giữa các thôn)
     │   ├── excel/                      # CÁC COMPONENT NHẬP / XUẤT EXCEL
     │   │   ├── ExportSettingsModal.tsx # Cấu hình tùy chọn xuất dữ liệu (chọn thôn, chọn nhóm chỉ tiêu xuất ra)
     │   │   └── ImportPreviewModal.tsx  # Xem trước dữ liệu bóc tách từ file Excel, cảnh báo dòng lỗi trước khi lưu
@@ -338,7 +338,7 @@ erDiagram
 | | `POST` | `/api/users` | Admin Only | Tạo tài khoản cán bộ thôn mới kèm `village_id` |
 | | `PUT` | `/api/users/:id` | Admin Only | Đổi mật khẩu, sửa thông tin cán bộ, phân công lại thôn |
 | | `DELETE`| `/api/users/:id` | Admin Only | Xóa tài khoản cán bộ |
-| **Thôn / Làng** | `GET` | `/api/villages` | Authenticated | Lấy danh mục 7 thôn kèm thống kê tổng số hộ (User bị ép theo thôn) |
+| **Thôn / Làng** | `GET` | `/api/villages` | Authenticated | Lấy danh mục các thôn kèm thống kê tổng số hộ (User bị ép theo thôn) |
 | | `POST` | `/api/villages` | Admin Only | Thêm thôn mới vào hệ thống |
 | | `PUT` | `/api/villages/:id` | Admin Only | Đổi tên thôn / cập nhật thông tin |
 | | `DELETE`| `/api/villages/:id` | Admin Only | Xóa thôn (chỉ khi không còn hộ nào thuộc thôn) |
