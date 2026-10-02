@@ -1,11 +1,22 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { getMe, login, refresh } from "../controllers/auth.controller";
 import { authenticateToken } from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.post("/login", login);
-router.post("/refresh", refresh);
+export const authLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: process.env.NODE_ENV === "test" ? 1000 : 20, // 20 requests per 15 minutes per IP (relaxed in test)
+	standardHeaders: true,
+	legacyHeaders: false,
+	message: {
+		error: "Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau 15 phút.",
+	},
+});
+
+router.post("/login", authLimiter, login);
+router.post("/refresh", authLimiter, refresh);
 router.get("/me", authenticateToken, getMe);
 
 export default router;
