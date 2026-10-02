@@ -71,23 +71,23 @@ export const LoginView: React.FC = () => {
 
 	return (
 		<div className="min-h-screen w-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 sm:p-6 font-sans text-slate-900 dark:text-slate-100 select-none">
-			<div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-xl border-t-4 border-t-emerald-600">
+			<div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl border-t-4 border-t-emerald-600">
 				{/* Header Branding */}
-				<div className="text-center mb-8">
-					<div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-950/60 border-[3px] border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full mx-auto flex items-center justify-center mb-5 shadow-xs">
-						<Sprout className="w-10 h-10" strokeWidth={1.5} />
+				<div className="text-center mb-5 sm:mb-6">
+					<div className="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-100 dark:bg-emerald-950/60 border-[3px] border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full mx-auto flex items-center justify-center mb-3 sm:mb-4 shadow-xs">
+						<Sprout className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={1.5} />
 					</div>
-					<h1 className="text-[28px] font-black text-slate-900 dark:text-white tracking-tight mb-1">
+					<h1 className="text-2xl sm:text-[26px] font-black text-slate-900 dark:text-white tracking-tight mb-1">
 						Đăng nhập
 					</h1>
-					<p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">
+					<p className="text-[10.5px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1.5">
 						QUẢN LÝ NÔNG NGHIỆP & NÔNG THÔN MỚI — XÃ ĐĂK HÀ
 					</p>
 				</div>
 
 				{/* Error Alert */}
 				{error && (
-					<div className="mb-6 p-3.5 bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-950/40 dark:border-rose-800/60 dark:text-rose-300 rounded-xl flex items-start gap-3 text-xs leading-relaxed">
+					<div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-950/40 dark:border-rose-800/60 dark:text-rose-300 rounded-xl flex items-start gap-2.5 text-xs leading-relaxed">
 						<AlertCircle
 							className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400"
 							strokeWidth={1.5}
@@ -97,7 +97,7 @@ export const LoginView: React.FC = () => {
 				)}
 
 				{/* Form */}
-				<form onSubmit={handleLogin} className="space-y-5">
+				<form onSubmit={handleLogin} className="space-y-4">
 					<div>
 						<label
 							htmlFor="login-username"
@@ -187,7 +187,7 @@ export const LoginView: React.FC = () => {
 					</button>
 				</form>
 
-				<div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+				<div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-center">
 					<p className="text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 font-medium">
 						<ShieldCheck
 							className="w-4 h-4 text-emerald-500"
