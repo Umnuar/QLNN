@@ -45,7 +45,7 @@ export const Header: React.FC = () => {
 					</div>
 					<div>
 						<div className="flex items-center gap-2">
-							<h1 className="text-sm font-black text-white tracking-tight">
+							<h1 className="text-xs sm:text-sm font-black text-white tracking-tight whitespace-nowrap">
 								QUẢN LÝ NÔNG NGHIỆP
 							</h1>
 							<span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-950/80 text-emerald-300 rounded-full border border-emerald-800 uppercase tracking-wider hidden sm:inline-block">
@@ -59,9 +59,9 @@ export const Header: React.FC = () => {
 				</div>
 
 				{/* Right Controls */}
-				<div className="flex items-center gap-2.5 sm:gap-3.5">
+				<div className="flex items-center gap-2 sm:gap-3.5">
 					{/* Zoom Controls Pill */}
-					<div className="flex items-center bg-slate-800 p-0.5 rounded-xl border border-slate-700 text-slate-300 text-xs">
+					<div className="hidden md:flex items-center bg-slate-800 p-0.5 rounded-xl border border-slate-700 text-slate-300 text-xs">
 						<button
 							type="button"
 							onClick={zoomOut}

@@ -175,13 +175,13 @@ export const Sidebar: React.FC = () => {
 	return (
 		<aside
 			className={`bg-slate-950 text-slate-300 flex flex-col shrink-0 border-r border-slate-800/80 select-none transition-[width] duration-200 ease-out overflow-hidden ${
-				isSidebarCollapsed ? "w-16" : "w-64"
+				isSidebarCollapsed ? "w-16" : "w-16 md:w-64"
 			}`}
 		>
 			<div className="p-3 flex items-center justify-between border-b border-slate-900 min-h-[56px] overflow-hidden">
 				{!isSidebarCollapsed ? (
 					<>
-						<div className="text-xs font-black text-slate-400 uppercase tracking-widest px-2 flex items-center gap-2 whitespace-nowrap overflow-hidden">
+						<div className="hidden md:flex text-xs font-black text-slate-400 uppercase tracking-widest px-2 items-center gap-2 whitespace-nowrap overflow-hidden">
 							<Database
 								className="w-4 h-4 text-emerald-400 shrink-0"
 								strokeWidth={1.5}
@@ -191,11 +191,20 @@ export const Sidebar: React.FC = () => {
 						<button
 							type="button"
 							onClick={toggleSidebar}
-							className="p-2 text-slate-400 hover:text-slate-100 hover:bg-slate-900 rounded-xl transition-all cursor-pointer shrink-0"
+							className="hidden md:flex p-2 text-slate-400 hover:text-slate-100 hover:bg-slate-900 rounded-xl transition-all cursor-pointer shrink-0"
 							aria-label="Thu gọn thanh bên"
 							title="Thu gọn thanh bên"
 						>
 							<PanelLeftClose className="w-4 h-4" strokeWidth={1.5} />
+						</button>
+						<button
+							type="button"
+							onClick={toggleSidebar}
+							className="md:hidden w-full flex items-center justify-center p-2 text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+							aria-label="Mở rộng hoặc thu gọn thanh bên"
+							title="Mở rộng hoặc thu gọn thanh bên"
+						>
+							<Database className="w-5 h-5 text-emerald-400" strokeWidth={1.5} />
 						</button>
 					</>
 				) : (
@@ -235,7 +244,7 @@ export const Sidebar: React.FC = () => {
 									className={`flex items-center gap-3 rounded-2xl transition-all duration-150 relative cursor-pointer overflow-hidden ${
 										isSidebarCollapsed
 											? "w-12 h-12 justify-center shrink-0 mx-auto"
-											: "w-full py-2.5 px-3 min-h-[48px]"
+											: "w-12 h-12 md:w-full md:h-auto justify-center md:justify-start py-2.5 px-3 min-h-[48px]"
 									} ${
 										isActive
 											? "bg-emerald-600 text-white shadow-md shadow-emerald-950/30"
@@ -251,7 +260,7 @@ export const Sidebar: React.FC = () => {
 										className={`overflow-hidden whitespace-nowrap transition-all duration-200 ease-out text-left ${
 											isSidebarCollapsed
 												? "max-w-0 opacity-0 pointer-events-none hidden"
-												: "max-w-[180px] opacity-100 flex-1 flex flex-col justify-center"
+												: "hidden md:flex max-w-[180px] opacity-100 flex-1 flex-col justify-center"
 										}`}
 									>
 										<div className="flex items-center justify-between">
@@ -301,15 +310,23 @@ export const Sidebar: React.FC = () => {
 			{/* Bottom Version Card matching QLHK */}
 			<div className="p-3.5 border-t border-slate-900 bg-slate-950 text-xs text-slate-400 overflow-hidden">
 				{!isSidebarCollapsed ? (
-					<div className="space-y-1 whitespace-nowrap overflow-hidden">
-						<div className="flex items-center gap-2 text-slate-200 font-bold text-xs">
+					<>
+						<div className="hidden md:block space-y-1 whitespace-nowrap overflow-hidden">
+							<div className="flex items-center gap-2 text-slate-200 font-bold text-xs">
+								<ShieldCheck
+									className="w-4 h-4 text-emerald-400 shrink-0"
+									strokeWidth={1.5}
+								/>
+								<span>QLNN v1.0.0</span>
+							</div>
+						</div>
+						<div className="md:hidden flex justify-center">
 							<ShieldCheck
-								className="w-4 h-4 text-emerald-400 shrink-0"
+								className="w-4 h-4 text-emerald-400"
 								strokeWidth={1.5}
 							/>
-							<span>QLNN v1.0.0</span>
 						</div>
-					</div>
+					</>
 				) : (
 					<div className="flex justify-center">
 						<ShieldCheck
