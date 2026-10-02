@@ -49,8 +49,12 @@ app.use(
 	}),
 );
 
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// Hỗ trợ upload snapshot dung lượng lớn cho khôi phục CSDL
+app.use("/api/backup/restore", express.json({ limit: "50mb" }));
+
+// Giới hạn dung lượng JSON body mặc định 2MB cho toàn bộ ứng dụng (SEC-03-F)
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 app.use(requestLogger);
 
 // Health Check Endpoint (Bắt buộc theo quy chuẩn hệ sinh thái Đăk Hà)
@@ -95,8 +99,7 @@ app.get("/", (_req, expressRes) => {
 	});
 });
 
-// Error handling middleware
-
+// Error handling middleware (SEC-03-E: Ẩn thông tin lỗi kỹ thuật nội bộ trên production)
 app.use(
 	(
 		err: any,
@@ -105,7 +108,20 @@ app.use(
 		_next: express.NextFunction,
 	) => {
 		console.error("[Error]", err);
-		res.status(err.status || 500).json({
+		if (err.type === "entity.too.large" || err.status === 413) {
+			res.status(413).json({
+				error: "Dung lượng dữ liệu gửi lên vượt quá giới hạn cho phép.",
+			});
+			return;
+		}
+		const status = err.status || 500;
+		if (process.env.NODE_ENV === "production" && status === 500) {
+			res.status(500).json({
+				error: "Đã xảy ra lỗi trên hệ thống. Vui lòng liên hệ quản trị viên.",
+			});
+			return;
+		}
+		res.status(status).json({
 			error: err.message || "Lỗi máy chủ nội bộ",
 		});
 	},

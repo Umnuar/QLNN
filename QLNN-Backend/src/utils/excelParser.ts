@@ -78,7 +78,7 @@ export async function parseDakHaExcel(
 	if (typeof bufferOrPath === "string") {
 		await workbook.xlsx.readFile(bufferOrPath);
 	} else {
-		await workbook.xlsx.load(bufferOrPath);
+		await workbook.xlsx.load(bufferOrPath as any);
 	}
 
 	const worksheet = workbook.worksheets[0];
