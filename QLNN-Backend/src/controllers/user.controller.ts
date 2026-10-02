@@ -35,6 +35,11 @@ export const createUser = async (req: AuthRequest, res: Response) => {
 		}
 		const { username, password, role, village_id } = req.body;
 
+		if (!password || typeof password !== "string" || password.length < 8) {
+			res.status(400).json({ error: "Mật khẩu phải có độ dài tối thiểu 8 ký tự." });
+			return;
+		}
+
 		const existing = await prisma.users.findUnique({ where: { username } });
 		if (existing) {
 			res.status(400).json({ error: "Tên đăng nhập đã tồn tại" });
@@ -121,6 +126,10 @@ export const updatePassword = async (req: AuthRequest, res: Response) => {
 		}
 		const id = String(req.params.id);
 		const { password } = req.body;
+		if (!password || typeof password !== "string" || password.length < 8) {
+			res.status(400).json({ error: "Mật khẩu phải có độ dài tối thiểu 8 ký tự." });
+			return;
+		}
 		const hashedPassword = await bcrypt.hash(password, 10);
 		await prisma.users.update({
 			where: { id },
@@ -158,7 +167,11 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 		const data: any = {};
 		if (role !== undefined) data.role = role;
 		if (village_id !== undefined) data.village_id = village_id || null;
-		if (password && typeof password === "string" && password.trim() !== "") {
+		if (password !== undefined && password !== null && password !== "") {
+			if (typeof password !== "string" || password.trim().length < 8) {
+				res.status(400).json({ error: "Mật khẩu mới phải có độ dài tối thiểu 8 ký tự." });
+				return;
+			}
 			data.password = await bcrypt.hash(password.trim(), 10);
 			data.token_version = { increment: 1 };
 		}
