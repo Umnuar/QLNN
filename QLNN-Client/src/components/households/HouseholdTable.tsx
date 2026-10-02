@@ -252,6 +252,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									<th className="py-3 px-2 text-center w-10 border-r border-b border-slate-200/80 dark:border-slate-800 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950">
 										<input
 											type="checkbox"
+											aria-label="Chọn tất cả hộ dân"
 											className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 											checked={
 												households.length > 0 &&
@@ -358,6 +359,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 													<td className="py-3 px-2 border-r border-b border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors">
 														<input
 															type="checkbox"
+															aria-label={`Chọn hộ ${hh.full_name}`}
 															className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 															checked={selectedIds.includes(hh.id!)}
 															onChange={() =>
@@ -716,6 +718,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									<th className="py-3 px-2 text-center w-10 border-r border-emerald-200 dark:border-emerald-800 sticky left-0 z-20 bg-emerald-100 dark:bg-emerald-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]">
 										<input
 											type="checkbox"
+											aria-label="Chọn tất cả hộ dân"
 											className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 											checked={
 												households.length > 0 &&
@@ -802,6 +805,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 												<td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
 													<input
 														type="checkbox"
+														aria-label={`Chọn hộ ${hh.full_name}`}
 														className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 														checked={selectedIds.includes(hh.id!)}
 														onChange={() =>
@@ -894,6 +898,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									<th className="py-3 px-2 text-center w-10 border-r border-teal-200 dark:border-teal-800 sticky left-0 z-20 bg-teal-100 dark:bg-teal-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]">
 										<input
 											type="checkbox"
+											aria-label="Chọn tất cả hộ dân"
 											className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 											checked={
 												households.length > 0 &&
@@ -976,6 +981,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 												<td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
 													<input
 														type="checkbox"
+														aria-label={`Chọn hộ ${hh.full_name}`}
 														className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 														checked={selectedIds.includes(hh.id!)}
 														onChange={() =>
@@ -1058,6 +1064,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									<th className="py-3 px-2 text-center w-10 border-r border-amber-200 dark:border-amber-800 sticky left-0 z-20 bg-amber-100 dark:bg-amber-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]">
 										<input
 											type="checkbox"
+											aria-label="Chọn tất cả hộ dân"
 											className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 											checked={
 												households.length > 0 &&
@@ -1140,6 +1147,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 												<td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
 													<input
 														type="checkbox"
+														aria-label={`Chọn hộ ${hh.full_name}`}
 														className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 														checked={selectedIds.includes(hh.id!)}
 														onChange={() =>
@@ -1222,6 +1230,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									<th className="py-3 px-2 text-center w-10 border-r border-sky-200 dark:border-sky-800 sticky left-0 z-20 bg-sky-100 dark:bg-sky-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]">
 										<input
 											type="checkbox"
+											aria-label="Chọn tất cả hộ dân"
 											className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 											checked={
 												households.length > 0 &&
@@ -1290,6 +1299,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 												<td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
 													<input
 														type="checkbox"
+														aria-label={`Chọn hộ ${hh.full_name}`}
 														className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 														checked={selectedIds.includes(hh.id!)}
 														onChange={() =>
@@ -1366,6 +1376,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									>
 										<input
 											type="checkbox"
+											aria-label="Chọn tất cả hộ dân"
 											className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 											checked={
 												households.length > 0 &&
@@ -1525,6 +1536,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 												<td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
 													<input
 														type="checkbox"
+														aria-label={`Chọn hộ ${hh.full_name}`}
 														className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 														checked={selectedIds.includes(hh.id!)}
 														onChange={() =>

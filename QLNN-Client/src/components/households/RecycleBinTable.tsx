@@ -72,6 +72,7 @@ export const RecycleBinTable: React.FC<HouseholdTableProps> = ({
 							>
 								<input
 									type="checkbox"
+									aria-label="Chọn tất cả hộ dân trong thùng rác"
 									className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 									checked={
 										households.length > 0 &&
@@ -201,6 +202,7 @@ export const RecycleBinTable: React.FC<HouseholdTableProps> = ({
 								<td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
 									<input
 										type="checkbox"
+										aria-label={`Chọn hộ ${hh.full_name}`}
 										className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
 										checked={selectedIds.includes(hh.id!)}
 										onChange={() => onToggleSelect && onToggleSelect(hh.id!)}
