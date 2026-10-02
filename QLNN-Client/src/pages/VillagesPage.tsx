@@ -328,7 +328,10 @@ export const VillagesPage: React.FC = () => {
 						<span className="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
 							ĐỊA BÀN QUẢN LÝ
 						</span>
-						<div className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1 tracking-tight">
+						<div
+							className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1 tracking-tight"
+							title={`${villages.length} Thôn`}
+						>
 							{villages.length} Thôn
 						</div>
 						<span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5" title="Toàn địa bàn Xã Đăk Hà">
@@ -346,7 +349,10 @@ export const VillagesPage: React.FC = () => {
 						<span className="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
 							HỘ NÔNG NGHIỆP
 						</span>
-						<div className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1 tracking-tight">
+						<div
+							className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1 tracking-tight"
+							title={`${overview?.household_count ?? 0} Hộ`}
+						>
 							{overview?.household_count ?? 0} Hộ
 						</div>
 						<span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold truncate block mt-0.5" title="Đã kê khai 18 chỉ số">
