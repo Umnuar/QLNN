@@ -318,77 +318,83 @@ export const VillagesPage: React.FC = () => {
 			</div>
 
 			{/* 4 Stat Cards */}
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-4 mt-4">
 				{/* Card 1: Địa bàn quản lý */}
-				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+				<div className="bg-white dark:bg-slate-900 p-4 xl:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5 xl:gap-4">
 					<div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/50 dark:border-emerald-800/50">
 						<MapPin className="w-6 h-6 text-emerald-500" strokeWidth={1.5} />
 					</div>
-					<div className="min-w-0">
-						<span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+					<div className="min-w-0 flex-1">
+						<span className="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
 							ĐỊA BÀN QUẢN LÝ
 						</span>
-						<div className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1">
+						<div className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1 tracking-tight">
 							{villages.length} Thôn
 						</div>
-						<span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5">
+						<span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5" title="Toàn địa bàn Xã Đăk Hà">
 							Toàn địa bàn Xã Đăk Hà
 						</span>
 					</div>
 				</div>
 
 				{/* Card 2: Hộ nông nghiệp */}
-				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+				<div className="bg-white dark:bg-slate-900 p-4 xl:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5 xl:gap-4">
 					<div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/50 dark:border-blue-800/50">
 						<Users className="w-6 h-6 text-blue-500" strokeWidth={1.5} />
 					</div>
-					<div className="min-w-0">
-						<span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+					<div className="min-w-0 flex-1">
+						<span className="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
 							HỘ NÔNG NGHIỆP
 						</span>
-						<div className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1">
+						<div className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1 tracking-tight">
 							{overview?.household_count ?? 0} Hộ
 						</div>
-						<span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold truncate block mt-0.5">
+						<span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold truncate block mt-0.5" title="Đã kê khai 18 chỉ số">
 							Đã kê khai 18 chỉ số
 						</span>
 					</div>
 				</div>
 
 				{/* Card 3: Tổng diện tích cây trồng */}
-				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+				<div className="bg-white dark:bg-slate-900 p-4 xl:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5 xl:gap-4">
 					<div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-200/50 dark:border-teal-800/50">
 						<Trees className="w-6 h-6 text-teal-500" strokeWidth={1.5} />
 					</div>
-					<div className="min-w-0">
-						<span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+					<div className="min-w-0 flex-1">
+						<span className="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
 							TỔNG DIỆN TÍCH CÂY TRỒNG
 						</span>
-						<div className="text-2xl font-black font-mono tabular-nums text-teal-600 dark:text-teal-400 mt-1 truncate">
+						<div
+							className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-teal-600 dark:text-teal-400 mt-1 tracking-tight"
+							title={cryptoHelper.formatArea(overview?.crops?.total_crops_area ?? 0)}
+						>
 							{cryptoHelper.formatArea(overview?.crops?.total_crops_area ?? 0)}
 						</div>
-						<span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5">
+						<span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5" title="Cà phê, cao su, dược liệu...">
 							Cà phê, cao su, dược liệu...
 						</span>
 					</div>
 				</div>
 
 				{/* Card 4: Tổng đàn vật nuôi */}
-				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+				<div className="bg-white dark:bg-slate-900 p-4 xl:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5 xl:gap-4">
 					<div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/50 dark:border-amber-800/50">
 						<PawPrint className="w-6 h-6 text-amber-500" strokeWidth={1.5} />
 					</div>
-					<div className="min-w-0">
-						<span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+					<div className="min-w-0 flex-1">
+						<span className="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
 							TỔNG ĐÀN VẬT NUÔI
 						</span>
-						<div className="text-2xl font-black font-mono tabular-nums text-amber-600 dark:text-amber-400 mt-1 truncate">
+						<div
+							className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-amber-600 dark:text-amber-400 mt-1 tracking-tight"
+							title={cryptoHelper.formatCount(overview?.livestock?.total_animals ?? 0, "con")}
+						>
 							{cryptoHelper.formatCount(
 								overview?.livestock?.total_animals ?? 0,
 								"con",
 							)}
 						</div>
-						<span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5">
+						<span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5" title="Trâu, bò, heo, gia cầm...">
 							Trâu, bò, heo, gia cầm...
 						</span>
 					</div>
@@ -575,14 +581,13 @@ export const VillagesPage: React.FC = () => {
 					return (
 						<div
 							key={village.id}
-							className="bg-white dark:bg-slate-900 rounded-3xl p-5 border-2 transition-all border-slate-200 dark:border-slate-800 hover:border-emerald-500 hover:shadow-xl hover:shadow-emerald-500/10 min-h-[160px] flex flex-col justify-between"
+							onClick={() => handleVillageClick(village.id)}
+							className="bg-white dark:bg-slate-900 rounded-3xl p-5 border-2 transition-all border-slate-200 dark:border-slate-800 hover:border-emerald-500 hover:shadow-xl hover:shadow-emerald-500/10 min-h-[160px] flex flex-col justify-between cursor-pointer group"
 						>
 							<div>
 								<div className="flex items-center justify-between gap-2 mb-3">
-									<button
-										type="button"
-										onClick={() => handleVillageClick(village.id)}
-										className="flex items-center gap-2 min-w-0 text-left cursor-pointer group hover:opacity-80 transition-opacity"
+									<div
+										className="flex items-center gap-2 min-w-0 text-left transition-opacity"
 										aria-label={`Xem thống kê thôn ${village.name}`}
 									>
 										<MapPin
@@ -593,10 +598,13 @@ export const VillagesPage: React.FC = () => {
 										<h4 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors tracking-tight truncate">
 											{village.name}
 										</h4>
-									</button>
+									</div>
 
 									{isAdmin && (
-										<div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/50 dark:border-slate-700/50 shrink-0">
+										<div
+											onClick={(e) => e.stopPropagation()}
+											className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/50 dark:border-slate-700/50 shrink-0"
+										>
 											<button
 												type="button"
 												title="Đổi tên thôn"
