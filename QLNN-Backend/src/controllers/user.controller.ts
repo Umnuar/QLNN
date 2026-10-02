@@ -51,6 +51,22 @@ export const createUser = async (req: AuthRequest, res: Response) => {
 			},
 		});
 
+		await prisma.audit_logs.create({
+			data: {
+				user_id: req.user?.id || null,
+				username: req.user?.username || "Admin",
+				village_id: village_id || null,
+				action: "CREATE_USER",
+				entity_type: "users",
+				entity_id: newUser.id,
+				details: {
+					username: newUser.username,
+					role: newUser.role,
+					village_id: newUser.village_id,
+				},
+			},
+		});
+
 		res.json({ id: newUser.id, username: newUser.username });
 	} catch (error) {
 		res.status(500).json({ error: "Lỗi tạo user" });
@@ -68,7 +84,29 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
 			res.status(400).json({ error: "Không thể tự xóa chính mình" });
 			return;
 		}
+		const targetUser = await prisma.users.findUnique({ where: { id } });
+		if (!targetUser) {
+			res.status(404).json({ error: "Không tìm thấy user" });
+			return;
+		}
+
 		await prisma.users.delete({ where: { id } });
+
+		await prisma.audit_logs.create({
+			data: {
+				user_id: req.user?.id || null,
+				username: req.user?.username || "Admin",
+				village_id: targetUser.village_id,
+				action: "DELETE_USER",
+				entity_type: "users",
+				entity_id: id,
+				details: {
+					username: targetUser.username,
+					role: targetUser.role,
+				},
+			},
+		});
+
 		res.json({ success: true });
 	} catch (error) {
 		res.status(500).json({ error: "Lỗi xóa user" });
@@ -88,6 +126,21 @@ export const updatePassword = async (req: AuthRequest, res: Response) => {
 			where: { id },
 			data: { password: hashedPassword, token_version: { increment: 1 } },
 		});
+
+		await prisma.audit_logs.create({
+			data: {
+				user_id: req.user?.id || null,
+				username: req.user?.username || "Admin",
+				village_id: null,
+				action: "RESET_PASSWORD",
+				entity_type: "users",
+				entity_id: id,
+				details: {
+					message: "Quản trị viên đặt lại mật khẩu cho cán bộ",
+				},
+			},
+		});
+
 		res.json({ success: true });
 	} catch (error) {
 		res.status(500).json({ error: "Lỗi đổi mật khẩu" });
@@ -120,6 +173,26 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 				created_at: true,
 			},
 		});
+
+		await prisma.audit_logs.create({
+			data: {
+				user_id: req.user?.id || null,
+				username: req.user?.username || "Admin",
+				village_id: updated.village_id || null,
+				action: "UPDATE_USER",
+				entity_type: "users",
+				entity_id: updated.id,
+				details: {
+					username: updated.username,
+					role: updated.role,
+					village_id: updated.village_id,
+					password_changed: Boolean(
+						password && typeof password === "string" && password.trim() !== "",
+					),
+				},
+			},
+		});
+
 		res.json(updated);
 	} catch (error) {
 		res.status(500).json({ error: "Lỗi cập nhật thông tin cán bộ" });
