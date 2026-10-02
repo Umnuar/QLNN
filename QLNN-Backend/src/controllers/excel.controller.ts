@@ -146,7 +146,7 @@ export const importExcel = async (req: AuthRequest, res: Response) => {
 		}
 
 		// Parse file Excel
-		const parseResult = parseDakHaExcel(req.file.buffer);
+		const parseResult = await parseDakHaExcel(req.file.buffer);
 		const parsedRows = parseResult.rows;
 
 		if (parsedRows.length === 0) {
@@ -284,7 +284,7 @@ export const previewExcel = async (req: AuthRequest, res: Response) => {
 		}
 
 		// Parse file Excel
-		const parseResult = parseDakHaExcel(req.file.buffer);
+		const parseResult = await parseDakHaExcel(req.file.buffer);
 		const parsedRows = parseResult.rows;
 
 		if (parsedRows.length === 0) {

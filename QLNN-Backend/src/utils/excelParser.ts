@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { removeAccents } from "./textUtils";
 
 export interface ParsedHouseholdRow {
@@ -30,80 +30,105 @@ export interface ParseExcelResult {
 	totalRowsParsed: number;
 }
 
+function getCellValue(val: any): any {
+	if (val === undefined || val === null) return "";
+	if (typeof val === "object") {
+		if ("result" in val && val.result !== undefined && val.result !== null) {
+			return val.result;
+		}
+		if ("text" in val && typeof val.text === "string") {
+			return val.text;
+		}
+		if (Array.isArray(val.richText)) {
+			return val.richText.map((rt: any) => rt.text || "").join("");
+		}
+	}
+	return val;
+}
+
 function parseNumber(val: any): number {
-	if (val === undefined || val === null || val === "") return 0;
-	if (typeof val === "number") return isNaN(val) ? 0 : val;
-	const cleaned = String(val).trim().replace(",", ".");
+	const raw = getCellValue(val);
+	if (raw === undefined || raw === null || raw === "") return 0;
+	if (typeof raw === "number") return isNaN(raw) ? 0 : raw;
+	const cleaned = String(raw).trim().replace(",", ".");
 	const num = parseFloat(cleaned);
 	return isNaN(num) ? 0 : num;
 }
 
 function parseIntNumber(val: any): number {
-	if (val === undefined || val === null || val === "") return 0;
-	if (typeof val === "number") return Math.floor(val);
-	const cleaned = String(val).trim().replace(",", ".");
+	const raw = getCellValue(val);
+	if (raw === undefined || raw === null || raw === "") return 0;
+	if (typeof raw === "number") return Math.floor(raw);
+	const cleaned = String(raw).trim().replace(",", ".");
 	const num = parseInt(cleaned, 10);
 	return isNaN(num) ? 0 : num;
 }
 
 /**
- * Đọc file Excel biểu mẫu 21 cột của Đăk Hà:
- * - Bỏ qua 9 dòng đầu (index 0 đến 8).
- * - Bắt đầu đọc từ dòng 10 (index 9, STT = 1).
+ * Đọc file Excel biểu mẫu 21 cột của Đăk Hà bằng ExcelJS:
+ * - Bỏ qua 9 dòng đầu (row 1 đến 9).
+ * - Bắt đầu đọc từ dòng 10 (STT = 1).
  * - Dừng lại chính xác trước dòng Tổng cộng / Footer.
  * - Chỉ thêm vào danh sách items nếu giá trị > 0.
  */
-export function parseDakHaExcel(
+export async function parseDakHaExcel(
 	bufferOrPath: Buffer | string,
-): ParseExcelResult {
-	const workbook =
-		typeof bufferOrPath === "string"
-			? XLSX.readFile(bufferOrPath)
-			: XLSX.read(bufferOrPath, { type: "buffer" });
+): Promise<ParseExcelResult> {
+	const workbook = new ExcelJS.Workbook();
+	if (typeof bufferOrPath === "string") {
+		await workbook.xlsx.readFile(bufferOrPath);
+	} else {
+		await workbook.xlsx.load(bufferOrPath);
+	}
 
-	const sheetName = workbook.SheetNames[0];
-	const worksheet = workbook.Sheets[sheetName];
-	const rawData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+	const worksheet = workbook.worksheets[0];
+	if (!worksheet) {
+		return { rows: [], totalRowsParsed: 0 };
+	}
 
 	let villageNameFromHeader = "";
 	let reportingPeriod = "";
 
-	// Đọc thôn và kỳ báo cáo từ header (nếu có)
-	if (rawData[1] && rawData[1][0]) {
-		const vMatch = String(rawData[1][0]).match(/THÔN\s*([^.]+)/i);
+	// Đọc thôn và kỳ báo cáo từ header (dòng 2 và dòng 5)
+	const row2Cell1 = getCellValue(worksheet.getRow(2).getCell(1).value);
+	if (row2Cell1) {
+		const vMatch = String(row2Cell1).match(/THÔN\s*([^.]+)/i);
 		if (vMatch) villageNameFromHeader = vMatch[1].trim();
 	}
-	if (rawData[4] && rawData[4][0]) {
-		const pMatch = String(rawData[4][0]).match(/thời điểm\s*([^\n\r]+)/i);
+
+	const row5Cell1 = getCellValue(worksheet.getRow(5).getCell(1).value);
+	if (row5Cell1) {
+		const pMatch = String(row5Cell1).match(/thời điểm\s*([^\n\r]+)/i);
 		if (pMatch) reportingPeriod = pMatch[1].trim();
 	}
 
 	const rows: ParsedHouseholdRow[] = [];
+	const rowCount = worksheet.rowCount;
 
-	// Bắt đầu từ dòng 10 (index 9 trong mảng 0-indexed)
-	for (let i = 9; i < rawData.length; i++) {
-		const r = rawData[i];
-		if (!r || r.length === 0) continue;
+	for (let rowNumber = 10; rowNumber <= rowCount; rowNumber++) {
+		const row = worksheet.getRow(rowNumber);
+		if (!row) continue;
 
-		const col0 = r[0] !== undefined && r[0] !== null ? String(r[0]).trim() : "";
-		const col1 = r[1] !== undefined && r[1] !== null ? String(r[1]).trim() : "";
+		const col0 = String(getCellValue(row.getCell(1).value)).trim(); // Col A
+		const col1 = String(getCellValue(row.getCell(2).value)).trim(); // Col B
 
 		// Điều kiện dừng: Khi gặp dòng "Tổng", "Tổng cộng", hoặc Footer ngày tháng/chữ ký
 		const normalizedCol0 = col0.toLowerCase();
 		const normalizedCol1 = col1.toLowerCase();
+		const col14 = String(getCellValue(row.getCell(15).value)).toLowerCase();
+
 		if (
 			normalizedCol0.startsWith("tổng") ||
 			normalizedCol1.startsWith("tổng") ||
 			normalizedCol0.includes("đăk hà") ||
 			normalizedCol0.includes("ban quản lý") ||
-			(r[14] && String(r[14]).toLowerCase().includes("đăk hà")) ||
-			(r[14] && String(r[14]).toLowerCase().includes("ban quản lý"))
+			col14.includes("đăk hà") ||
+			col14.includes("ban quản lý")
 		) {
 			break;
 		}
 
 		// BỎ QUA DÒNG TRỐNG TÊN: Một dòng CHỈ hợp lệ khi Cột B (Họ và tên) có dữ liệu thật.
-		// Nếu Cột B trống (dù Cột A có STT in sẵn trong template), bắt buộc bỏ qua, không tạo "hộ ma".
 		if (!col1) {
 			continue;
 		}
@@ -111,14 +136,13 @@ export function parseDakHaExcel(
 		const stt = parseIntNumber(col0) || rows.length + 1;
 		const full_name = col1;
 		const name_unaccented = removeAccents(full_name);
-		const notes =
-			r[20] !== undefined && r[20] !== null ? String(r[20]).trim() : "";
+		const notes = String(getCellValue(row.getCell(21).value)).trim();
 
 		// 1. CÂY TRỒNG (12 cột)
 		const crop_items: ParsedHouseholdRow["crop_items"] = [];
 
-		// Col 2: Cà phê (ha) - Hộ gia đình
-		const cafeH = parseNumber(r[2]);
+		// Col C (cell 3): Cà phê (ha) - Hộ gia đình
+		const cafeH = parseNumber(row.getCell(3).value);
 		if (cafeH > 0) {
 			crop_items.push({
 				crop_type: "Cà phê",
@@ -128,8 +152,8 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// Col 3: Cà phê (ha) - Nhận khoán
-		const cafeC = parseNumber(r[3]);
+		// Col D (cell 4): Cà phê (ha) - Nhận khoán
+		const cafeC = parseNumber(row.getCell(4).value);
 		if (cafeC > 0) {
 			crop_items.push({
 				crop_type: "Cà phê",
@@ -139,8 +163,8 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// Col 4: Cao su (ha) - Hộ gia đình
-		const rubH = parseNumber(r[4]);
+		// Col E (cell 5): Cao su (ha) - Hộ gia đình
+		const rubH = parseNumber(row.getCell(5).value);
 		if (rubH > 0) {
 			crop_items.push({
 				crop_type: "Cao su",
@@ -150,8 +174,8 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// Col 5: Cao su (ha) - Nhận khoán
-		const rubC = parseNumber(r[5]);
+		// Col F (cell 6): Cao su (ha) - Nhận khoán
+		const rubC = parseNumber(row.getCell(6).value);
 		if (rubC > 0) {
 			crop_items.push({
 				crop_type: "Cao su",
@@ -161,8 +185,8 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// Col 6: Cây ăn quả (ha)
-		const fruit = parseNumber(r[6]);
+		// Col G (cell 7): Cây ăn quả (ha)
+		const fruit = parseNumber(row.getCell(7).value);
 		if (fruit > 0) {
 			crop_items.push({
 				crop_type: "Cây ăn quả",
@@ -172,8 +196,8 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// Col 7: Cây Mắc Ca (ha)
-		const macca = parseNumber(r[7]);
+		// Col H (cell 8): Cây Mắc Ca (ha)
+		const macca = parseNumber(row.getCell(8).value);
 		if (macca > 0) {
 			crop_items.push({
 				crop_type: "Cây Mắc Ca",
@@ -183,9 +207,9 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// 4 Cột Dược liệu (Chỉ lưu nếu > 0)
-		// Col 8: Đinh lăng
-		const dinhLang = parseNumber(r[8]);
+		// 4 Cột Dược liệu (Cells 9-12)
+		// Col I (cell 9): Đinh lăng
+		const dinhLang = parseNumber(row.getCell(9).value);
 		if (dinhLang > 0) {
 			crop_items.push({
 				crop_type: "Cây dược liệu",
@@ -195,8 +219,8 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// Col 9: Gừng
-		const gung = parseNumber(r[9]);
+		// Col J (cell 10): Gừng
+		const gung = parseNumber(row.getCell(10).value);
 		if (gung > 0) {
 			crop_items.push({
 				crop_type: "Cây dược liệu",
@@ -206,8 +230,8 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// Col 10: Nghệ
-		const nghe = parseNumber(r[10]);
+		// Col K (cell 11): Nghệ
+		const nghe = parseNumber(row.getCell(11).value);
 		if (nghe > 0) {
 			crop_items.push({
 				crop_type: "Cây dược liệu",
@@ -217,8 +241,8 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// Col 11: Sả
-		const sa = parseNumber(r[11]);
+		// Col L (cell 12): Sả
+		const sa = parseNumber(row.getCell(12).value);
 		if (sa > 0) {
 			crop_items.push({
 				crop_type: "Cây dược liệu",
@@ -228,8 +252,8 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// Col 12: Lúa nước (ha)
-		const lua = parseNumber(r[12]);
+		// Col M (cell 13): Lúa nước (ha)
+		const lua = parseNumber(row.getCell(13).value);
 		if (lua > 0) {
 			crop_items.push({
 				crop_type: "Lúa nước",
@@ -239,8 +263,8 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// Col 13: Cây hàng năm khác (ha)
-		const otherAnnual = parseNumber(r[13]);
+		// Col N (cell 14): Cây hàng năm khác (ha)
+		const otherAnnual = parseNumber(row.getCell(14).value);
 		if (otherAnnual > 0) {
 			crop_items.push({
 				crop_type: "Cây hàng năm khác",
@@ -250,38 +274,38 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// 2. VẬT NUÔI (4 cột)
+		// 2. VẬT NUÔI (4 cột: cells 15-18)
 		const livestock_items: ParsedHouseholdRow["livestock_items"] = [];
 
-		// Col 14: Trâu (con)
-		const trau = parseIntNumber(r[14]);
+		// Col O (cell 15): Trâu (con)
+		const trau = parseIntNumber(row.getCell(15).value);
 		if (trau > 0) {
 			livestock_items.push({ animal_type: "Trâu", quantity: trau });
 		}
 
-		// Col 15: Bò (con)
-		const bo = parseIntNumber(r[15]);
+		// Col P (cell 16): Bò (con)
+		const bo = parseIntNumber(row.getCell(16).value);
 		if (bo > 0) {
 			livestock_items.push({ animal_type: "Bò", quantity: bo });
 		}
 
-		// Col 16: Heo (con)
-		const heo = parseIntNumber(r[16]);
+		// Col Q (cell 17): Heo (con)
+		const heo = parseIntNumber(row.getCell(17).value);
 		if (heo > 0) {
 			livestock_items.push({ animal_type: "Heo", quantity: heo });
 		}
 
-		// Col 17: Gia cầm (con)
-		const giaCam = parseIntNumber(r[17]);
+		// Col R (cell 18): Gia cầm (con)
+		const giaCam = parseIntNumber(row.getCell(18).value);
 		if (giaCam > 0) {
 			livestock_items.push({ animal_type: "Gia cầm", quantity: giaCam });
 		}
 
-		// 3. THỦY SẢN (2 cột)
+		// 3. THỦY SẢN (2 cột: cells 19-20)
 		const aquaculture_items: ParsedHouseholdRow["aquaculture_items"] = [];
 
-		// Col 18: Nuôi cá ao (ha)
-		const caAo = parseNumber(r[18]);
+		// Col S (cell 19): Nuôi cá ao (ha)
+		const caAo = parseNumber(row.getCell(19).value);
 		if (caAo > 0) {
 			aquaculture_items.push({
 				aquaculture_type: "Nuôi cá ao",
@@ -290,8 +314,8 @@ export function parseDakHaExcel(
 			});
 		}
 
-		// Col 19: Nuôi cá lồng bè (lồng)
-		const caLong = parseIntNumber(r[19]);
+		// Col T (cell 20): Nuôi cá lồng bè (lồng)
+		const caLong = parseIntNumber(row.getCell(20).value);
 		if (caLong > 0) {
 			aquaculture_items.push({
 				aquaculture_type: "Nuôi cá lồng bè",

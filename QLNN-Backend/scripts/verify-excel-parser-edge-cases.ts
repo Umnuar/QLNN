@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { parseDakHaExcel } from '../src/utils/excelParser';
 
 async function runExcelParserChallenges() {
@@ -59,14 +59,16 @@ async function runExcelParserChallenges() {
 
   const fullSheetData = [...headerRows, ...dataRows];
 
-  // Convert to Excel workbook buffer
-  const ws = XLSX.utils.aoa_to_sheet(fullSheetData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'ThongKeThon1');
-  const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  // Convert to Excel workbook buffer with ExcelJS
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('ThongKeThon1');
+  for (const row of fullSheetData) {
+    ws.addRow(row);
+  }
+  const buffer = await wb.xlsx.writeBuffer();
 
   // Run parser
-  const result = parseDakHaExcel(buffer);
+  const result = await parseDakHaExcel(Buffer.from(buffer));
 
   // 1. Header Metadata extraction
   assert(result.villageNameFromHeader === '1', 'Extracts village name from header (Thôn 1)', `Got '${result.villageNameFromHeader}'`);
