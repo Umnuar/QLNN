@@ -96,4 +96,29 @@ describe('Auth API & RBAC (Phần 1.1)', () => {
 
     expect(res.status).toBe(403);
   });
+
+  it('7. Đăng xuất thu hồi phiên (POST /api/auth/logout) tăng token_version', async () => {
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'user_test_auth', password: 'password123' });
+
+    expect(loginRes.status).toBe(200);
+    const sessionToken = loginRes.body.accessToken;
+    const sessionRefreshToken = loginRes.body.refreshToken;
+
+    const logoutRes = await request(app)
+      .post('/api/auth/logout')
+      .set('Authorization', `Bearer ${sessionToken}`);
+
+    expect(logoutRes.status).toBe(200);
+    expect(logoutRes.body.success).toBe(true);
+
+    // 8. Chặn Refresh Token Replay: token cũ bị từ chối cấp token mới sau khi đã logout (SEC-05-A)
+    const replayRes = await request(app)
+      .post('/api/auth/refresh')
+      .send({ refreshToken: sessionRefreshToken });
+
+    expect(replayRes.status).toBe(401);
+    expect(replayRes.body.error).toContain('thu hồi');
+  });
 });

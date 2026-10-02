@@ -86,7 +86,7 @@ export const updatePassword = async (req: AuthRequest, res: Response) => {
 		const hashedPassword = await bcrypt.hash(password, 10);
 		await prisma.users.update({
 			where: { id },
-			data: { password: hashedPassword },
+			data: { password: hashedPassword, token_version: { increment: 1 } },
 		});
 		res.json({ success: true });
 	} catch (error) {
@@ -107,6 +107,7 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 		if (village_id !== undefined) data.village_id = village_id || null;
 		if (password && typeof password === "string" && password.trim() !== "") {
 			data.password = await bcrypt.hash(password.trim(), 10);
+			data.token_version = { increment: 1 };
 		}
 		const updated = await prisma.users.update({
 			where: { id },

@@ -28,6 +28,7 @@ export const login = async (req: Request, res: Response) => {
 			username: user.username,
 			role: user.role as "admin" | "user",
 			village_id: user.village_id,
+			token_version: user.token_version,
 		};
 
 		const accessToken = generateAccessToken(payload);
@@ -60,11 +61,23 @@ export const refresh = async (req: Request, res: Response) => {
 			return;
 		}
 
+		// Kiểm tra token_version để ngăn chặn Refresh Token Replay sau khi logout hoặc đổi mật khẩu
+		if (
+			decoded.token_version !== undefined &&
+			user.token_version !== decoded.token_version
+		) {
+			res.status(401).json({
+				error: "Phiên làm việc đã bị thu hồi hoặc hết hạn. Vui lòng đăng nhập lại.",
+			});
+			return;
+		}
+
 		const payload = {
 			id: user.id,
 			username: user.username,
 			role: user.role as "admin" | "user",
 			village_id: user.village_id,
+			token_version: user.token_version,
 		};
 
 		const newAccessToken = generateAccessToken(payload);
@@ -77,6 +90,28 @@ export const refresh = async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		res.status(401).json({ error: "Refresh token không hợp lệ" });
+	}
+};
+
+export const logout = async (req: any, res: Response) => {
+	try {
+		if (!req.user?.id) {
+			res.status(401).json({ error: "Chưa xác thực" });
+			return;
+		}
+
+		await prisma.users.update({
+			where: { id: req.user.id },
+			data: { token_version: { increment: 1 } },
+		});
+
+		res.json({
+			success: true,
+			message: "Đăng xuất thành công, phiên làm việc đã được thu hồi.",
+		});
+	} catch (error: any) {
+		console.error("[QLNN Logout Error]:", error);
+		res.status(500).json({ error: "Lỗi khi đăng xuất" });
 	}
 };
 

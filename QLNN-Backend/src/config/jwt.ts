@@ -34,6 +34,7 @@ export interface TokenPayload {
 	username: string;
 	role: "admin" | "user";
 	village_id: string | null;
+	token_version?: number;
 	iat?: number;
 	exp?: number;
 }
