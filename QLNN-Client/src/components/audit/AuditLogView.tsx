@@ -894,14 +894,20 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
 					{/* Lọc theo Thôn */}
 					{selectedVillageId ? (
 						<div className="flex items-center justify-between px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 rounded-2xl text-xs">
-							<div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-200 truncate">
+							<div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-200 min-w-0 flex-1 mr-2">
 								<MapPin
 									className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0"
 									strokeWidth={1.5}
 								/>
-								<span className="truncate">
-									Đang xem biến động dữ liệu:{" "}
-									<strong>
+								<span
+									className="truncate"
+									title={`Đang xem biến động dữ liệu: ${
+										villages.find((v) => v.id === selectedVillageId)?.name ||
+										"Thôn đã chọn"
+									}`}
+								>
+									Thôn đang xem:{" "}
+									<strong className="text-emerald-950 dark:text-white">
 										{villages.find((v) => v.id === selectedVillageId)?.name ||
 											"Thôn đã chọn"}
 									</strong>
