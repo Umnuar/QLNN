@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 5001;
 // Bảo mật HTTP Headers
 app.use(helmet());
 
-// Cấu hình CORS
+// Cấu hình CORS (SEC-04-C: Không cho phép wildcard localhost trên production)
 const corsOrigins = process.env.CORS_ORIGIN
 	? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
 	: ["http://localhost:5174", "http://localhost:5173"];
@@ -34,11 +34,12 @@ const corsOrigins = process.env.CORS_ORIGIN
 app.use(
 	cors({
 		origin: (origin, callback) => {
+			const isDev = process.env.NODE_ENV !== "production";
 			// Cho phép requests không có origin (Electron / Mobile / Postman) hoặc nằm trong danh sách
 			if (
 				!origin ||
 				corsOrigins.includes(origin) ||
-				origin.startsWith("http://localhost:")
+				(isDev && origin.startsWith("http://localhost:"))
 			) {
 				callback(null, true);
 			} else {

@@ -17,7 +17,7 @@ export default defineConfig({
       '/api': {
         target: 'https://qlnn.dulieudakha.vn',
         changeOrigin: true,
-        secure: false,
+        secure: true,
       },
     },
   },
