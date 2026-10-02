@@ -155,8 +155,9 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
 	const [error, setError] = useState<string | null>(null);
 	const [userList, setUserList] = useState<User[]>([]);
 
-	// Tải danh sách cán bộ để phục vụ bộ lọc
+	// Tải danh sách cán bộ để phục vụ bộ lọc (chỉ Admin)
 	useEffect(() => {
+		if (!isAdmin) return;
 		const loadUsers = async () => {
 			try {
 				const users = await authApi.getUsers();
@@ -166,7 +167,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
 			}
 		};
 		loadUsers();
-	}, []);
+	}, [isAdmin]);
 
 	// Truy vấn Audit Logs từ API
 	const fetchLogs = useCallback(
@@ -270,6 +271,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
 					icon: RotateCcw,
 				};
 			case "IMPORT":
+			case "IMPORT_EXCEL":
 				return {
 					label: "Nhập Excel",
 					colorBadge:
@@ -584,7 +586,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
 			);
 		}
 
-		if (act === "IMPORT") {
+		if (act === "IMPORT" || act === "IMPORT_EXCEL") {
 			const vals =
 				typeof item.new_values === "object" && item.new_values
 					? item.new_values
@@ -905,17 +907,19 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
 									</strong>
 								</span>
 							</div>
-							<button
-								type="button"
-								onClick={() => {
-									setSelectedVillageId("");
-									setVillageFilter("");
-								}}
-								className="ml-2 px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-slate-700 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-xl text-[11px] font-bold shadow-xs cursor-pointer transition-all shrink-0"
-								title="Chuyển về xem toàn xã"
-							>
-								Xem Toàn Xã
-							</button>
+							{isAdmin && (
+								<button
+									type="button"
+									onClick={() => {
+										setSelectedVillageId("");
+										setVillageFilter("");
+									}}
+									className="ml-2 px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-slate-700 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-xl text-[11px] font-bold shadow-xs cursor-pointer transition-all shrink-0"
+									title="Chuyển về xem toàn xã"
+								>
+									Xem Toàn Xã
+								</button>
+							)}
 						</div>
 					) : isAdmin ? (
 						<CustomSelect

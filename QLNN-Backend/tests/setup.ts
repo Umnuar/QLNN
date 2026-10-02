@@ -1,6 +1,8 @@
 // tests/setup.ts
 import { PrismaClient } from '@prisma/client';
 
+jest.setTimeout(30000);
+
 const prisma = new PrismaClient();
 
 beforeAll(async () => {

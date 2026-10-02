@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "QLNN - Quản Lý Nông Nghiệp & Nông Thôn Mới Xã Đăk Hà (Backend API)",
   "main": "dist/index.js",
-  "scripts": { "test": "jest",
+  "scripts": { "test": "jest --runInBand",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",

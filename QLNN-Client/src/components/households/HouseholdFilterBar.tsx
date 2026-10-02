@@ -112,12 +112,15 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 				<Search
 					className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none"
 					strokeWidth={1.5}
+					aria-hidden="true"
 				/>
 				<input
+					id="household-search-input"
 					type="text"
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					placeholder="Tìm theo họ tên chủ hộ..."
+					aria-label="Tìm theo họ tên chủ hộ"
 					className="w-full h-8 sm:h-9 pl-8.5 pr-14 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden font-medium transition-all"
 				/>
 				<div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center">
@@ -129,7 +132,11 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 								aria-label="Xóa tìm kiếm"
 								className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
 							>
-								<X className="w-3.5 h-3.5" strokeWidth={1.5} />
+								<X
+									className="w-3.5 h-3.5"
+									strokeWidth={1.5}
+									aria-hidden="true"
+								/>
 							</button>
 							<div className="w-px h-3.5 bg-slate-200 dark:bg-slate-700 mx-1" />
 						</>
@@ -148,6 +155,7 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 									: ""
 							}`}
 							strokeWidth={1.5}
+							aria-hidden="true"
 						/>
 					</button>
 				</div>
@@ -229,6 +237,7 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 				<ChevronsUpDown
 					className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400"
 					strokeWidth={1.5}
+					aria-hidden="true"
 				/>
 				<span className="hidden sm:inline">
 					{isAllExpanded ? "Thu gọn tất cả" : "Bung tất cả"}
@@ -244,7 +253,11 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 					title="Xóa bộ lọc về mặc định"
 					className="h-8 px-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0 transition-all"
 				>
-					<RotateCcw className="w-3.5 h-3.5" strokeWidth={1.5} />
+					<RotateCcw
+						className="w-3.5 h-3.5"
+						strokeWidth={1.5}
+						aria-hidden="true"
+					/>
 					<span>Xóa lọc</span>
 				</button>
 			)}
@@ -258,6 +271,7 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 					<button
 						type="button"
 						onClick={onDeselectAll}
+						aria-label="Bỏ chọn tất cả hộ"
 						className="h-8 px-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-all"
 					>
 						Bỏ chọn
@@ -265,17 +279,27 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 					<button
 						type="button"
 						onClick={onExportSelected}
+						aria-label="Xuất dữ liệu các hộ đã chọn"
 						className="h-8 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
 					>
-						<Download className="w-3.5 h-3.5" strokeWidth={1.5} />
+						<Download
+							className="w-3.5 h-3.5"
+							strokeWidth={1.5}
+							aria-hidden="true"
+						/>
 						<span>Xuất Excel</span>
 					</button>
 					<button
 						type="button"
 						onClick={onDeleteSelected}
+						aria-label="Xóa các hộ đã chọn"
 						className="h-8 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
 					>
-						<Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+						<Trash2
+							className="w-3.5 h-3.5"
+							strokeWidth={1.5}
+							aria-hidden="true"
+						/>
 						<span>Xóa</span>
 					</button>
 				</div>
