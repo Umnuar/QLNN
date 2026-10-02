@@ -19,6 +19,39 @@ export interface SmartUpsertAnalysis {
 }
 
 /**
+ * Kiểm tra tính hợp lệ nhị phân (Magic Bytes) của tệp Excel tải lên
+ * .xlsx (ZIP): PK\x03\x04 (0x50 0x4B 0x03 0x04)
+ * .xls (OLE2): 0xD0 0xCF 0x11 0xE0
+ */
+export function validateExcelBuffer(buffer: Buffer): {
+	valid: boolean;
+	error?: string;
+} {
+	if (!buffer || buffer.length < 4) {
+		return { valid: false, error: "Tệp tin rỗng hoặc không đúng định dạng" };
+	}
+	const isZip =
+		buffer[0] === 0x50 &&
+		buffer[1] === 0x4b &&
+		buffer[2] === 0x03 &&
+		buffer[3] === 0x04;
+	const isLegacyOle =
+		buffer[0] === 0xd0 &&
+		buffer[1] === 0xcf &&
+		buffer[2] === 0x11 &&
+		buffer[3] === 0xe0;
+
+	if (!isZip && !isLegacyOle) {
+		return {
+			valid: false,
+			error:
+				"Định dạng tệp không hợp lệ: tệp tải lên không phải là tài liệu Excel (.xlsx / .xls) tiêu chuẩn (chữ ký nhị phân không khớp).",
+		};
+	}
+	return { valid: true };
+}
+
+/**
  * HÀM DÙNG CHUNG DUY NHẤT: Phân tích danh sách dòng Excel để xác định Create vs Update
  * Dùng chung 100% cho cả Preview (/api/excel/preview) và Import thật (/api/excel/import)
  * Đảm bảo:
@@ -60,6 +93,7 @@ export function analyzeParsedRowsForUpsert(
 				notes: row.notes,
 			};
 			householdMapByName.set(normalizedName, placeholderNewHh);
+
 			analyzedRows.push({
 				row,
 				action: "create",
@@ -86,6 +120,12 @@ export const importExcel = async (req: AuthRequest, res: Response) => {
 			res
 				.status(400)
 				.json({ error: "Vui lòng tải lên file Excel (.xls, .xlsx)" });
+			return;
+		}
+
+		const validation = validateExcelBuffer(req.file.buffer);
+		if (!validation.valid) {
+			res.status(400).json({ error: validation.error });
 			return;
 		}
 
@@ -218,6 +258,12 @@ export const previewExcel = async (req: AuthRequest, res: Response) => {
 			res
 				.status(400)
 				.json({ error: "Vui lòng tải lên file Excel (.xls, .xlsx)" });
+			return;
+		}
+
+		const validation = validateExcelBuffer(req.file.buffer);
+		if (!validation.valid) {
+			res.status(400).json({ error: validation.error });
 			return;
 		}
 
