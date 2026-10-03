@@ -31,12 +31,12 @@
 | `P4-L1-FOUNDATION` | Phase 4 | Layer 1: Foundation tokens (Tailwind, index.css) | `L1-foundation` | completed | `ui-sync/layer1-tokens.md` | Non-breaking token adoption (Build & Test PASS) |
 | `P4-L2-APP-SHELL` | Phase 4 | Layer 2: App Shell (AppLayout, Header, Sidebar) | `L2-shell` | completed | `ui-sync/layer2-shell.md` | Reskin shell keeping QLNN routes/menus (Build & Test PASS) |
 | `P4-L3-PRIMITIVES` | Phase 4 | Layer 3: Shared primitives (Button, Select, Table, Modal) | `L3-primitives` | completed | `ui-sync/layer3-primitives.md` | Reusable UI building blocks (Build & Test PASS) |
-| `P4-L4-AUTH` | Phase 4 | Layer 4 Screen Group: Login & Auth | `L4-auth` | in_progress | `ui-sync/layer4-auth.md` | Login form, error alerts, session |
-| `P4-L4-VILLAGES` | Phase 4 | Layer 4 Screen Group: Villages & Territory | `L4-villages` | pending | `ui-sync/layer4-villages.md` | Banner, stat cards, village cards |
-| `P4-L4-HOUSEHOLDS` | Phase 4 | Layer 4 Screen Group: Households & FilterBar & Form | `L4-households` | pending | `ui-sync/layer4-households.md` | 18 agricultural indicators, OCC, Drawer |
-| `P4-L4-ANALYTICS` | Phase 4 | Layer 4 Screen Group: Analytics Dashboard | `L4-analytics` | pending | `ui-sync/layer4-analytics.md` | Summary cards, charts, village comparison |
-| `P4-L4-RECYCLE-AUDIT` | Phase 4 | Layer 4 Screen Group: Recycle Bin & Audit Log | `L4-recycle-audit` | pending | `ui-sync/layer4-recycle-audit.md` | Restore, permanent delete, timeline diff |
-| `P4-L4-SETTINGS` | Phase 4 | Layer 4 Screen Group: System Settings & Users | `L4-settings` | pending | `ui-sync/layer4-settings.md` | Profile, user management, backup/restore |
+| `P4-L4-AUTH` | Phase 4 | Layer 4 Screen Group: Login & Auth | `L4-auth` | completed | `ui-sync/layer4-auth.md` | Login form, error alerts, session (Tests PASS) |
+| `P4-L4-VILLAGES` | Phase 4 | Layer 4 Screen Group: Villages & Territory | `L4-villages` | completed | `ui-sync/layer4-villages.md` | Banner, stat cards, village cards (Tests PASS) |
+| `P4-L4-HOUSEHOLDS` | Phase 4 | Layer 4 Screen Group: Households & FilterBar & Form | `L4-households` | completed | `ui-sync/layer4-households.md` | 18 agricultural indicators, OCC, Drawer (Tests PASS) |
+| `P4-L4-ANALYTICS` | Phase 4 | Layer 4 Screen Group: Analytics Dashboard | `L4-analytics` | completed | `ui-sync/layer4-analytics.md` | Summary cards, charts, village comparison (Tests PASS) |
+| `P4-L4-RECYCLE-AUDIT` | Phase 4 | Layer 4 Screen Group: Recycle Bin & Audit Log | `L4-recycle-audit` | completed | `ui-sync/layer4-recycle-audit.md` | Restore, permanent delete, timeline diff (Tests PASS) |
+| `P4-L4-SETTINGS` | Phase 4 | Layer 4 Screen Group: System Settings & Users | `L4-settings` | completed | `ui-sync/layer4-settings.md` | Profile, user management, backup/restore (Tests PASS) |
 | `P5-VER-CONTENT` | Phase 5 | Independent Content Invariant Verification | `V-content` | pending | `ui-sync/verify-content.md` | 100% Vietnamese labels, columns, data intact |
 | `P5-VER-VISUAL` | Phase 5 | Independent Visual Parity Audit | `V-visual` | pending | `ui-sync/verify-visual.md` | Token compliance, spacing, dark mode |
 | `P5-VER-FUNCTIONAL` | Phase 5 | Independent Automated Test & Flow Verification | `V-functional` | pending | `ui-sync/verify-functional.md` | 100% tests pass, 0 console errors |
