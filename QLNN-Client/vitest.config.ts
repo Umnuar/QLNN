@@ -12,7 +12,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    setupFiles: ['./src/tests/setup.ts'],
+    setupFiles: [path.resolve(import.meta.dirname, './src/tests/setup.ts')],
     globals: true,
     testTimeout: 20000,
   },

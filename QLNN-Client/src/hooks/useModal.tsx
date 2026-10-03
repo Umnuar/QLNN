@@ -1,6 +1,12 @@
 import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
 import type React from "react";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useState,
+} from "react";
 
 interface ModalOptions {
 	title: string;
@@ -100,7 +106,10 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({
 								)}
 							</div>
 							<div className="flex-1 min-w-0">
-								<h3 id="generic-modal-title" className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+								<h3
+									id="generic-modal-title"
+									className="text-base font-black text-slate-900 dark:text-white tracking-tight"
+								>
 									{modal.title}
 								</h3>
 								<p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">

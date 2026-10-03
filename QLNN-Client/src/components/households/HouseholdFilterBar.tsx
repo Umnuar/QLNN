@@ -1,5 +1,6 @@
 import {
 	ArrowUpDown,
+	ChevronDown,
 	ChevronsUpDown,
 	Download,
 	Layers,
@@ -11,6 +12,7 @@ import {
 	X,
 } from "lucide-react";
 import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import { CustomSelect } from "../common/CustomSelect";
 
 export type ScaleFilter = "all" | "large" | "medium" | "small";
@@ -90,6 +92,26 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 	onDeleteSelected,
 }) => {
 	const isSelectionActive = Boolean(selectedCount && selectedCount > 0);
+	const [isActionDropdownOpen, setIsActionDropdownOpen] = useState(false);
+	const actionDropdownRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				actionDropdownRef.current &&
+				!actionDropdownRef.current.contains(event.target as Node)
+			) {
+				setIsActionDropdownOpen(false);
+			}
+		};
+		if (isActionDropdownOpen) {
+			document.addEventListener("mousedown", handleClickOutside);
+		}
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [isActionDropdownOpen]);
+
 	const activeFilterCount =
 		(search.trim() !== "" ? 1 : 0) +
 		(scaleFilter !== "all" ? 1 : 0) +
@@ -170,7 +192,7 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 			</div>
 
 			{/* 2. Dropdown Quy mô */}
-			<div className="w-40 shrink-0">
+			<div className="w-44 shrink-0">
 				<CustomSelect
 					variant="filter"
 					defaultValue="all"
@@ -186,7 +208,7 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 			</div>
 
 			{/* 3. Dropdown Loại hình */}
-			<div className="w-42 shrink-0">
+			<div className="w-44 shrink-0">
 				<CustomSelect
 					variant="filter"
 					defaultValue="all"
@@ -202,7 +224,7 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 			</div>
 
 			{/* 4. Dropdown Sắp xếp */}
-			<div className="w-40 shrink-0">
+			<div className="w-42 shrink-0">
 				<CustomSelect
 					variant="filter"
 					defaultValue="default"
@@ -281,46 +303,71 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 				</button>
 			)}
 
-			{/* 7. Cụm tác vụ khi có hộ được chọn: dồn sang mép phải (ml-auto) */}
+			{/* 7. Cụm tác vụ hàng loạt khi có dòng được chọn: dồn sang mép phải (ml-auto) */}
 			{isSelectionActive && (
-				<div className="ml-auto flex items-center gap-2 shrink-0 animate-in fade-in flex-wrap">
-					<span className="px-3 py-1 text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 rounded-xl border border-emerald-200 dark:border-emerald-800">
-						Đã chọn {selectedCount} hộ
-					</span>
-					<button
-						type="button"
-						onClick={onDeselectAll}
-						aria-label="Bỏ chọn tất cả hộ"
-						className="h-8 px-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-all"
-					>
-						Bỏ chọn
-					</button>
-					<button
-						type="button"
-						onClick={onExportSelected}
-						aria-label="Xuất dữ liệu các hộ đã chọn"
-						className="h-8 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
-					>
-						<Download
-							className="w-3.5 h-3.5"
-							strokeWidth={1.5}
-							aria-hidden="true"
-						/>
-						<span>Xuất Excel</span>
-					</button>
-					<button
-						type="button"
-						onClick={onDeleteSelected}
-						aria-label="Xóa các hộ đã chọn"
-						className="h-8 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
-					>
-						<Trash2
-							className="w-3.5 h-3.5"
-							strokeWidth={1.5}
-							aria-hidden="true"
-						/>
-						<span>Xóa</span>
-					</button>
+				<div className="ml-auto flex items-center gap-2 shrink-0 animate-in fade-in">
+					{/* Nút trung tính "Thao tác (N)" dạng dropdown */}
+					<div className="relative" ref={actionDropdownRef}>
+						<button
+							type="button"
+							onClick={() => setIsActionDropdownOpen((prev) => !prev)}
+							className="h-8 sm:h-9 px-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer select-none transition-all"
+							aria-expanded={isActionDropdownOpen}
+							aria-haspopup="menu"
+						>
+							<span>Thao tác ({selectedCount})</span>
+							<ChevronDown
+								className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
+									isActionDropdownOpen ? "rotate-180" : ""
+								}`}
+							/>
+						</button>
+
+						{isActionDropdownOpen && (
+							<div className="absolute right-0 top-full mt-1.5 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100">
+								{onExportSelected && (
+									<button
+										type="button"
+										onClick={() => {
+											setIsActionDropdownOpen(false);
+											onExportSelected();
+										}}
+										className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-300 rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
+									>
+										<Download className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+										<span>Xuất Excel ({selectedCount} hộ)</span>
+									</button>
+								)}
+								{onDeselectAll && (
+									<button
+										type="button"
+										onClick={() => {
+											setIsActionDropdownOpen(false);
+											onDeselectAll();
+										}}
+										className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 rounded-xl flex items-center gap-2 cursor-pointer transition-colors border-t border-slate-100 dark:border-slate-800"
+									>
+										<X className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+										<span>Bỏ chọn tất cả</span>
+									</button>
+								)}
+							</div>
+						)}
+					</div>
+
+					{/* Nút đỏ xóa các hộ đã chọn */}
+					{onDeleteSelected && (
+						<button
+							type="button"
+							onClick={onDeleteSelected}
+							className="h-8 sm:h-9 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
+							title={`Xóa ${selectedCount} hộ đã chọn`}
+							aria-label={`Xóa ${selectedCount} hộ đã chọn`}
+						>
+							<Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+							<span>{selectedCount}</span>
+						</button>
+					)}
 				</div>
 			)}
 		</div>

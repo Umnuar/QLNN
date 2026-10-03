@@ -16,11 +16,7 @@ import React, { useState } from "react";
 import { useApp } from "../../AppContext";
 import type { HouseholdFlat } from "../../types";
 import { TablePagination } from "../common/TablePagination";
-import {
-	NumberCell,
-	TABLE_STYLES,
-	VillageBadge,
-} from "../common/tableStyles";
+import { NumberCell, TABLE_STYLES, VillageBadge } from "../common/tableStyles";
 
 interface HouseholdTableProps {
 	selectedIds?: string[];
@@ -264,9 +260,6 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 					<span className="font-bold text-[14px] text-slate-800 dark:text-slate-100">
 						Danh Sách Hộ Kinh Tế Nông Nghiệp
 					</span>
-					<span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800">
-						{total} bản ghi
-					</span>
 				</div>
 
 				<div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -440,7 +433,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									<th className={TABLE_STYLES.thRight}>Thủy Sản</th>
 									{!readOnly && (
 										<th
-											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.08)] dark:shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.3)] bg-slate-50 dark:bg-slate-800`}
 										>
 											Thao Tác
 										</th>
@@ -467,7 +460,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 															onDoubleClick={() => !readOnly && onEdit(hh)}
 															className={`${TABLE_STYLES.tr} ${
 																isExpanded ? TABLE_STYLES.trExpanded : ""
-															}`}
+															} ${selectedIds.includes(hh.id!) ? TABLE_STYLES.trSelected : ""}`}
 															title="Bấm đúp để sửa số liệu hộ này"
 														>
 															<td className={TABLE_STYLES.stickyLeftCheckbox}>
@@ -826,7 +819,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									<th className={TABLE_STYLES.thRight}>Hàng Năm</th>
 									{!readOnly && (
 										<th
-											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.08)] dark:shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.3)] bg-slate-50 dark:bg-slate-800`}
 										>
 											Thao Tác
 										</th>
@@ -847,7 +840,11 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 													<tr
 														key={hh.id}
 														onDoubleClick={() => !readOnly && onEdit(hh)}
-														className={TABLE_STYLES.tr}
+														className={`${TABLE_STYLES.tr} ${
+															selectedIds.includes(hh.id!)
+																? TABLE_STYLES.trSelected
+																: ""
+														}`}
 													>
 														<td className={TABLE_STYLES.stickyLeftCheckbox}>
 															<input
@@ -951,7 +948,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									<th className={TABLE_STYLES.thRight}>Tổng Dược Liệu</th>
 									{!readOnly && (
 										<th
-											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.08)] dark:shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.3)] bg-slate-50 dark:bg-slate-800`}
 										>
 											Thao Tác
 										</th>
@@ -978,7 +975,11 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 													<tr
 														key={hh.id}
 														onDoubleClick={() => !readOnly && onEdit(hh)}
-														className={TABLE_STYLES.tr}
+														className={`${TABLE_STYLES.tr} ${
+															selectedIds.includes(hh.id!)
+																? TABLE_STYLES.trSelected
+																: ""
+														}`}
 													>
 														<td className={TABLE_STYLES.stickyLeftCheckbox}>
 															<input
@@ -1061,7 +1062,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									<th className={TABLE_STYLES.thRight}>Tổng Đàn</th>
 									{!readOnly && (
 										<th
-											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.08)] dark:shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.3)] bg-slate-50 dark:bg-slate-800`}
 										>
 											Thao Tác
 										</th>
@@ -1088,7 +1089,11 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 													<tr
 														key={hh.id}
 														onDoubleClick={() => !readOnly && onEdit(hh)}
-														className={TABLE_STYLES.tr}
+														className={`${TABLE_STYLES.tr} ${
+															selectedIds.includes(hh.id!)
+																? TABLE_STYLES.trSelected
+																: ""
+														}`}
 													>
 														<td className={TABLE_STYLES.stickyLeftCheckbox}>
 															<input
@@ -1188,7 +1193,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									<th className={TABLE_STYLES.thRight}>Cá Lồng Bè</th>
 									{!readOnly && (
 										<th
-											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.08)] dark:shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.3)] bg-slate-50 dark:bg-slate-800`}
 										>
 											Thao Tác
 										</th>
@@ -1209,7 +1214,11 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 													<tr
 														key={hh.id}
 														onDoubleClick={() => !readOnly && onEdit(hh)}
-														className={TABLE_STYLES.tr}
+														className={`${TABLE_STYLES.tr} ${
+															selectedIds.includes(hh.id!)
+																? TABLE_STYLES.trSelected
+																: ""
+														}`}
 													>
 														<td className={TABLE_STYLES.stickyLeftCheckbox}>
 															<input
@@ -1304,7 +1313,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									{!readOnly && (
 										<th
 											rowSpan={2}
-											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.3)] bg-slate-50 dark:bg-slate-800`}
 										>
 											Thao Tác
 										</th>
@@ -1353,7 +1362,11 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 													<tr
 														key={hh.id}
 														onDoubleClick={() => !readOnly && onEdit(hh)}
-														className={TABLE_STYLES.tr}
+														className={`${TABLE_STYLES.tr} ${
+															selectedIds.includes(hh.id!)
+																? TABLE_STYLES.trSelected
+																: ""
+														}`}
 													>
 														<td className={TABLE_STYLES.stickyLeftCheckbox}>
 															<input

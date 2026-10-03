@@ -28,33 +28,34 @@ export const TABLE_STYLES = {
 	table:
 		"w-full min-w-[1020px] text-left border-separate border-spacing-0 whitespace-nowrap",
 
-	// Tiêu đề cột (TH)
-	th: "py-3.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200/90 dark:border-slate-800 select-none whitespace-nowrap",
+	// Tiêu đề cột (TH) - Nền đặc tuyệt đối chống lộ chữ khi cuộn ngang
+	th: "py-3.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border-b border-slate-200/90 dark:border-slate-800 select-none whitespace-nowrap",
 	thRight:
-		"py-3.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200/90 dark:border-slate-800 text-right select-none whitespace-nowrap",
+		"py-3.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border-b border-slate-200/90 dark:border-slate-800 text-right select-none whitespace-nowrap",
 	thCenter:
-		"py-3.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200/90 dark:border-slate-800 text-center select-none whitespace-nowrap",
+		"py-3.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border-b border-slate-200/90 dark:border-slate-800 text-center select-none whitespace-nowrap",
 
 	// Dòng dữ liệu (TR)
 	tr: "group bg-white dark:bg-slate-900 hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors duration-150 border-b border-slate-100 dark:border-slate-800/80 cursor-pointer",
 	trExpanded: "bg-emerald-50/30 dark:bg-slate-800/40",
+	trSelected: "row-selected !bg-emerald-50/60 dark:!bg-emerald-950/40",
 
-	// Ô dữ liệu (TD)
+	// Ô dữ liệu (TD) - Sử dụng font chính với tabular-nums, không dùng font mono
 	td: "py-3 px-3 text-[14px] text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800/80 align-middle whitespace-nowrap",
 	tdCenter:
 		"py-3 px-3 text-[14px] text-center text-slate-600 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/80 align-middle whitespace-nowrap",
 	tdRight:
-		"py-3 px-3 text-[14px] text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800/80 align-middle whitespace-nowrap",
+		"py-3 px-3 text-[14px] text-right tabular-nums text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800/80 align-middle whitespace-nowrap",
 
-	// Cột cố định (Sticky)
+	// Cột cố định (Sticky) - Nền đặc + bóng nhẹ, đổi màu xanh nhạt khi dòng được chọn
 	stickyLeftCheckbox:
-		"py-3 px-2.5 text-center w-10 sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800/80 transition-colors",
+		"py-3 px-2.5 text-center w-10 sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 group-[.row-selected]:bg-emerald-50 group-[.row-selected]:dark:bg-emerald-950 border-b border-slate-100 dark:border-slate-800/80 transition-colors",
 	stickyLeftSTT:
-		"py-3 px-2 text-center w-12 font-mono text-xs text-slate-500 dark:text-slate-400 sticky left-10 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800/80 whitespace-nowrap transition-colors",
+		"py-3 px-2 text-center w-12 tabular-nums text-xs text-slate-500 dark:text-slate-400 sticky left-10 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 group-[.row-selected]:bg-emerald-50 group-[.row-selected]:dark:bg-emerald-950 border-b border-slate-100 dark:border-slate-800/80 whitespace-nowrap transition-colors",
 	stickyLeftName:
-		"py-3 px-3.5 min-w-[200px] sticky left-[88px] z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800/80 shadow-[4px_0_10px_-2px_rgba(0,0,0,0.04)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.2)] whitespace-nowrap transition-colors",
+		"py-3 px-3.5 min-w-[200px] sticky left-[88px] z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 group-[.row-selected]:bg-emerald-50 group-[.row-selected]:dark:bg-emerald-950 border-b border-slate-100 dark:border-slate-800/80 shadow-[4px_0_10px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.3)] whitespace-nowrap transition-colors",
 	stickyRightAction:
-		"py-3 px-3 text-center min-w-[96px] sticky right-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800/80 shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)] whitespace-nowrap transition-colors",
+		"py-3 px-3 text-center min-w-[96px] sticky right-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 group-[.row-selected]:bg-emerald-50 group-[.row-selected]:dark:bg-emerald-950 border-b border-slate-100 dark:border-slate-800/80 shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-6px_0_12px_-2px_rgba(0,0,0,0.3)] whitespace-nowrap transition-colors",
 
 	// Kiểu chữ chính và phụ
 	primaryName: "text-[14px] font-bold text-slate-900 dark:text-slate-100",
@@ -120,7 +121,7 @@ export const NumberCell: React.FC<{
 
 	return (
 		<span className="inline-flex items-baseline justify-end gap-1">
-			<span className="font-mono tabular-nums text-[14px] text-slate-800 dark:text-slate-200 font-medium">
+			<span className="tabular-nums text-[14px] text-slate-800 dark:text-slate-200 font-medium">
 				{formatted}
 			</span>
 			{unit && (

@@ -135,7 +135,10 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
 					</div>
 
 					<div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-						<label htmlFor="export-scope-all" className="flex items-start gap-3 cursor-pointer group">
+						<label
+							htmlFor="export-scope-all"
+							className="flex items-start gap-3 cursor-pointer group"
+						>
 							<div className="relative flex items-start">
 								<input
 									id="export-scope-all"

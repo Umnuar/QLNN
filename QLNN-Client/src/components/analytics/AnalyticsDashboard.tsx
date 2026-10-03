@@ -432,7 +432,8 @@ export const AnalyticsDashboard: React.FC = () => {
 					</div>
 					<p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
 						Tổng hợp quy mô 18 chỉ tiêu cây trồng, vật nuôi và mô hình thủy sản
-						tại {villages.length > 0 ? `${villages.length} thôn` : "các thôn"} Xã Đăk Hà
+						tại {villages.length > 0 ? `${villages.length} thôn` : "các thôn"}{" "}
+						Xã Đăk Hà
 					</p>
 				</div>
 
@@ -816,9 +817,7 @@ export const AnalyticsDashboard: React.FC = () => {
 											{cryptoHelper.formatArea(row.crops?.fruit_tree || 0)}
 										</td>
 										<td className="py-3 px-3 text-right font-mono tabular-nums border-r border-slate-100 dark:border-slate-800/60">
-											{cryptoHelper.formatArea(
-												row.crops?.total_herb_area || 0,
-											)}
+											{cryptoHelper.formatArea(row.crops?.total_herb_area || 0)}
 										</td>
 										<td className="py-3 px-3 text-right font-mono font-bold tabular-nums text-amber-600 dark:text-amber-400 border-r border-slate-100 dark:border-slate-800/60">
 											{cryptoHelper.formatCount(

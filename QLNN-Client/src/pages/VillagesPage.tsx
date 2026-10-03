@@ -332,7 +332,10 @@ export const VillagesPage: React.FC = () => {
 							Toàn địa bàn Xã Đăk Hà
 						</div>
 					</div>
-					<MapPin className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0" strokeWidth={1.5} />
+					<MapPin
+						className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0"
+						strokeWidth={1.5}
+					/>
 				</div>
 
 				{/* Card 2: Hộ nông nghiệp */}
@@ -348,7 +351,10 @@ export const VillagesPage: React.FC = () => {
 							Đã kê khai 18 chỉ số CSDL
 						</div>
 					</div>
-					<Building2 className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0" strokeWidth={1.5} />
+					<Building2
+						className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0"
+						strokeWidth={1.5}
+					/>
 				</div>
 
 				{/* Card 3: Tổng diện tích cây trồng */}
@@ -364,7 +370,10 @@ export const VillagesPage: React.FC = () => {
 							Cà phê, cao su, dược liệu...
 						</div>
 					</div>
-					<Trees className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0" strokeWidth={1.5} />
+					<Trees
+						className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0"
+						strokeWidth={1.5}
+					/>
 				</div>
 
 				{/* Card 4: Tổng đàn vật nuôi */}
@@ -374,13 +383,19 @@ export const VillagesPage: React.FC = () => {
 							TỔNG ĐÀN VẬT NUÔI
 						</div>
 						<div className="text-2xl font-black font-mono tabular-nums text-amber-600 dark:text-amber-400 mt-1">
-							{cryptoHelper.formatCount(overview?.livestock?.total_animals ?? 0, "con")}
+							{cryptoHelper.formatCount(
+								overview?.livestock?.total_animals ?? 0,
+								"con",
+							)}
 						</div>
 						<div className="text-[11px] text-amber-700 dark:text-amber-300 font-semibold mt-0.5">
 							Trâu, bò, heo, gia cầm...
 						</div>
 					</div>
-					<PawPrint className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0" strokeWidth={1.5} />
+					<PawPrint
+						className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0"
+						strokeWidth={1.5}
+					/>
 				</div>
 			</div>
 

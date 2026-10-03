@@ -24,24 +24,26 @@ export const TablePagination: React.FC<TablePaginationProps> = ({
 	const end = Math.min(page * limit, total);
 
 	return (
-		<div className="p-4 bg-slate-50/95 dark:bg-slate-950/90 border-t border-slate-200/90 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs select-none">
+		<div className="p-3.5 sm:px-4 bg-slate-50/80 dark:bg-slate-950/60 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs select-none">
 			<div className="text-slate-600 dark:text-slate-300 font-medium">
 				Hiển thị{" "}
-				<strong className="text-slate-900 dark:text-white font-bold">
-					{start}–{end}
+				<strong className="text-slate-900 dark:text-white font-bold tabular-nums">
+					{total === 0
+						? "0"
+						: `${start.toLocaleString("vi-VN")}–${end.toLocaleString("vi-VN")}`}
 				</strong>{" "}
 				trong tổng số{" "}
-				<strong className="text-slate-900 dark:text-white font-bold">
-					{total}
+				<strong className="text-slate-900 dark:text-white font-bold tabular-nums">
+					{total.toLocaleString("vi-VN")}
 				</strong>{" "}
 				bản ghi
 			</div>
 
 			<div className="flex items-center gap-3">
 				{/* Limit selector via CustomSelect */}
-				<div className="flex items-center gap-2">
-					<span className="text-slate-500 dark:text-slate-400 font-medium">
-						Hiển thị:
+				<div className="flex items-center gap-1.5">
+					<span className="text-slate-500 dark:text-slate-400 font-medium shrink-0">
+						Số dòng:
 					</span>
 					<div className="w-28">
 						<CustomSelect
@@ -58,19 +60,20 @@ export const TablePagination: React.FC<TablePaginationProps> = ({
 					</div>
 				</div>
 
-				{/* Page navigation */}
+				{/* Page navigation: ‹ Trước | Trang X / Y | Sau › */}
 				<div className="flex items-center gap-1.5">
 					<button
 						type="button"
 						disabled={page <= 1}
 						onClick={() => onPageChange(page - 1)}
 						aria-label="Trang trước"
-						className="p-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95"
+						className="px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center gap-1 text-xs font-semibold"
 					>
-						<ChevronLeft className="w-4 h-4" strokeWidth={1.5} />
+						<ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.5} />
+						<span>Trước</span>
 					</button>
 
-					<span className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-mono font-bold text-xs text-slate-800 dark:text-slate-200">
+					<span className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl tabular-nums font-bold text-xs text-slate-800 dark:text-slate-200">
 						Trang {page} / {totalPages || 1}
 					</span>
 
@@ -79,9 +82,10 @@ export const TablePagination: React.FC<TablePaginationProps> = ({
 						disabled={page >= totalPages}
 						onClick={() => onPageChange(page + 1)}
 						aria-label="Trang tiếp theo"
-						className="p-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95"
+						className="px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center gap-1 text-xs font-semibold"
 					>
-						<ChevronRight className="w-4 h-4" strokeWidth={1.5} />
+						<span>Sau</span>
+						<ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} />
 					</button>
 				</div>
 			</div>
