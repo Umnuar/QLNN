@@ -21,12 +21,12 @@
 | `P1-INV-PAGES` | Phase 1 | Inventory Primary Pages (Villages, Households, Analytics) | `A-inv-pages` | completed | `ui-sync/00_screens_pages.md` | All active view modes & statistics |
 | `P1-INV-MODALS` | Phase 1 | Inventory Modals, Drawers, Filterbars, Dialogs | `A-inv-modals` | completed | `ui-sync/00_screens_modals.md` | 18 indicators form, 21-col preview, diffs |
 | `P1-INV-CONSOLIDATE` | Phase 1 | Consolidate whole-screen & state inventory | Orchestrator | completed | `ui-sync/00_screens.md` | Complete coverage gate (114+ states) |
-| `P2-DES-TOKENS` | Phase 2 | Extract design tokens (colors, typo, radii, shadows) | `A-design` | in_progress | `ui-sync/design-language/tokens.md` | Exact Tailwind & CSS variable values |
-| `P2-DES-SHELL` | Phase 2 | Extract shell layout & navigation patterns | `A-design` | in_progress | `ui-sync/design-language/shell.md` | Header, Sidebar, responsive rules |
-| `P2-DES-NAV-FILTER` | Phase 2 | Extract search, filterbars, dropdowns, pagination | `A-design` | in_progress | `ui-sync/design-language/patterns-nav-filter.md` | Filter islands, CustomSelect, badges |
-| `P2-DES-DATA-FORM` | Phase 2 | Extract table & form input component patterns | `A-design` | in_progress | `ui-sync/design-language/patterns-data-form.md` | Sticky tables, cards, form inputs |
-| `P2-DES-FEEDBACK` | Phase 2 | Extract feedback, drawers, modals, toasts, alerts | `A-design` | in_progress | `ui-sync/design-language/patterns-feedback.md` | Slide-over drawer, confirm dialogs, empty |
-| `P3-APP-MAPPING` | Phase 3 | Whole-app component-to-pattern mapping matrix | `A-mapper` | pending | `ui-sync/01_mapping.md` | Target -> Reference pattern mapping |
+| `P2-DES-TOKENS` | Phase 2 | Extract design tokens (colors, typo, radii, shadows) | `A-design` | completed | `ui-sync/design-language/tokens.md` | Exact Tailwind & CSS variable values |
+| `P2-DES-SHELL` | Phase 2 | Extract shell layout & navigation patterns | `A-design` | completed | `ui-sync/design-language/shell.md` | Header, Sidebar, responsive rules |
+| `P2-DES-NAV-FILTER` | Phase 2 | Extract search, filterbars, dropdowns, pagination | `A-design` | completed | `ui-sync/design-language/patterns-nav-filter.md` | Filter islands, CustomSelect, badges |
+| `P2-DES-DATA-FORM` | Phase 2 | Extract table & form input component patterns | `A-design` | completed | `ui-sync/design-language/patterns-data-form.md` | Sticky tables, cards, form inputs |
+| `P2-DES-FEEDBACK` | Phase 2 | Extract feedback, drawers, modals, toasts, alerts | `A-design` | completed | `ui-sync/design-language/patterns-feedback.md` | Slide-over drawer, confirm dialogs, empty |
+| `P3-APP-MAPPING` | Phase 3 | Whole-app component-to-pattern mapping matrix | `A-mapper` | completed | `ui-sync/01_mapping.md` | Target -> Reference pattern mapping (100% mapped) |
 | `P3-APPROVAL-GATE` | Phase 3 | User presentation & formal approval gate | Orchestrator + User | pending | Artifact & Prompt | Explicit approval required before edit |
 | `P4-L1-FOUNDATION` | Phase 4 | Layer 1: Foundation tokens (Tailwind, index.css) | `L1-foundation` | pending | `ui-sync/layer1-tokens.md` | Non-breaking token adoption |
 | `P4-L2-APP-SHELL` | Phase 4 | Layer 2: App Shell (AppLayout, Header, Sidebar) | `L2-shell` | pending | `ui-sync/layer2-shell.md` | Reskin shell keeping QLNN routes/menus |
