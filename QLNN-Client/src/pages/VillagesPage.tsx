@@ -1,6 +1,7 @@
 import {
 	ArrowRight,
 	BarChart3,
+	Building2,
 	Check,
 	Edit3,
 	MapPin,
@@ -9,7 +10,6 @@ import {
 	Search,
 	Trash2,
 	Trees,
-	Users,
 	X,
 } from "lucide-react";
 import type React from "react";
@@ -318,92 +318,69 @@ export const VillagesPage: React.FC = () => {
 			</div>
 
 			{/* 4 Stat Cards */}
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-4 mt-4">
+			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
 				{/* Card 1: Địa bàn quản lý */}
-				<div className="bg-white dark:bg-slate-900 p-4 xl:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5 xl:gap-4">
-					<div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/50 dark:border-emerald-800/50">
-						<MapPin className="w-6 h-6 text-emerald-500" strokeWidth={1.5} />
-					</div>
-					<div className="min-w-0 flex-1">
-						<span className="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
+				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center justify-between">
+					<div>
+						<div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
 							ĐỊA BÀN QUẢN LÝ
-						</span>
-						<div
-							className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1 tracking-tight"
-							title={`${villages.length} Thôn`}
-						>
+						</div>
+						<div className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1">
 							{villages.length} Thôn
 						</div>
-						<span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5" title="Toàn địa bàn Xã Đăk Hà">
+						<div className="text-[11px] text-slate-400 font-medium mt-0.5">
 							Toàn địa bàn Xã Đăk Hà
-						</span>
+						</div>
 					</div>
+					<MapPin className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0" strokeWidth={1.5} />
 				</div>
 
 				{/* Card 2: Hộ nông nghiệp */}
-				<div className="bg-white dark:bg-slate-900 p-4 xl:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5 xl:gap-4">
-					<div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/50 dark:border-blue-800/50">
-						<Users className="w-6 h-6 text-blue-500" strokeWidth={1.5} />
-					</div>
-					<div className="min-w-0 flex-1">
-						<span className="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
+				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center justify-between">
+					<div>
+						<div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
 							HỘ NÔNG NGHIỆP
-						</span>
-						<div
-							className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1 tracking-tight"
-							title={`${overview?.household_count ?? 0} Hộ`}
-						>
+						</div>
+						<div className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1">
 							{overview?.household_count ?? 0} Hộ
 						</div>
-						<span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold truncate block mt-0.5" title="Đã kê khai 18 chỉ số">
-							Đã kê khai 18 chỉ số
-						</span>
+						<div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
+							Đã kê khai 18 chỉ số CSDL
+						</div>
 					</div>
+					<Building2 className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0" strokeWidth={1.5} />
 				</div>
 
 				{/* Card 3: Tổng diện tích cây trồng */}
-				<div className="bg-white dark:bg-slate-900 p-4 xl:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5 xl:gap-4">
-					<div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-200/50 dark:border-teal-800/50">
-						<Trees className="w-6 h-6 text-teal-500" strokeWidth={1.5} />
-					</div>
-					<div className="min-w-0 flex-1">
-						<span className="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
+				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center justify-between">
+					<div>
+						<div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
 							TỔNG DIỆN TÍCH CÂY TRỒNG
-						</span>
-						<div
-							className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-teal-600 dark:text-teal-400 mt-1 tracking-tight"
-							title={cryptoHelper.formatArea(overview?.crops?.total_crops_area ?? 0)}
-						>
+						</div>
+						<div className="text-2xl font-black font-mono tabular-nums text-teal-600 dark:text-teal-400 mt-1">
 							{cryptoHelper.formatArea(overview?.crops?.total_crops_area ?? 0)}
 						</div>
-						<span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5" title="Cà phê, cao su, dược liệu...">
+						<div className="text-[11px] text-teal-700 dark:text-teal-300 font-semibold mt-0.5">
 							Cà phê, cao su, dược liệu...
-						</span>
+						</div>
 					</div>
+					<Trees className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0" strokeWidth={1.5} />
 				</div>
 
 				{/* Card 4: Tổng đàn vật nuôi */}
-				<div className="bg-white dark:bg-slate-900 p-4 xl:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5 xl:gap-4">
-					<div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/50 dark:border-amber-800/50">
-						<PawPrint className="w-6 h-6 text-amber-500" strokeWidth={1.5} />
-					</div>
-					<div className="min-w-0 flex-1">
-						<span className="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
+				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center justify-between">
+					<div>
+						<div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
 							TỔNG ĐÀN VẬT NUÔI
-						</span>
-						<div
-							className="text-lg sm:text-xl xl:text-2xl font-black font-mono tabular-nums text-amber-600 dark:text-amber-400 mt-1 tracking-tight"
-							title={cryptoHelper.formatCount(overview?.livestock?.total_animals ?? 0, "con")}
-						>
-							{cryptoHelper.formatCount(
-								overview?.livestock?.total_animals ?? 0,
-								"con",
-							)}
 						</div>
-						<span className="text-[11px] text-slate-400 font-medium truncate block mt-0.5" title="Trâu, bò, heo, gia cầm...">
+						<div className="text-2xl font-black font-mono tabular-nums text-amber-600 dark:text-amber-400 mt-1">
+							{cryptoHelper.formatCount(overview?.livestock?.total_animals ?? 0, "con")}
+						</div>
+						<div className="text-[11px] text-amber-700 dark:text-amber-300 font-semibold mt-0.5">
 							Trâu, bò, heo, gia cầm...
-						</span>
+						</div>
 					</div>
+					<PawPrint className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0" strokeWidth={1.5} />
 				</div>
 			</div>
 

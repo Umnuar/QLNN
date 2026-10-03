@@ -4,22 +4,23 @@ import {
 	Building2,
 	Download,
 	Fish,
-	Flower2,
 	PawPrint,
+	PieChart,
 	RefreshCw,
+	Shield,
 	Trees,
-	Users,
 	Zap,
 } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 import { useApp } from "../../AppContext";
 import { analyticsApi } from "../../api/analyticsApi";
 import { getCache, setCache } from "../../db/indexedDB";
 import type { OverviewAnalytics, VillageAnalytics } from "../../types";
 import { cryptoHelper } from "../../utils/cryptoHelper";
 
-// Component Donut Chart SVG nhẹ
+// Component Donut Chart SVG nhẹ (Vibe tối giản QLHK)
 const MiniDonut: React.FC<{
 	val1: number;
 	label1: string;
@@ -28,12 +29,12 @@ const MiniDonut: React.FC<{
 	label2: string;
 	color2: string;
 	unit: string;
-}> = ({ val1, label1, color1, val2, label2, color2 }) => {
+}> = ({ val1, label1, color1, val2, label2, color2, unit }) => {
 	const total = val1 + val2;
 	if (total <= 0) {
 		return (
 			<div className="text-center py-4 text-slate-400 dark:text-slate-500 text-xs italic">
-				Chưa có số liệu diện tích
+				Chưa có số liệu thống kê
 			</div>
 		);
 	}
@@ -41,7 +42,6 @@ const MiniDonut: React.FC<{
 	const p1 = Math.round((val1 / total) * 100);
 	const p2 = 100 - p1;
 
-	// SVG circle calculation
 	const radius = 38;
 	const circumference = 2 * Math.PI * radius;
 	const strokeDashoffset1 = circumference - (p1 / 100) * circumference;
@@ -53,9 +53,9 @@ const MiniDonut: React.FC<{
 					className="w-full h-full -rotate-90"
 					viewBox="0 0 100 100"
 					role="img"
-					aria-label="Biểu đồ tỷ lệ cơ cấu hộ gia đình"
+					aria-label={`Biểu đồ tỷ lệ ${label1} và ${label2}`}
 				>
-					<title>Biểu đồ tỷ lệ cơ cấu hộ gia đình</title>
+					<title>{`Biểu đồ tỷ lệ ${label1} và ${label2}`}</title>
 					<circle
 						cx="50"
 						cy="50"
@@ -81,8 +81,8 @@ const MiniDonut: React.FC<{
 					<span className="text-xs font-mono font-black text-slate-800 dark:text-slate-100">
 						{p1}%
 					</span>
-					<span className="text-[9px] text-slate-400 font-bold uppercase">
-						Hộ GD
+					<span className="text-[9px] text-slate-400 font-bold uppercase truncate max-w-[50px]">
+						{label1}
 					</span>
 				</div>
 			</div>
@@ -90,37 +90,41 @@ const MiniDonut: React.FC<{
 			<div className="flex-1 space-y-2">
 				<div className="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/80 dark:border-slate-800">
 					<div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 text-xs">
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2 min-w-0">
 							<div
 								className="w-2.5 h-2.5 rounded-full shrink-0"
 								style={{ backgroundColor: color1 }}
 							/>
-							<span>{label1}</span>
+							<span className="truncate">{label1}</span>
 						</div>
-						<span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+						<span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold text-xs shrink-0 ml-1">
 							{p1}%
 						</span>
 					</div>
 					<div className="text-slate-600 dark:text-slate-400 font-bold font-mono text-xs pl-4.5 mt-0.5 tabular-nums">
-						{cryptoHelper.formatArea(val1)}
+						{unit === "ha"
+							? cryptoHelper.formatArea(val1)
+							: cryptoHelper.formatCount(val1, unit)}
 					</div>
 				</div>
 
 				<div className="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/80 dark:border-slate-800">
 					<div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 text-xs">
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2 min-w-0">
 							<div
 								className="w-2.5 h-2.5 rounded-full shrink-0"
 								style={{ backgroundColor: color2 }}
 							/>
-							<span>{label2}</span>
+							<span className="truncate">{label2}</span>
 						</div>
-						<span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+						<span className="font-mono text-amber-600 dark:text-amber-400 font-bold text-xs shrink-0 ml-1">
 							{p2}%
 						</span>
 					</div>
 					<div className="text-slate-600 dark:text-slate-400 font-bold font-mono text-xs pl-4.5 mt-0.5 tabular-nums">
-						{cryptoHelper.formatArea(val2)}
+						{unit === "ha"
+							? cryptoHelper.formatArea(val2)
+							: cryptoHelper.formatCount(val2, unit)}
 					</div>
 				</div>
 			</div>
@@ -128,29 +132,34 @@ const MiniDonut: React.FC<{
 	);
 };
 
-// Component Progress Bar
+// Component Progress Bar tối giản (Vibe QLHK Ảnh 2)
 const ProgressBar: React.FC<{
 	label: string;
 	value: number;
-	max: number;
+	total: number;
 	colorClass: string;
 	unit: string;
-}> = ({ label, value, max, colorClass, unit }) => {
-	const percent = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
+}> = ({ label, value, total, colorClass, unit }) => {
+	const percent = total > 0 ? Math.round((value / total) * 1000) / 10 : 0;
 	return (
 		<div className="space-y-1.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
 			<div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
-				<span>{label}</span>
-				<span className="font-mono tabular-nums text-sm text-slate-900 dark:text-slate-100 font-bold">
+				<span className="flex items-center gap-1.5 min-w-0">
+					<span className="truncate">{label}</span>
+					<span className="text-[10px] text-slate-400 font-mono shrink-0">
+						({percent}%)
+					</span>
+				</span>
+				<span className="font-mono tabular-nums text-sm text-slate-900 dark:text-slate-100 font-bold shrink-0 ml-2">
 					{unit === "ha"
 						? cryptoHelper.formatArea(value)
 						: cryptoHelper.formatCount(value, unit)}
 				</span>
 			</div>
-			<div className="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+			<div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
 				<div
 					className={`h-full rounded-full transition-all duration-300 ${colorClass}`}
-					style={{ width: `${percent}%` }}
+					style={{ width: `${Math.min(100, percent)}%` }}
 				/>
 			</div>
 		</div>
@@ -158,8 +167,14 @@ const ProgressBar: React.FC<{
 };
 
 export const AnalyticsDashboard: React.FC = () => {
-	const { user, selectedVillageId, setSelectedVillageId, setActiveTab } =
-		useApp();
+	const {
+		user,
+		selectedVillageId,
+		setSelectedVillageId,
+		selectedVillageName,
+		setActiveTab,
+		villages,
+	} = useApp();
 
 	const [loading, setLoading] = useState<boolean>(true);
 	const [overview, setOverview] = useState<OverviewAnalytics | null>(null);
@@ -182,8 +197,9 @@ export const AnalyticsDashboard: React.FC = () => {
 				await setCache(cacheKeyOverview, res);
 				setIsUsingCachedData(false);
 
-				if (user?.role === "admin") {
-					const vRes = await analyticsApi.getByVillage();
+				// Nạp danh sách số liệu so sánh theo thôn
+				const vRes = await analyticsApi.getByVillage();
+				if (vRes?.data) {
 					setVillageData(vRes.data);
 					await setCache(cacheKeyVillage, vRes.data);
 				}
@@ -205,10 +221,8 @@ export const AnalyticsDashboard: React.FC = () => {
 						setScopeName(cachedRes.scope.village_name);
 						setIsUsingCachedData(true);
 					}
-					if (user?.role === "admin") {
-						const cachedV = await getCache<VillageAnalytics[]>(cacheKeyVillage);
-						if (cachedV) setVillageData(cachedV);
-					}
+					const cachedV = await getCache<VillageAnalytics[]>(cacheKeyVillage);
+					if (cachedV) setVillageData(cachedV);
 				} else {
 					throw err;
 				}
@@ -234,15 +248,146 @@ export const AnalyticsDashboard: React.FC = () => {
 			window.removeEventListener("server:reconnected", handleReconnected);
 	}, [loadData]);
 
+	// Tổng cộng cộng dồn toàn xã cho bảng so sánh (Ảnh 3)
+	const villageTotals = useMemo(() => {
+		let totalHh = 0;
+		let totalCropsArea = 0;
+		let totalCafe = 0;
+		let totalRubber = 0;
+		let totalFruit = 0;
+		let totalHerb = 0;
+		let totalAnimals = 0;
+		let totalFishPond = 0;
+		let totalFishCage = 0;
+
+		villageData.forEach((r) => {
+			totalHh += r.household_count || 0;
+			totalCropsArea += r.crops?.total_crops_area || 0;
+			totalCafe += r.crops?.total_cafe || 0;
+			totalRubber += r.crops?.total_rubber || 0;
+			totalFruit += r.crops?.fruit_tree || 0;
+			totalHerb += r.crops?.total_herb_area || 0;
+			totalAnimals += r.livestock?.total_animals || 0;
+			totalFishPond += r.aquaculture?.fish_pond || 0;
+			totalFishCage += r.aquaculture?.fish_cage || 0;
+		});
+
+		return {
+			totalHh,
+			totalCropsArea,
+			totalCafe,
+			totalRubber,
+			totalFruit,
+			totalHerb,
+			totalAnimals,
+			totalFishPond,
+			totalFishCage,
+		};
+	}, [villageData]);
+
+	// Hàm xuất báo cáo thống kê Excel chuẩn QLHK
+	const handleExportStatsExcel = () => {
+		try {
+			const titleRow = [
+				"UBND XÃ ĐĂK HÀ - BẢNG THỐNG KÊ SO SÁNH NÔNG NGHIỆP CÁC THÔN",
+			];
+			const emptyRow: unknown[] = [];
+			const headers = [
+				"STT",
+				"Tên Thôn",
+				"Số Hộ",
+				"Tổng Cây Trồng (ha)",
+				"Cà Phê (ha)",
+				"Cao Su (ha)",
+				"Cây Ăn Quả (ha)",
+				"Dược Liệu (ha)",
+				"Tổng Vật Nuôi (con)",
+				"Cá Ao (ha)",
+				"Cá Lồng (lồng)",
+			];
+
+			const dataRows = villageData.map((row, idx) => [
+				idx + 1,
+				row.village_name,
+				row.household_count,
+				row.crops?.total_crops_area || 0,
+				row.crops?.total_cafe || 0,
+				row.crops?.total_rubber || 0,
+				row.crops?.fruit_tree || 0,
+				row.crops?.total_herb_area || 0,
+				row.livestock?.total_animals || 0,
+				row.aquaculture?.fish_pond || 0,
+				row.aquaculture?.fish_cage || 0,
+			]);
+
+			const totalRow = [
+				"",
+				"TỔNG CỘNG TOÀN XÃ",
+				villageTotals.totalHh,
+				villageTotals.totalCropsArea,
+				villageTotals.totalCafe,
+				villageTotals.totalRubber,
+				villageTotals.totalFruit,
+				villageTotals.totalHerb,
+				villageTotals.totalAnimals,
+				villageTotals.totalFishPond,
+				villageTotals.totalFishCage,
+			];
+
+			const aoaData = [titleRow, emptyRow, headers, ...dataRows, totalRow];
+			const ws = XLSX.utils.aoa_to_sheet(aoaData);
+
+			ws["!cols"] = [
+				{ wch: 6 },
+				{ wch: 25 },
+				{ wch: 12 },
+				{ wch: 20 },
+				{ wch: 14 },
+				{ wch: 14 },
+				{ wch: 16 },
+				{ wch: 16 },
+				{ wch: 20 },
+				{ wch: 14 },
+				{ wch: 14 },
+			];
+
+			ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }];
+
+			const wb = XLSX.utils.book_new();
+			XLSX.utils.book_append_sheet(wb, ws, "SoSanhCacThon");
+			const filename = `BaoCao_ThongKe_NongNghiep_DakHa_${new Date().toISOString().slice(0, 10)}.xlsx`;
+			XLSX.writeFile(wb, filename);
+		} catch (err) {
+			console.error("Export error, calling backend API:", err);
+			// Fallback gọi API Backend
+			analyticsApi
+				.exportComparison()
+				.then((blob) => {
+					const url = window.URL.createObjectURL(blob);
+					const a = document.createElement("a");
+					a.href = url;
+					a.download = `BangSoSanhCacThon_${new Date().toISOString().split("T")[0]}.xlsx`;
+					document.body.appendChild(a);
+					a.click();
+					window.URL.revokeObjectURL(url);
+					document.body.removeChild(a);
+				})
+				.catch((e) => {
+					console.error("Backend export error:", e);
+					alert("Không thể xuất file Excel thống kê.");
+				});
+		}
+	};
+
 	if (loading && !overview) {
 		return (
 			<div className="py-24 text-center text-slate-400 dark:text-slate-500">
 				<div className="w-10 h-10 border-3 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mx-auto mb-3" />
 				<div className="text-base font-bold text-slate-700 dark:text-slate-200">
-					Đang tổng hợp 25 chỉ số Nông thôn mới...
+					Đang tổng hợp 18 chỉ số nông nghiệp Đăk Hà...
 				</div>
 				<p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-					Đồng bộ số liệu diện tích và đàn vật nuôi xã Đăk Hà
+					Đồng bộ số liệu diện tích và đàn vật nuôi từ CSDL
 				</p>
 			</div>
 		);
@@ -256,74 +401,65 @@ export const AnalyticsDashboard: React.FC = () => {
 		);
 	}
 
-	const handleExportComparisonExcel = async () => {
-		try {
-			const blob = await analyticsApi.exportComparison();
-			const url = window.URL.createObjectURL(blob);
-			const a = document.createElement("a");
-			a.href = url;
-			a.download = `BangSoSanhCacThon_${new Date().toISOString().split("T")[0]}.xlsx`;
-			document.body.appendChild(a);
-			a.click();
-			window.URL.revokeObjectURL(url);
-			document.body.removeChild(a);
-		} catch (err) {
-			console.error(err);
-			alert("Không thể xuất file so sánh các thôn.");
-		}
-	};
-
 	const crops = overview.crops;
-
 	const livestock = overview.livestock;
 	const aqua = overview.aquaculture;
 
 	return (
 		<div className="space-y-6">
-			{/* Top Banner & Filter */}
+			{/* Top Banner & Filter (Vibe tối giản QLHK Ảnh 2) */}
 			<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-150">
 				<div>
-					<div className="flex items-center gap-2.5">
+					<div className="flex items-center gap-2.5 flex-wrap">
 						<span className="px-3 py-1 rounded-xl text-xs font-black bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 uppercase tracking-wider">
-							{scopeName}
+							{selectedVillageName || scopeName || "Toàn xã Đăk Hà"}
 						</span>
+
+						{isUsingCachedData && (
+							<div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 rounded-xl text-xs font-bold shadow-xs animate-in fade-in">
+								<Zap className="w-3.5 h-3.5 text-amber-500" strokeWidth={1.5} />
+								<span>Đang chạy trên dữ liệu ngoại tuyến (Offline Cache)</span>
+							</div>
+						)}
+
 						<h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-							{isUsingCachedData && (
-								<span className="inline-flex items-center gap-1 text-xs bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800 font-medium">
-									<Zap
-										className="w-3.5 h-3.5 text-amber-500"
-										strokeWidth={1.5}
-									/>
-									<span>Ngoại tuyến</span>
-								</span>
-							)}
 							<BarChart3
 								className="w-6 h-6 text-emerald-600 dark:text-emerald-400"
 								strokeWidth={1.5}
 							/>
-							<span>Thống Kê</span>
+							<span>Thống Kê Nông Nghiệp & Nông Thôn Mới</span>
 						</h2>
 					</div>
 					<p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-						Hệ thống 25 chỉ số thống kê diện tích cây trồng, tổng đàn vật nuôi
-						và diện tích thủy sản
+						Tổng hợp quy mô 18 chỉ tiêu cây trồng, vật nuôi và mô hình thủy sản
+						tại {villages.length > 0 ? `${villages.length} thôn` : "các thôn"} Xã Đăk Hà
 					</p>
 				</div>
 
 				<div className="flex items-center gap-3">
-					{user?.role === "admin" && (
-						<button
-							type="button"
-							onClick={() => {
-								setSelectedVillageId("");
-								setActiveTab("villages");
-							}}
-							className="h-10 flex items-center gap-1.5 px-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700"
-						>
-							<ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
-							<span>Quay lại danh sách thôn</span>
-						</button>
-					)}
+					{user?.role === "admin" &&
+						(selectedVillageId || scopeName !== "Toàn xã") && (
+							<button
+								type="button"
+								onClick={() => {
+									setSelectedVillageId("");
+									setActiveTab("villages");
+								}}
+								className="h-10 flex items-center justify-center gap-1.5 px-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-[0.99] cursor-pointer border border-slate-200 dark:border-slate-700"
+							>
+								<ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
+								<span>Quay lại danh sách thôn</span>
+							</button>
+						)}
+
+					<button
+						type="button"
+						onClick={handleExportStatsExcel}
+						className="h-10 flex items-center gap-1.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold transition-all active:scale-[0.99] shadow-xs cursor-pointer"
+					>
+						<Download className="w-4 h-4" strokeWidth={1.5} />
+						<span>Xuất Báo Cáo Excel</span>
+					</button>
 
 					<button
 						type="button"
@@ -332,497 +468,419 @@ export const AnalyticsDashboard: React.FC = () => {
 						className="p-2.5 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors cursor-pointer"
 					>
 						<RefreshCw
-							className={`w-4 h-4 ${loading ? "animate-spin text-emerald-600 dark:text-emerald-400" : ""}`}
+							strokeWidth={1.5}
+							className={`w-4 h-4 ${loading ? "animate-spin text-emerald-600" : ""}`}
 						/>
 					</button>
 				</div>
 			</div>
 
-			{/* 4 Hero KPI Cards */}
+			{/* 4 Thẻ KPI Tóm Tắt (Layout chuẩn Ảnh 1: text trái, icon outline phải) */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-				{/* Card 1: Hộ Nông Nghiệp */}
-				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center gap-4 transition-all">
-					<div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/60 dark:border-indigo-800/60">
-						<Users className="w-5 h-5" strokeWidth={1.5} />
-					</div>
+				{/* KPI 1: Tổng số Hộ */}
+				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center justify-between">
 					<div>
-						<div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-							Tổng số hộ
+						<div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+							TỔNG HỘ NÔNG NGHIỆP
 						</div>
-						<div className="text-2xl font-black text-slate-900 dark:text-white font-mono tabular-nums mt-0.5">
-							{cryptoHelper.formatCount(overview.household_count, "hộ")}
+						<div className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">
+							{overview.household_count.toLocaleString("vi-VN")} Hộ
 						</div>
-						<div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-							Đã kê khai trong CSDL
+						<div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
+							Đã kê khai 18 chỉ số CSDL
 						</div>
 					</div>
+					<Building2
+						className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0"
+						strokeWidth={1.5}
+					/>
 				</div>
 
-				{/* Card 2: Tổng Diện Tích Cây Trồng */}
-				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center gap-4 transition-all">
-					<div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/60 dark:border-emerald-800/60">
-						<Trees className="w-5 h-5" strokeWidth={1.5} />
-					</div>
+				{/* KPI 2: Tổng Diện Tích Cây Trồng */}
+				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center justify-between">
 					<div>
-						<div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-							Tổng cây trồng
+						<div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+							TỔNG DIỆN TÍCH CÂY TRỒNG
 						</div>
-						<div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums mt-0.5">
+						<div className="text-2xl font-black font-mono mt-1 text-teal-600 dark:text-teal-400">
 							{cryptoHelper.formatArea(crops.total_crops_area)}
 						</div>
-						<div className="text-xs text-emerald-700 dark:text-emerald-300 font-bold mt-0.5">
-							12 chỉ tiêu diện tích
+						<div className="text-[11px] text-teal-700 dark:text-teal-300 font-semibold mt-0.5">
+							12 chỉ tiêu diện tích canh tác
 						</div>
 					</div>
+					<Trees
+						className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0"
+						strokeWidth={1.5}
+					/>
 				</div>
 
-				{/* Card 3: Tổng Đàn Vật Nuôi */}
-				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center gap-4 transition-all">
-					<div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/60 dark:border-amber-800/60">
-						<PawPrint className="w-5 h-5" strokeWidth={1.5} />
-					</div>
+				{/* KPI 3: Tổng Đàn Vật Nuôi */}
+				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center justify-between">
 					<div>
-						<div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-							Tổng đàn vật nuôi
+						<div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+							TỔNG ĐÀN VẬT NUÔI
 						</div>
-						<div className="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono tabular-nums mt-0.5">
+						<div className="text-2xl font-black font-mono mt-1 text-amber-600 dark:text-amber-400">
 							{cryptoHelper.formatCount(livestock.total_animals, "con")}
 						</div>
-						<div className="text-xs text-amber-700 dark:text-amber-300 font-bold mt-0.5">
-							4 loại gia súc, gia cầm
+						<div className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold mt-0.5">
+							Gia súc: {livestock.total_cattle + livestock.pig} • Gia cầm:{" "}
+							{livestock.poultry}
 						</div>
 					</div>
+					<PawPrint
+						className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0"
+						strokeWidth={1.5}
+					/>
 				</div>
 
-				{/* Card 4: Thủy Sản */}
-				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center gap-4 transition-all">
-					<div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-200/60 dark:border-sky-800/60">
-						<Fish className="w-5 h-5" strokeWidth={1.5} />
-					</div>
+				{/* KPI 4: Thủy Sản */}
+				<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center justify-between">
 					<div>
-						<div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-							Thủy sản
+						<div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+							THỦY SẢN & MẶT NƯỚC
 						</div>
-						<div className="text-2xl font-black text-sky-600 dark:text-sky-400 font-mono tabular-nums mt-0.5">
+						<div className="text-2xl font-black font-mono mt-1 text-purple-600 dark:text-purple-400">
 							{cryptoHelper.formatArea(aqua.fish_pond)}
 						</div>
-						<div className="text-xs text-sky-700 dark:text-sky-300 font-bold mt-0.5">
-							+ {cryptoHelper.formatCount(aqua.fish_cage, "lồng")}
+						<div className="text-[11px] text-purple-700 dark:text-purple-300 font-semibold mt-0.5">
+							+ {cryptoHelper.formatCount(aqua.fish_cage, "lồng")} nuôi lồng bè
 						</div>
 					</div>
+					<Fish
+						className="w-6 h-6 text-slate-400 dark:text-slate-500 shrink-0"
+						strokeWidth={1.5}
+					/>
 				</div>
 			</div>
 
-			{/* SECTION 1: CÂY TRỒNG (12 Chỉ Số) */}
-			<div className="space-y-4">
-				<div className="flex items-center gap-2.5">
-					<div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-						<Trees className="w-4.5 h-4.5" />
-					</div>
-					<h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
-						1. Cơ Cấu Cây Trồng (Tổng:{" "}
-						{cryptoHelper.formatArea(crops.total_crops_area)})
-					</h3>
-				</div>
-
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-					{/* Cà phê Donut Card */}
-					<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4 transition-colors duration-150">
-						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-2">
-								<span className="w-3 h-3 rounded-full bg-amber-500" />
-								<h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
-									Cà Phê (Tổng Diện Tích)
-								</h4>
-							</div>
-							<span className="text-sm font-black font-mono tabular-nums px-3 py-1 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 rounded-xl border border-amber-200 dark:border-amber-800">
-								{cryptoHelper.formatArea(crops.total_cafe)}
-							</span>
-						</div>
-
-						<MiniDonut
-							val1={crops.cafe_household}
-							label1="Hộ gia đình"
-							color1="#d97706"
-							val2={crops.cafe_contracted}
-							label2="Nhận khoán"
-							color2="#f59e0b"
-							unit="ha"
-						/>
-					</div>
-
-					{/* Cao su Donut Card */}
-					<div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4 transition-colors duration-150">
-						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-2">
-								<span className="w-3 h-3 rounded-full bg-emerald-500" />
-								<h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
-									Cao Su (Tổng Diện Tích)
-								</h4>
-							</div>
-							<span className="text-sm font-black font-mono tabular-nums px-3 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 rounded-xl border border-emerald-200 dark:border-emerald-800">
-								{cryptoHelper.formatArea(crops.total_rubber)}
-							</span>
-						</div>
-
-						<MiniDonut
-							val1={crops.rubber_household}
-							label1="Hộ gia đình"
-							color1="#059669"
-							val2={crops.rubber_contracted}
-							label2="Nhận khoán"
-							color2="#34d399"
-							unit="ha"
-						/>
-					</div>
-				</div>
-
-				{/* 4 Cards: Cây Ăn Quả, Mắc Ca, Lúa Nước, Cây Hàng Năm Khác */}
-				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-					<div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-150">
-						<div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-							Cây ăn quả
-						</div>
-						<div className="text-2xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
-							{cryptoHelper.formatArea(crops.fruit_tree)}
-						</div>
-						<p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-							Sầu riêng, mít, bơ, cam...
-						</p>
-					</div>
-
-					<div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-150">
-						<div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-							Cây Mắc Ca
-						</div>
-						<div className="text-2xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
-							{cryptoHelper.formatArea(crops.macadamia)}
-						</div>
-						<p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-							Cây công nghiệp giá trị cao
-						</p>
-					</div>
-
-					<div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-150">
-						<div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-							Lúa nước
-						</div>
-						<div className="text-2xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
-							{cryptoHelper.formatArea(crops.wet_rice)}
-						</div>
-						<p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-							Lúa 2 vụ / 1 vụ
-						</p>
-					</div>
-
-					<div className="bg-white dark:bg-slate-900 p-4.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-150">
-						<div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-							Cây hàng năm khác
-						</div>
-						<div className="text-2xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
-							{cryptoHelper.formatArea(crops.other_annual_crops)}
-						</div>
-						<p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-							Ngô, sắn, khoai, hoa màu
-						</p>
-					</div>
-				</div>
-
-				{/* Dược Liệu Breakdown Box */}
-				<div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 space-y-4">
-					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-3">
-						<div className="flex items-center gap-3">
-							<div className="w-10 h-10 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center">
-								<Flower2 className="w-5 h-5" strokeWidth={1.5} />
-							</div>
-							<div>
-								<h4 className="font-black text-base text-slate-900 dark:text-white">
-									Cây Dược Liệu Đăk Hà (4 Loại Con)
-								</h4>
-								<p className="text-xs text-slate-500 dark:text-slate-400">
-									Cây trồng bản địa dược liệu thuộc đề án phát triển NTM xã Đăk
-									Hà
-								</p>
-							</div>
-						</div>
-						<div className="text-left sm:text-right">
-							<span className="text-xs text-teal-700 dark:text-teal-400 uppercase font-bold tracking-wider block">
-								Tổng diện tích dược liệu
-							</span>
-							<span className="text-2xl sm:text-3xl font-black text-teal-600 dark:text-teal-400 font-mono tabular-nums">
-								{cryptoHelper.formatArea(crops.total_herb_area)}
-							</span>
-						</div>
-					</div>
-
-					<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-						<div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-							<div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-								Đinh lăng
-							</div>
-							<div className="text-xl font-black font-mono tabular-nums mt-1 text-slate-900 dark:text-white">
-								{cryptoHelper.formatArea(crops.herb_dinh_lang)}
-							</div>
-						</div>
-
-						<div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-							<div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-								Gừng
-							</div>
-							<div className="text-xl font-black font-mono tabular-nums mt-1 text-slate-900 dark:text-white">
-								{cryptoHelper.formatArea(crops.herb_gung)}
-							</div>
-						</div>
-
-						<div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-							<div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-								Nghệ
-							</div>
-							<div className="text-xl font-black font-mono tabular-nums mt-1 text-slate-900 dark:text-white">
-								{cryptoHelper.formatArea(crops.herb_nghe)}
-							</div>
-						</div>
-
-						<div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-							<div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-								Sả
-							</div>
-							<div className="text-xl font-black font-mono tabular-nums mt-1 text-slate-900 dark:text-white">
-								{cryptoHelper.formatArea(crops.herb_sa)}
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			{/* SECTION 2 & 3: VẬT NUÔI & THỦY SẢN */}
-			<div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-				{/* Vật nuôi (7 cols) */}
-				<div className="lg:col-span-7 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4 transition-colors duration-150">
+			{/* Hàng 2: Biểu Đồ & Cơ Cấu 2 Panel Lớn (Vibe tối giản QLHK Ảnh 2) */}
+			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+				{/* PANEL 1: CÂY TRỒNG (12 Chỉ Số) */}
+				<div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4">
 					<div className="flex items-center justify-between">
-						<div className="flex items-center gap-2.5">
-							<div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-xs">
-								<PawPrint className="w-4.5 h-4.5" strokeWidth={1.5} />
-							</div>
-							<h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
-								2. Tổng Đàn Vật Nuôi (
-								{cryptoHelper.formatCount(livestock.total_animals, "con")})
-							</h3>
+						<div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
+							<PieChart
+								className="w-4 h-4 text-emerald-500"
+								strokeWidth={1.5}
+							/>
+							<span>Cơ Cấu Cây Trồng Chuẩn Xã Đăk Hà</span>
 						</div>
-					</div>
-
-					{/* Cattle Summary Box */}
-					<div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 flex items-center justify-between">
-						<div>
-							<span className="text-xs font-bold text-amber-700 dark:text-amber-400">
-								Tổng Đàn Trâu Bò (Gia súc lớn):
-							</span>
-							<p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-								Trâu: {livestock.buffalo} con • Bò: {livestock.cow} con
-							</p>
-						</div>
-						<span className="text-lg font-black font-mono tabular-nums text-amber-700 dark:text-amber-400">
-							{cryptoHelper.formatCount(livestock.total_cattle, "con")}
+						<span className="text-xs font-mono text-slate-400">
+							12 Cây trồng • {cryptoHelper.formatArea(crops.total_crops_area)}
 						</span>
 					</div>
 
-					<div className="space-y-2.5 pt-1">
+					{/* MiniDonut phân bổ Cây công nghiệp vs Cây khác */}
+					<MiniDonut
+						val1={crops.total_cafe + crops.total_rubber}
+						label1="Cây CN"
+						color1="#10b981"
+						val2={Math.max(
+							0,
+							crops.total_crops_area - (crops.total_cafe + crops.total_rubber),
+						)}
+						label2="Khác/Dược liệu"
+						color2="#f59e0b"
+						unit="ha"
+					/>
+
+					{/* Danh sách thanh tiến độ mỏng tối giản */}
+					<div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+						<ProgressBar
+							label="Cà phê (Hộ gia đình)"
+							value={crops.cafe_household}
+							total={crops.total_crops_area}
+							colorClass="bg-emerald-500"
+							unit="ha"
+						/>
+						<ProgressBar
+							label="Cà phê (Nhận khoán)"
+							value={crops.cafe_contracted}
+							total={crops.total_crops_area}
+							colorClass="bg-amber-500"
+							unit="ha"
+						/>
+						<ProgressBar
+							label="Cao su (Hộ gia đình)"
+							value={crops.rubber_household}
+							total={crops.total_crops_area}
+							colorClass="bg-teal-500"
+							unit="ha"
+						/>
+						<ProgressBar
+							label="Cao su (Nhận khoán)"
+							value={crops.rubber_contracted}
+							total={crops.total_crops_area}
+							colorClass="bg-teal-400"
+							unit="ha"
+						/>
+						<ProgressBar
+							label="Cây ăn quả (Sầu riêng, mít, bơ...)"
+							value={crops.fruit_tree}
+							total={crops.total_crops_area}
+							colorClass="bg-teal-600"
+							unit="ha"
+						/>
+						<ProgressBar
+							label="Cây Mắc ca"
+							value={crops.macadamia}
+							total={crops.total_crops_area}
+							colorClass="bg-sky-500"
+							unit="ha"
+						/>
+						<ProgressBar
+							label="Dược liệu: Đinh lăng"
+							value={crops.herb_dinh_lang}
+							total={crops.total_crops_area}
+							colorClass="bg-purple-500"
+							unit="ha"
+						/>
+						<ProgressBar
+							label="Dược liệu: Gừng, Nghệ, Sả"
+							value={crops.herb_gung + crops.herb_nghe + crops.herb_sa}
+							total={crops.total_crops_area}
+							colorClass="bg-violet-500"
+							unit="ha"
+						/>
+						<ProgressBar
+							label="Lúa nước"
+							value={crops.wet_rice}
+							total={crops.total_crops_area}
+							colorClass="bg-blue-500"
+							unit="ha"
+						/>
+						<ProgressBar
+							label="Cây hàng năm khác"
+							value={crops.other_annual_crops}
+							total={crops.total_crops_area}
+							colorClass="bg-slate-500"
+							unit="ha"
+						/>
+					</div>
+				</div>
+
+				{/* PANEL 2: VẬT NUÔI & THỦY SẢN (6 Chỉ Số) */}
+				<div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
+							<Shield className="w-4 h-4 text-blue-500" strokeWidth={1.5} />
+							<span>Cơ Cấu Chăn Nuôi & Thủy Sản</span>
+						</div>
+						<span className="text-xs font-mono text-slate-400">
+							4 Vật nuôi • 2 Thủy sản
+						</span>
+					</div>
+
+					{/* MiniDonut phân bổ Gia súc vs Gia cầm */}
+					<MiniDonut
+						val1={livestock.total_cattle + livestock.pig}
+						label1="Gia súc"
+						color1="#3b82f6"
+						val2={livestock.poultry}
+						label2="Gia cầm"
+						color2="#ec4899"
+						unit="con"
+					/>
+
+					{/* Danh sách thanh tiến độ mỏng tối giản */}
+					<div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
 						<ProgressBar
 							label="Đàn Gia Cầm (Gà, Vịt, Ngan)"
 							value={livestock.poultry}
-							max={livestock.total_animals}
-							colorClass="bg-amber-500"
+							total={livestock.total_animals}
+							colorClass="bg-pink-500"
 							unit="con"
 						/>
 						<ProgressBar
 							label="Đàn Heo"
 							value={livestock.pig}
-							max={livestock.total_animals}
+							total={livestock.total_animals}
 							colorClass="bg-rose-500"
 							unit="con"
 						/>
 						<ProgressBar
 							label="Đàn Bò"
 							value={livestock.cow}
-							max={livestock.total_animals}
-							colorClass="bg-amber-600"
+							total={livestock.total_animals}
+							colorClass="bg-blue-600"
 							unit="con"
 						/>
 						<ProgressBar
 							label="Đàn Trâu"
 							value={livestock.buffalo}
-							max={livestock.total_animals}
+							total={livestock.total_animals}
 							colorClass="bg-slate-600"
 							unit="con"
 						/>
-					</div>
-				</div>
-
-				{/* Thủy sản (5 cols) */}
-				<div className="lg:col-span-5 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between transition-colors duration-150">
-					<div>
-						<div className="flex items-center gap-2.5 mb-4">
-							<div className="w-8 h-8 rounded-xl bg-sky-600 text-white flex items-center justify-center shadow-xs">
-								<Fish className="w-4.5 h-4.5" />
-							</div>
-							<h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
-								3. Nuôi Trồng Thủy Sản
-							</h3>
-						</div>
-
-						<div className="space-y-3">
-							<div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200/90 dark:border-slate-800">
-								<div className="text-xs font-bold text-sky-700 dark:text-sky-400">
-									Nuôi Cá Ao Hồ (Diện tích)
-								</div>
-								<div className="text-2xl font-black font-mono tabular-nums text-sky-700 dark:text-sky-400 mt-1">
-									{cryptoHelper.formatArea(aqua.fish_pond)}
-								</div>
-								<p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-									Mặt nước nuôi thả cá truyền thống
-								</p>
-							</div>
-
-							<div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200/90 dark:border-slate-800">
-								<div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-									Nuôi Cá Lồng Bè (Số lồng)
-								</div>
-								<div className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white mt-1">
-									{cryptoHelper.formatCount(aqua.fish_cage, "lồng")}
-								</div>
-								<p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-									Lồng nuôi cá trên lòng hồ thủy điện
-								</p>
-							</div>
-						</div>
-					</div>
-
-					<div className="p-3.5 bg-slate-50 dark:bg-slate-950 rounded-2xl text-xs text-slate-500 dark:text-slate-400 italic border border-slate-200/90 dark:border-slate-800">
-						* Số liệu được cập nhật theo thời gian thực từ CSDL.
+						<ProgressBar
+							label="Nuôi Cá Ao Hồ (Mặt nước nuôi thả)"
+							value={aqua.fish_pond}
+							total={aqua.fish_pond > 0 ? aqua.fish_pond : 1}
+							colorClass="bg-sky-500"
+							unit="ha"
+						/>
+						<ProgressBar
+							label="Nuôi Cá Lồng Bè (Lòng hồ thủy điện)"
+							value={aqua.fish_cage}
+							total={aqua.fish_cage > 0 ? aqua.fish_cage : 1}
+							colorClass="bg-indigo-500"
+							unit="lồng"
+						/>
 					</div>
 				</div>
 			</div>
 
-			{/* SECTION 4: BẢNG SO SÁNH GIỮA CÁC THÔN (Admin) */}
-			{user?.role === "admin" &&
-				!selectedVillageId &&
-				villageData.length > 0 && (
-					<div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden space-y-3 p-5 transition-colors duration-150">
-						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-2.5">
-								<div className="w-8 h-8 rounded-xl bg-slate-800 text-white flex items-center justify-center">
-									<Building2 className="w-4.5 h-4.5" />
-								</div>
-								<div>
-									<h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-										4. Bảng so sánh số liệu các thôn
-									</h3>
-									<p className="text-xs text-slate-500 dark:text-slate-400">
-										So sánh 25 chỉ tiêu nông thôn mới
-									</p>
-								</div>
-							</div>
-							<button
-								type="button"
-								onClick={handleExportComparisonExcel}
-								className="px-3 py-1.5 flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold text-xs rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors border border-emerald-200 dark:border-emerald-800 shrink-0"
-							>
-								<Download className="w-3.5 h-3.5" />
-								<span>Xuất Excel</span>
-							</button>
+			{/* Hàng 3: Bảng Thống Kê So Sánh Giữa Các Thôn (Layout chuẩn QLHK Ảnh 3) */}
+			{villageData.length > 0 && (
+				<div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+					<div className="p-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+						<div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+							<Building2
+								className="w-4 h-4 text-emerald-500"
+								strokeWidth={1.5}
+							/>
+							<span>BẢNG THỐNG KÊ SO SÁNH GIỮA CÁC THÔN</span>
 						</div>
-
-						<div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
-							<table className="w-full min-w-[1060px] text-left border-separate border-spacing-0 text-xs whitespace-nowrap">
-								<thead>
-									<tr className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-black uppercase text-[11px] tracking-wider">
-										<th className="py-3 px-3.5 border-b border-r border-slate-200 dark:border-slate-800 sticky left-0 z-10 bg-slate-50 dark:bg-slate-950 shadow-[4px_0_10px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.25)]">
-											Tên Thôn
-										</th>
-										<th className="py-3 px-3 text-center border-b border-r border-slate-200 dark:border-slate-800">
-											Số Hộ
-										</th>
-										<th className="py-3 px-3 text-right border-b border-r border-slate-200 dark:border-slate-800">
-											Cà Phê (ha)
-										</th>
-										<th className="py-3 px-3 text-right border-b border-r border-slate-200 dark:border-slate-800">
-											Cao Su (ha)
-										</th>
-										<th className="py-3 px-3 text-right border-b border-r border-slate-200 dark:border-slate-800">
-											Cây Ăn Quả
-										</th>
-										<th className="py-3 px-3 text-right border-b border-r border-slate-200 dark:border-slate-800">
-											Dược Liệu
-										</th>
-										<th className="py-3 px-3 text-right border-b border-r border-slate-200 dark:border-slate-800">
-											Tổng Cây (ha)
-										</th>
-										<th className="py-3 px-3 text-right border-b border-r border-slate-200 dark:border-slate-800">
-											Trâu Bò (con)
-										</th>
-										<th className="py-3 px-3 text-right border-b border-r border-slate-200 dark:border-slate-800">
-											Heo (con)
-										</th>
-										<th className="py-3 px-3 text-right border-b border-slate-200 dark:border-slate-800">
-											Gia Cầm (con)
-										</th>
-										<th className="py-3 px-3 text-right border-b border-r border-slate-200 dark:border-slate-800">
-											Cá Ao (ha)
-										</th>
-										<th className="py-3 px-3 text-right border-b border-slate-200 dark:border-slate-800">
-											Cá Lồng
-										</th>
-									</tr>
-								</thead>
-								<tbody className="font-semibold text-slate-700 dark:text-slate-300 text-xs">
-									{villageData.map((v) => (
-										<tr
-											key={v.village_id}
-											className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
-										>
-											<td className="py-3 px-3.5 font-bold text-slate-900 dark:text-slate-100 text-[13.5px] border-b border-r border-slate-100 dark:border-slate-800/60 sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_10px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.25)]">
-												{v.village_name}
-											</td>
-											<td className="py-3 px-3 text-center font-mono tabular-nums font-bold text-indigo-600 dark:text-indigo-400 text-sm border-b border-r border-slate-100 dark:border-slate-800/60">
-												{v.household_count}
-											</td>
-											<td className="py-3 px-3 text-right font-mono tabular-nums border-b border-r border-slate-100 dark:border-slate-800/60">
-												{cryptoHelper.formatArea(v.crops.total_cafe)}
-											</td>
-											<td className="py-3 px-3 text-right font-mono tabular-nums border-b border-r border-slate-100 dark:border-slate-800/60">
-												{cryptoHelper.formatArea(v.crops.total_rubber)}
-											</td>
-											<td className="py-3 px-3 text-right font-mono tabular-nums border-b border-r border-slate-100 dark:border-slate-800/60">
-												{cryptoHelper.formatArea(v.crops.fruit_tree)}
-											</td>
-											<td className="py-3 px-3 text-right font-mono tabular-nums border-b border-r border-slate-100 dark:border-slate-800/60">
-												{cryptoHelper.formatArea(v.crops.total_herb_area)}
-											</td>
-											<td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-emerald-600 dark:text-emerald-400 text-sm border-b border-r border-slate-100 dark:border-slate-800/60">
-												{cryptoHelper.formatArea(v.crops.total_crops_area)}
-											</td>
-											<td className="py-3 px-3 text-right font-mono tabular-nums border-b border-r border-slate-100 dark:border-slate-800/60">
-												{v.livestock.total_cattle}
-											</td>
-											<td className="py-3 px-3 text-right font-mono tabular-nums border-b border-r border-slate-100 dark:border-slate-800/60">
-												{v.livestock.pig}
-											</td>
-											<td className="py-3 px-3 text-right font-mono tabular-nums border-b border-r border-slate-100 dark:border-slate-800/60">
-												{v.livestock.poultry}
-											</td>
-											<td className="py-3 px-3 text-right font-mono tabular-nums border-b border-r border-slate-100 dark:border-slate-800/60">
-												{cryptoHelper.formatArea(v.aquaculture.fish_pond)}
-											</td>
-											<td className="py-3 px-3 text-right font-mono tabular-nums border-b border-slate-100 dark:border-slate-800/60">
-												{v.aquaculture.fish_cage}
-											</td>
-										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
+						<span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-bold">
+							{villageData.length} thôn đơn vị hành chính
+						</span>
 					</div>
-				)}
+
+					<div className="overflow-x-auto">
+						<table className="w-full text-left border-collapse text-xs">
+							<thead>
+								<tr className="bg-slate-100/90 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-b border-slate-200/90 dark:border-slate-800 font-black uppercase tracking-wider text-[11px]">
+									<th className="py-3 px-3.5 text-center w-12 border-r border-slate-200/80 dark:border-slate-800">
+										STT
+									</th>
+									<th className="py-3 px-4 border-r border-slate-200/80 dark:border-slate-800 min-w-[180px]">
+										TÊN THÔN
+									</th>
+									<th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 font-bold">
+										SỐ HỘ
+									</th>
+									<th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 font-bold text-emerald-600 dark:text-emerald-400">
+										TỔNG CÂY TRỒNG (HA)
+									</th>
+									<th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800">
+										CÀ PHÊ (HA)
+									</th>
+									<th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800">
+										CAO SU (HA)
+									</th>
+									<th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800">
+										CÂY ĂN QUẢ
+									</th>
+									<th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800">
+										DƯỢC LIỆU
+									</th>
+									<th className="py-3 px-3 text-right border-r border-slate-200/80 dark:border-slate-800 font-bold text-amber-600 dark:text-amber-400">
+										TỔNG VẬT NUÔI (CON)
+									</th>
+									<th className="py-3 px-3 text-right">THỦY SẢN (AO/LỒNG)</th>
+								</tr>
+							</thead>
+							<tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+								{villageData.map((row, idx) => (
+									<tr
+										key={row.village_id}
+										className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-[13px] ${
+											selectedVillageId === row.village_id
+												? "bg-emerald-500/10 dark:bg-emerald-950/40 font-bold"
+												: ""
+										}`}
+									>
+										<td className="py-3 px-3.5 text-center font-mono text-slate-500 border-r border-slate-100 dark:border-slate-800/60">
+											{idx + 1}
+										</td>
+										<td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 border-r border-slate-100 dark:border-slate-800/60">
+											{row.village_name}
+										</td>
+										<td className="py-3 px-3 text-right font-mono font-bold tabular-nums border-r border-slate-100 dark:border-slate-800/60">
+											{row.household_count.toLocaleString("vi-VN")}
+										</td>
+										<td className="py-3 px-3 text-right font-mono font-bold tabular-nums text-emerald-600 dark:text-emerald-400 border-r border-slate-100 dark:border-slate-800/60">
+											{cryptoHelper.formatArea(
+												row.crops?.total_crops_area || 0,
+											)}
+										</td>
+										<td className="py-3 px-3 text-right font-mono tabular-nums border-r border-slate-100 dark:border-slate-800/60">
+											{cryptoHelper.formatArea(row.crops?.total_cafe || 0)}
+										</td>
+										<td className="py-3 px-3 text-right font-mono tabular-nums border-r border-slate-100 dark:border-slate-800/60">
+											{cryptoHelper.formatArea(row.crops?.total_rubber || 0)}
+										</td>
+										<td className="py-3 px-3 text-right font-mono tabular-nums border-r border-slate-100 dark:border-slate-800/60">
+											{cryptoHelper.formatArea(row.crops?.fruit_tree || 0)}
+										</td>
+										<td className="py-3 px-3 text-right font-mono tabular-nums border-r border-slate-100 dark:border-slate-800/60">
+											{cryptoHelper.formatArea(
+												row.crops?.total_herb_area || 0,
+											)}
+										</td>
+										<td className="py-3 px-3 text-right font-mono font-bold tabular-nums text-amber-600 dark:text-amber-400 border-r border-slate-100 dark:border-slate-800/60">
+											{cryptoHelper.formatCount(
+												row.livestock?.total_animals || 0,
+												"con",
+											)}
+										</td>
+										<td className="py-3 px-3 text-right font-mono tabular-nums">
+											<span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+												{cryptoHelper.formatArea(
+													row.aquaculture?.fish_pond || 0,
+												)}{" "}
+												/ {row.aquaculture?.fish_cage || 0} lồng
+											</span>
+										</td>
+									</tr>
+								))}
+							</tbody>
+							<tfoot className="bg-slate-100/80 dark:bg-slate-800/80 font-black text-slate-900 dark:text-white border-t-2 border-slate-300 dark:border-slate-700">
+								<tr className="text-[13px]">
+									<td
+										colSpan={2}
+										className="py-3.5 px-4 text-center font-black uppercase tracking-wider"
+									>
+										TỔNG CỘNG TOÀN XÃ
+									</td>
+									<td className="py-3.5 px-3 text-right font-mono font-black tabular-nums border-r border-slate-200 dark:border-slate-700">
+										{villageTotals.totalHh.toLocaleString("vi-VN")}
+									</td>
+									<td className="py-3.5 px-3 text-right font-mono font-black tabular-nums text-emerald-600 dark:text-emerald-400 border-r border-slate-200 dark:border-slate-700">
+										{cryptoHelper.formatArea(villageTotals.totalCropsArea)}
+									</td>
+									<td className="py-3.5 px-3 text-right font-mono font-black tabular-nums border-r border-slate-200 dark:border-slate-700">
+										{cryptoHelper.formatArea(villageTotals.totalCafe)}
+									</td>
+									<td className="py-3.5 px-3 text-right font-mono font-black tabular-nums border-r border-slate-200 dark:border-slate-700">
+										{cryptoHelper.formatArea(villageTotals.totalRubber)}
+									</td>
+									<td className="py-3.5 px-3 text-right font-mono font-black tabular-nums border-r border-slate-200 dark:border-slate-700">
+										{cryptoHelper.formatArea(villageTotals.totalFruit)}
+									</td>
+									<td className="py-3.5 px-3 text-right font-mono font-black tabular-nums border-r border-slate-200 dark:border-slate-700">
+										{cryptoHelper.formatArea(villageTotals.totalHerb)}
+									</td>
+									<td className="py-3.5 px-3 text-right font-mono font-black tabular-nums text-amber-600 dark:text-amber-400 border-r border-slate-200 dark:border-slate-700">
+										{cryptoHelper.formatCount(
+											villageTotals.totalAnimals,
+											"con",
+										)}
+									</td>
+									<td className="py-3.5 px-3 text-right font-mono font-black tabular-nums">
+										<span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+											{cryptoHelper.formatArea(villageTotals.totalFishPond)} /{" "}
+											{villageTotals.totalFishCage} lồng
+										</span>
+									</td>
+								</tr>
+							</tfoot>
+						</table>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };
