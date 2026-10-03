@@ -32,7 +32,6 @@ describe("SidebarNavigation Contextual Filtering", () => {
 
 		// Phải có đúng 4 nút
 		expect(screen.getByText("Quản Lý Thôn")).toBeInTheDocument();
-		expect(screen.getByText("Quản lý các thôn xã Đăk Hà")).toBeInTheDocument();
 		expect(screen.getByText("Thùng Rác")).toBeInTheDocument();
 		expect(screen.getByText("Nhật Ký Hoạt Động")).toBeInTheDocument();
 		expect(screen.getByText("Cài Đặt Hệ Thống")).toBeInTheDocument();
@@ -60,7 +59,6 @@ describe("SidebarNavigation Contextual Filtering", () => {
 		// Phải có đúng 5 nút
 		expect(screen.getByText("Quản Lý Thôn")).toBeInTheDocument();
 		expect(screen.getByText("Thống Kê")).toBeInTheDocument();
-		expect(screen.getByText("Toàn xã Đăk Hà")).toBeInTheDocument();
 		expect(screen.getByText("Chính")).toBeInTheDocument();
 		expect(screen.getByText("Thùng Rác")).toBeInTheDocument();
 		expect(screen.getByText("Nhật Ký Hoạt Động")).toBeInTheDocument();
@@ -87,11 +85,8 @@ describe("SidebarNavigation Contextual Filtering", () => {
 
 		// Kiểm tra đủ 6 nút (không có Nhập / Xuất Excel)
 		expect(screen.getByText("Quản Lý Thôn")).toBeInTheDocument();
-		expect(screen.getByText("Quay lại danh sách thôn")).toBeInTheDocument();
 		expect(screen.getByText("Thống Kê")).toBeInTheDocument();
-		expect(screen.getAllByText("Thôn Kon Đào").length).toBeGreaterThanOrEqual(
-			1,
-		);
+		expect(screen.getByText("Chính")).toBeInTheDocument();
 		expect(screen.getByText("Hộ Nông Nghiệp")).toBeInTheDocument();
 		expect(screen.getByText("Thùng Rác")).toBeInTheDocument();
 		expect(screen.getByText("Nhật Ký Hoạt Động")).toBeInTheDocument();

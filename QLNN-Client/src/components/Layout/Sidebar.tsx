@@ -19,7 +19,6 @@ interface NavItem {
 	id: string;
 	label: string;
 	icon: React.ComponentType<LucideProps>;
-	desc: string;
 	badge?: string;
 }
 
@@ -32,7 +31,6 @@ export const Sidebar: React.FC = () => {
 		toggleSidebar,
 		selectedVillageId,
 		setSelectedVillageId,
-		selectedVillageName,
 	} = useApp();
 
 	useEffect(() => {
@@ -60,32 +58,27 @@ export const Sidebar: React.FC = () => {
 						id: "villages",
 						label: "Quản Lý Thôn",
 						icon: MapIcon,
-						desc: "Quản lý các thôn xã Đăk Hà",
 					},
 					{
 						id: "analytics",
 						label: "Thống Kê",
 						icon: BarChart3,
-						desc: "Toàn xã Đăk Hà",
 						badge: "Chính",
 					},
 					{
 						id: "recycle-bin",
 						label: "Thùng Rác",
 						icon: Trash2,
-						desc: "Quản lý hộ dân đã xóa",
 					},
 					{
 						id: "audit",
 						label: "Nhật Ký Hoạt Động",
 						icon: History,
-						desc: "Lịch sử biến động dữ liệu",
 					},
 					{
 						id: "settings",
 						label: "Cài Đặt Hệ Thống",
 						icon: SettingsIcon,
-						desc: "Tài khoản & sao lưu CSDL",
 					},
 				];
 			} else {
@@ -94,67 +87,56 @@ export const Sidebar: React.FC = () => {
 						id: "villages",
 						label: "Quản Lý Thôn",
 						icon: MapIcon,
-						desc: "Quản lý các thôn xã Đăk Hà",
 					},
 					{
 						id: "recycle-bin",
 						label: "Thùng Rác",
 						icon: Trash2,
-						desc: "Quản lý hộ dân đã xóa",
 					},
 					{
 						id: "audit",
 						label: "Nhật Ký Hoạt Động",
 						icon: History,
-						desc: "Lịch sử biến động dữ liệu",
 					},
 					{
 						id: "settings",
 						label: "Cài Đặt Hệ Thống",
 						icon: SettingsIcon,
-						desc: "Tài khoản & sao lưu CSDL",
 					},
 				];
 			}
 		} else {
-			const villageScopeDesc = selectedVillageName || "Thôn đã chọn";
 			navItems = [
 				{
 					id: "villages",
 					label: "Quản Lý Thôn",
 					icon: MapIcon,
-					desc: "Quay lại danh sách thôn",
 				},
 				{
 					id: "analytics",
 					label: "Thống Kê",
 					icon: BarChart3,
-					desc: villageScopeDesc,
 					badge: "Chính",
 				},
 				{
 					id: "households",
 					label: "Hộ Nông Nghiệp",
 					icon: Sprout,
-					desc: villageScopeDesc,
 				},
 				{
 					id: "recycle-bin",
 					label: "Thùng Rác",
 					icon: Trash2,
-					desc: "Quản lý hộ dân đã xóa",
 				},
 				{
 					id: "audit",
 					label: "Nhật Ký Hoạt Động",
 					icon: History,
-					desc: "Lịch sử biến động dữ liệu",
 				},
 				{
 					id: "settings",
 					label: "Cài Đặt Hệ Thống",
 					icon: SettingsIcon,
-					desc: "Tài khoản & sao lưu CSDL",
 				},
 			];
 		}
@@ -164,26 +146,22 @@ export const Sidebar: React.FC = () => {
 				id: "analytics",
 				label: "Thống Kê",
 				icon: BarChart3,
-				desc: "18 chỉ tiêu nông nghiệp",
 				badge: "Chính",
 			},
 			{
 				id: "households",
 				label: "Hộ Nông Nghiệp",
 				icon: Sprout,
-				desc: "Quản lý 18 chỉ số hộ dân",
 			},
 			{
 				id: "recycle-bin",
 				label: "Thùng Rác",
 				icon: Trash2,
-				desc: "Quản lý hộ dân đã xóa",
 			},
 			{
 				id: "audit",
 				label: "Nhật Ký Hoạt Động",
 				icon: History,
-				desc: "Lịch sử biến động dữ liệu",
 			},
 		];
 	}
@@ -191,8 +169,10 @@ export const Sidebar: React.FC = () => {
 	return (
 		<>
 			{!isSidebarCollapsed && (
-				<div
-					className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-30 md:hidden animate-in fade-in duration-200"
+				<button
+					type="button"
+					aria-label="Đóng thanh bên"
+					className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-30 md:hidden animate-in fade-in duration-200 w-full h-full border-0 p-0 cursor-default"
 					onClick={toggleSidebar}
 				/>
 			)}
@@ -256,14 +236,18 @@ export const Sidebar: React.FC = () => {
 											} else {
 												setActiveTab(item.id);
 											}
-											if (typeof window !== "undefined" && window.innerWidth < 768 && !isSidebarCollapsed) {
+											if (
+												typeof window !== "undefined" &&
+												window.innerWidth < 768 &&
+												!isSidebarCollapsed
+											) {
 												toggleSidebar();
 											}
 										}}
 										className={`flex items-center gap-3 rounded-2xl transition-all duration-150 relative cursor-pointer overflow-hidden ${
 											isSidebarCollapsed
-												? "w-12 h-12 justify-center shrink-0 mx-auto"
-												: "w-full py-2.5 px-3 min-h-[48px]"
+												? "w-11 h-11 justify-center shrink-0 mx-auto"
+												: "w-full h-11 px-3"
 										} ${
 											isActive
 												? "bg-emerald-600 text-white shadow-md shadow-emerald-950/30"
@@ -275,20 +259,14 @@ export const Sidebar: React.FC = () => {
 											strokeWidth={1.5}
 										/>
 
-										<div
-											className={`overflow-hidden whitespace-nowrap transition-all duration-200 ease-out text-left ${
-												isSidebarCollapsed
-													? "max-w-0 opacity-0 pointer-events-none hidden"
-													: "flex max-w-[180px] opacity-100 flex-1 flex-col justify-center"
-											}`}
-										>
-											<div className="flex items-center justify-between">
-												<span className="text-[13.5px] tracking-tight font-bold">
+										{!isSidebarCollapsed && (
+											<div className="flex items-center justify-between flex-1 min-w-0">
+												<span className="text-[13.5px] tracking-tight font-bold truncate">
 													{item.label}
 												</span>
 												{item.badge && (
 													<span
-														className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ml-1.5 ${
+														className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ml-1.5 shrink-0 ${
 															isActive
 																? "bg-emerald-800/90 text-emerald-100"
 																: "bg-slate-800 text-slate-300"
@@ -298,25 +276,18 @@ export const Sidebar: React.FC = () => {
 													</span>
 												)}
 											</div>
-											<div
-												className={`text-xs truncate mt-0.5 ${
-													isActive
-														? "text-emerald-100/90"
-														: "text-slate-500 group-hover:text-slate-400"
-												}`}
-											>
-												{item.desc}
-											</div>
-										</div>
+										)}
 									</button>
 
 									{isSidebarCollapsed && (
-										<div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 px-3.5 py-2 bg-slate-900 text-white text-xs font-bold rounded-2xl shadow-2xl border border-slate-700/90 whitespace-nowrap pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
+										<div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-2xl border border-slate-700/90 whitespace-nowrap pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
 											<div className="flex items-center gap-1.5">
-												<span className="text-sm">{item.label}</span>
-											</div>
-											<div className="text-xs text-slate-400 font-medium mt-0.5">
-												{item.desc}
+												<span>{item.label}</span>
+												{item.badge && (
+													<span className="text-[9px] font-bold px-1 py-0.5 rounded bg-emerald-700 text-white uppercase">
+														{item.badge}
+													</span>
+												)}
 											</div>
 										</div>
 									)}
