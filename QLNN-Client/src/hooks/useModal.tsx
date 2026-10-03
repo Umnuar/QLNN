@@ -72,7 +72,7 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({
 											? "bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
 											: modal.type === "success"
 												? "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
-												: "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+												: "bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800"
 								}`}
 							>
 								{modal.type === "danger" || modal.type === "warning" ? (
@@ -95,7 +95,7 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({
 								type="button"
 								onClick={handleCancel}
 								aria-label="Đóng hộp thoại"
-								className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded-lg"
+								className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded-lg cursor-pointer"
 							>
 								<X className="w-5 h-5" />
 							</button>
@@ -106,7 +106,7 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({
 									type="button"
 									onClick={handleCancel}
 									disabled={isLoading}
-									className="h-10 px-4 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 cursor-pointer"
+									className="h-10 px-4 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
 								>
 									{modal.cancelText || "Hủy bỏ"}
 								</button>

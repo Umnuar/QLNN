@@ -30,8 +30,8 @@
 | `P3-APPROVAL-GATE` | Phase 3 | User presentation & formal approval gate | Orchestrator + User | completed | Artifact & User Approval | Formally approved by user |
 | `P4-L1-FOUNDATION` | Phase 4 | Layer 1: Foundation tokens (Tailwind, index.css) | `L1-foundation` | completed | `ui-sync/layer1-tokens.md` | Non-breaking token adoption (Build & Test PASS) |
 | `P4-L2-APP-SHELL` | Phase 4 | Layer 2: App Shell (AppLayout, Header, Sidebar) | `L2-shell` | completed | `ui-sync/layer2-shell.md` | Reskin shell keeping QLNN routes/menus (Build & Test PASS) |
-| `P4-L3-PRIMITIVES` | Phase 4 | Layer 3: Shared primitives (Button, Select, Table, Modal) | `L3-primitives` | in_progress | `ui-sync/layer3-primitives.md` | Reusable UI building blocks |
-| `P4-L4-AUTH` | Phase 4 | Layer 4 Screen Group: Login & Auth | `L4-auth` | pending | `ui-sync/layer4-auth.md` | Login form, error alerts, session |
+| `P4-L3-PRIMITIVES` | Phase 4 | Layer 3: Shared primitives (Button, Select, Table, Modal) | `L3-primitives` | completed | `ui-sync/layer3-primitives.md` | Reusable UI building blocks (Build & Test PASS) |
+| `P4-L4-AUTH` | Phase 4 | Layer 4 Screen Group: Login & Auth | `L4-auth` | in_progress | `ui-sync/layer4-auth.md` | Login form, error alerts, session |
 | `P4-L4-VILLAGES` | Phase 4 | Layer 4 Screen Group: Villages & Territory | `L4-villages` | pending | `ui-sync/layer4-villages.md` | Banner, stat cards, village cards |
 | `P4-L4-HOUSEHOLDS` | Phase 4 | Layer 4 Screen Group: Households & FilterBar & Form | `L4-households` | pending | `ui-sync/layer4-households.md` | 18 agricultural indicators, OCC, Drawer |
 | `P4-L4-ANALYTICS` | Phase 4 | Layer 4 Screen Group: Analytics Dashboard | `L4-analytics` | pending | `ui-sync/layer4-analytics.md` | Summary cards, charts, village comparison |

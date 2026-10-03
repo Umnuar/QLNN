@@ -199,7 +199,7 @@ export function CustomSelect<T extends string | number = string | number>({
 
 	const sizeStyles = {
 		sm: {
-			trigger: "px-2.5 py-1.5 text-xs rounded-xl min-h-[32px]",
+			trigger: "h-8 sm:h-9 px-2.5 text-xs font-semibold rounded-xl",
 			icon: "w-3.5 h-3.5",
 			option: "px-2.5 py-1.5 text-xs",
 		},
@@ -276,7 +276,7 @@ export function CustomSelect<T extends string | number = string | number>({
 									selectedOption.value !== "ALL"
 							)
 								? "border-emerald-500/80 bg-emerald-50/50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700"
-								: "bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-100 hover:border-slate-400 dark:hover:border-slate-600"
+								: "bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 hover:border-slate-300 dark:hover:border-slate-600"
 						}
 	          focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
 	          ${isOpen ? "border-emerald-500 dark:border-emerald-500 ring-2 ring-emerald-500/20" : ""}

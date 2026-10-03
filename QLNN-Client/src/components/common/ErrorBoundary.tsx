@@ -29,14 +29,14 @@ export class ErrorBoundary extends Component<Props, State> {
 		if (this.state.hasError) {
 			if (this.props.fallback) return this.props.fallback;
 			return (
-				<div className="flex flex-col items-center justify-center min-h-screen p-6 text-center bg-slate-50 font-sans">
-					<div className="p-4 bg-rose-100 text-rose-600 rounded-full mb-4">
+				<div className="flex flex-col items-center justify-center min-h-screen p-6 text-center bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100">
+					<div className="p-4 bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-full mb-4">
 						<AlertTriangle className="w-10 h-10" />
 					</div>
-					<h1 className="text-2xl font-bold text-slate-800 mb-2">
+					<h1 className="text-2xl font-bold mb-2">
 						Đã xảy ra sự cố hệ thống
 					</h1>
-					<p className="text-slate-600 mb-6 max-w-md">
+					<p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md text-sm font-medium">
 						Giao diện ứng dụng gặp lỗi không mong muốn. Vui lòng thử tải lại
 						hoặc liên hệ quản trị viên.
 					</p>
@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
 					<button
 						type="button"
 						onClick={() => window.location.reload()}
-						className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow-sm transition-colors cursor-pointer"
+						className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition-colors cursor-pointer text-xs"
 					>
 						<RefreshCw
 							className="w-4 h-4"
