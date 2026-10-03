@@ -1,5 +1,4 @@
 import {
-	ChevronDown,
 	ChevronRight,
 	Edit3,
 	Eye,
@@ -16,8 +15,12 @@ import {
 import React, { useState } from "react";
 import { useApp } from "../../AppContext";
 import type { HouseholdFlat } from "../../types";
-import { cryptoHelper } from "../../utils/cryptoHelper";
 import { TablePagination } from "../common/TablePagination";
+import {
+	NumberCell,
+	TABLE_STYLES,
+	VillageBadge,
+} from "../common/tableStyles";
 
 interface HouseholdTableProps {
 	selectedIds?: string[];
@@ -50,7 +53,6 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 	selectedIds = [],
 	onToggleSelect,
 	onToggleSelectAll,
-
 	readOnly = false,
 	households,
 	loading,
@@ -93,23 +95,6 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 		setShowMasked((prev) => ({ ...prev, [id]: !prev[id] }));
 	};
 
-	const villageColorMap: Record<string, string> = {
-		"Thôn 1":
-			"bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800",
-		"Thôn 2":
-			"bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800",
-		"Thôn 3":
-			"bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-950/80 dark:text-purple-300 dark:border-purple-800",
-		"Thôn 4":
-			"bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800",
-		"Thôn 5":
-			"bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800",
-		"Thôn Đăk Kđêm":
-			"bg-indigo-50 text-indigo-800 border-indigo-200 dark:bg-indigo-950/80 dark:text-indigo-300 dark:border-indigo-800",
-		"Thôn Kon Bơ Bắn":
-			"bg-teal-50 text-teal-800 border-teal-200 dark:bg-teal-950/80 dark:text-teal-300 dark:border-teal-800",
-	};
-
 	// Helper tính toán tổng hợp cho từng hộ dân
 	const computeHouseholdSummary = (hh: HouseholdFlat) => {
 		const totalCrops =
@@ -138,19 +123,172 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 		return { totalCrops, totalHerbs, totalAnimals };
 	};
 
+	// Loading state component
+	const renderLoading = (colSpan: number, label: string) => (
+		<tr>
+			<td
+				colSpan={colSpan}
+				className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
+			>
+				<div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mx-auto mb-2" />
+				<span className="font-bold text-sm">{label}</span>
+			</td>
+		</tr>
+	);
+
+	// Empty state component
+	const renderEmpty = (colSpan: number) => (
+		<tr>
+			<td
+				colSpan={colSpan}
+				className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
+			>
+				<div className="text-base font-bold text-slate-600 dark:text-slate-300">
+					Không tìm thấy hộ nông nghiệp nào
+				</div>
+			</td>
+		</tr>
+	);
+
+	// Primary name cell with optional expand toggle and masked notes
+	const renderNameCell = (
+		hh: HouseholdFlat,
+		allowExpand = false,
+		isExpanded = false,
+	) => (
+		<td className={TABLE_STYLES.stickyLeftName}>
+			<div className="flex items-center gap-1.5">
+				{allowExpand && (
+					<button
+						type="button"
+						onClick={(e) => {
+							e.stopPropagation();
+							toggleRowExpand(hh.id!);
+						}}
+						aria-label={`Chi tiết 18 chỉ số hộ ${hh.full_name}`}
+						title="Xem/thu gọn 18 chỉ số"
+						className={`p-1 rounded-md transition-colors cursor-pointer ${
+							isExpanded
+								? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
+								: "text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+						}`}
+					>
+						<ChevronRight
+							className={`w-3.5 h-3.5 transition-transform duration-200 ${
+								isExpanded
+									? "rotate-90 text-emerald-600 dark:text-emerald-400"
+									: "text-slate-400"
+							}`}
+							strokeWidth={1.5}
+						/>
+					</button>
+				)}
+				<span className={TABLE_STYLES.primaryName}>{hh.full_name}</span>
+			</div>
+			{hh.notes && (
+				<div
+					className={`flex items-center gap-1 mt-0.5 ${TABLE_STYLES.subText} ${
+						allowExpand ? "pl-6" : ""
+					}`}
+				>
+					<button
+						type="button"
+						onClick={(e) => {
+							e.stopPropagation();
+							toggleMask(hh.id!);
+						}}
+						aria-label="Bật/Tắt che thông tin"
+						className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded cursor-pointer"
+						title={showMasked[hh.id!] ? "Che thông tin" : "Hiện thông tin"}
+					>
+						{showMasked[hh.id!] ? (
+							<EyeOff className="w-3 h-3" strokeWidth={1.5} />
+						) : (
+							<Eye className="w-3 h-3" strokeWidth={1.5} />
+						)}
+					</button>
+					<span className="truncate max-w-[200px]">
+						{showMasked[hh.id!]
+							? hh.notes
+							: hh.notes.replace(
+									/\d{4,}/g,
+									(match) => "••••" + match.slice(-3),
+								)}
+					</span>
+				</div>
+			)}
+		</td>
+	);
+
+	// Action buttons cell (32px square buttons)
+	const renderActionCell = (hh: HouseholdFlat) => {
+		if (readOnly) return null;
+		return (
+			<td className={TABLE_STYLES.stickyRightAction}>
+				<div className="flex items-center justify-center gap-1">
+					<button
+						type="button"
+						onClick={(e) => {
+							e.stopPropagation();
+							!isDisconnected && onEdit(hh);
+						}}
+						disabled={isDisconnected}
+						aria-label={`Sửa số liệu hộ ${hh.full_name}`}
+						title="Sửa số liệu hộ này"
+						className={TABLE_STYLES.actionBtnEdit}
+					>
+						<Edit3 className="w-4 h-4" strokeWidth={1.5} />
+					</button>
+					<button
+						type="button"
+						onClick={(e) => {
+							e.stopPropagation();
+							onDelete(hh);
+						}}
+						aria-label={`Xóa hộ ${hh.full_name}`}
+						title="Xóa hộ này"
+						className={TABLE_STYLES.actionBtnDelete}
+					>
+						<Trash2 className="w-4 h-4" strokeWidth={1.5} />
+					</button>
+				</div>
+			</td>
+		);
+	};
+
 	return (
-		<div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors duration-150">
-			{/* Top Segmented Views Bar */}
-			<div className="p-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
-				<div className="flex items-center gap-1.5 p-1 bg-slate-200/60 dark:bg-slate-800/80 rounded-2xl border border-slate-300/60 dark:border-slate-700/60 flex-wrap">
+		<div className={TABLE_STYLES.card}>
+			{/* 1. Header thẻ bo góc + bóng mềm */}
+			<div className={TABLE_STYLES.cardHeader}>
+				<div className="flex items-center gap-2.5">
+					<span className="font-bold text-[14px] text-slate-800 dark:text-slate-100">
+						Danh Sách Hộ Kinh Tế Nông Nghiệp
+					</span>
+					<span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800">
+						{total} bản ghi
+					</span>
+				</div>
+
+				<div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+					<Lightbulb
+						className="w-3.5 h-3.5 text-amber-500 inline shrink-0"
+						strokeWidth={1.5}
+					/>
+					<span>Mẹo: Bấm đúp vào dòng để xem & sửa nhanh 18 chỉ số</span>
+				</div>
+			</div>
+
+			{/* 2. Dải tab con pill bo góc */}
+			<div className="px-3.5 py-2.5 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+				<div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 flex-wrap">
 					{/* Tab 1: Tổng hợp */}
 					<button
 						type="button"
 						onClick={() => setViewMode("overview")}
-						className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+						className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
 							viewMode === "overview"
 								? "bg-emerald-600 text-white shadow-xs"
-								: "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700/50"
+								: "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
 						}`}
 					>
 						<Layers className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -164,7 +302,7 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 						className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
 							viewMode === "crops"
 								? "bg-emerald-600 text-white shadow-xs"
-								: "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700/50"
+								: "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
 						}`}
 					>
 						<Trees className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -177,8 +315,8 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 						onClick={() => setViewMode("herbs")}
 						className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
 							viewMode === "herbs"
-								? "bg-teal-600 text-white shadow-xs"
-								: "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700/50"
+								? "bg-emerald-600 text-white shadow-xs"
+								: "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
 						}`}
 					>
 						<Flower2 className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -191,8 +329,8 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 						onClick={() => setViewMode("livestock")}
 						className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
 							viewMode === "livestock"
-								? "bg-amber-600 text-white shadow-xs"
-								: "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700/50"
+								? "bg-emerald-600 text-white shadow-xs"
+								: "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
 						}`}
 					>
 						<PawPrint className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -205,51 +343,43 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 						onClick={() => setViewMode("aquaculture")}
 						className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
 							viewMode === "aquaculture"
-								? "bg-sky-600 text-white shadow-xs"
-								: "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700/50"
+								? "bg-emerald-600 text-white shadow-xs"
+								: "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
 						}`}
 					>
 						<Fish className="w-3.5 h-3.5" strokeWidth={1.5} />
 						<span>Thủy Sản</span>
 					</button>
 
-					{/* Tab 6: 21 cột đầy đủ */}
+					{/* Tab 6: Tất cả (21 cột đầy đủ) */}
 					<button
 						type="button"
 						onClick={() => setViewMode("full")}
 						className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
 							viewMode === "full"
-								? "bg-slate-800 dark:bg-slate-700 text-white shadow-xs"
-								: "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700/50"
+								? "bg-emerald-600 text-white shadow-xs"
+								: "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
 						}`}
 					>
 						<LayoutGrid className="w-3.5 h-3.5" strokeWidth={1.5} />
-						<span>Tất cả</span>
+						<span>Tất Cả</span>
 					</button>
-				</div>
-
-				<div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium px-2">
-					<Lightbulb
-						className="w-3.5 h-3.5 text-amber-500 inline shrink-0"
-						strokeWidth={1.5}
-					/>
-					<span className="hidden sm:inline">
-						Mẹo: Bấm đúp vào dòng để xem & sửa nhanh 18 chỉ số
-					</span>
 				</div>
 			</div>
 
-			{/* Table Container */}
-			<div className="overflow-x-auto">
-				<table className="w-full min-w-[1060px] text-left border-separate border-spacing-0 text-xs whitespace-nowrap">
+			{/* 3. Vùng chứa bảng cuộn */}
+			<div className={TABLE_STYLES.scrollContainer}>
+				<table className={TABLE_STYLES.table}>
 					{/* ========================================================================= */}
-					{/* 1. VIEW MODE: OVERVIEW (7 CỘT GỌN GÀNG - KHÔNG CUỘN NGANG) */}
+					{/* 1. VIEW MODE: OVERVIEW (TỔNG HỢP GỌN GÀNG) */}
 					{/* ========================================================================= */}
 					{viewMode === "overview" && (
 						<>
 							<thead>
-								<tr className="bg-slate-100/90 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-[11px] font-black uppercase tracking-wider">
-									<th className="py-3 px-2 text-center w-10 border-r border-b border-slate-200/80 dark:border-slate-800 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950">
+								<tr>
+									<th
+										className={`${TABLE_STYLES.thCenter} sticky left-0 z-20 w-10`}
+									>
 										<input
 											type="checkbox"
 											aria-label="Chọn tất cả hộ dân"
@@ -261,10 +391,14 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 											onChange={() => onToggleSelectAll && onToggleSelectAll()}
 										/>
 									</th>
-									<th className="py-3 px-2 text-center w-12 border-r border-b border-slate-200/80 dark:border-slate-800 sticky left-10 z-20 bg-slate-100 dark:bg-slate-950 whitespace-nowrap">
+									<th
+										className={`${TABLE_STYLES.thCenter} sticky left-10 z-20 w-12`}
+									>
 										STT
 									</th>
-									<th className="py-3 px-3.5 min-w-[160px] border-r border-b border-slate-200/80 dark:border-slate-800 sticky left-[88px] z-20 bg-slate-100 dark:bg-slate-950 shadow-[4px_0_10px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.25)] whitespace-nowrap">
+									<th
+										className={`${TABLE_STYLES.th} sticky left-[88px] z-20 min-w-[200px] shadow-[4px_0_10px_-2px_rgba(0,0,0,0.04)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.2)]`}
+									>
 										<div className="flex items-center gap-1.5">
 											{onToggleExpandAll && (
 												<button
@@ -278,10 +412,18 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 															? "Thu gọn tất cả chi tiết"
 															: "Bung tất cả chi tiết"
 													}
-													className="p-1 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+													className={`p-1 rounded-md transition-colors cursor-pointer ${
+														isAllExpanded
+															? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
+															: "text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-200 dark:hover:bg-slate-800"
+													}`}
 												>
-													<ChevronDown
-														className={`w-3.5 h-3.5 transition-transform duration-200 ${isAllExpanded ? "" : "-rotate-90"}`}
+													<ChevronRight
+														className={`w-3.5 h-3.5 transition-transform duration-200 ${
+															isAllExpanded
+																? "rotate-90 text-emerald-600 dark:text-emerald-400"
+																: "text-slate-400"
+														}`}
 														strokeWidth={1.5}
 													/>
 												</button>
@@ -289,433 +431,369 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 											<span>Họ và Tên Chủ Hộ</span>
 										</div>
 									</th>
-									<th className="py-3 px-3.5 min-w-[100px] border-r border-b border-slate-200/80 dark:border-slate-800 whitespace-nowrap">
+									<th className={`${TABLE_STYLES.th} min-w-[120px]`}>
 										Thôn Quản Lý
 									</th>
-									<th className="py-3 px-3 text-right border-r border-b border-slate-200/80 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-300 whitespace-nowrap">
-										Tổng Cây Trồng (ha)
-									</th>
-									<th className="py-3 px-3 text-right border-r border-b border-slate-200/80 dark:border-slate-800 bg-teal-50/50 dark:bg-teal-950/30 text-teal-900 dark:text-teal-300 whitespace-nowrap">
-										Dược Liệu (ha)
-									</th>
-									<th className="py-3 px-3 text-right border-r border-b border-slate-200/80 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300 whitespace-nowrap">
-										Vật Nuôi (con)
-									</th>
-									<th className="py-3 px-3 text-right border-r border-b border-slate-200/80 dark:border-slate-800 bg-sky-50/50 dark:bg-sky-950/30 text-sky-900 dark:text-sky-300 whitespace-nowrap">
-										Thủy Sản
-									</th>
+									<th className={TABLE_STYLES.thRight}>Tổng Cây Trồng</th>
+									<th className={TABLE_STYLES.thRight}>Dược Liệu</th>
+									<th className={TABLE_STYLES.thRight}>Vật Nuôi</th>
+									<th className={TABLE_STYLES.thRight}>Thủy Sản</th>
 									{!readOnly && (
-										<th className="py-3 px-3 text-center min-w-[90px] border-b border-slate-200/80 dark:border-slate-800 sticky right-0 z-20 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-slate-100 dark:bg-slate-950 whitespace-nowrap">
+										<th
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
+										>
 											Thao Tác
 										</th>
 									)}
 								</tr>
 							</thead>
 							<tbody>
-								{loading ? (
-									<tr>
-										<td
-											colSpan={9}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mx-auto mb-2" />
-											<span className="font-bold text-sm">
-												Đang tải dữ liệu hộ nông nghiệp...
-											</span>
-										</td>
-									</tr>
-								) : households.length === 0 ? (
-									<tr>
-										<td
-											colSpan={9}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="text-base font-bold text-slate-600 dark:text-slate-300">
-												Không tìm thấy hộ nông nghiệp nào
-											</div>
-										</td>
-									</tr>
-								) : (
-									households.map((hh, idx) => {
-										const stt = (page - 1) * limit + idx + 1;
-										const { totalCrops, totalHerbs, totalAnimals } =
-											computeHouseholdSummary(hh);
-										const villageColor =
-											villageColorMap[hh.village_name || ""] ||
-											"bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
-										const isExpanded = !!expandedRows[hh.id!];
+								{loading
+									? renderLoading(
+											readOnly ? 8 : 9,
+											"Đang tải dữ liệu hộ nông nghiệp...",
+										)
+									: households.length === 0
+										? renderEmpty(readOnly ? 8 : 9)
+										: households.map((hh, idx) => {
+												const stt = (page - 1) * limit + idx + 1;
+												const { totalCrops, totalHerbs, totalAnimals } =
+													computeHouseholdSummary(hh);
+												const isExpanded = !!expandedRows[hh.id!];
 
-										return (
-											<React.Fragment key={hh.id}>
-												<tr
-													onDoubleClick={() => !readOnly && onEdit(hh)}
-													className={`hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors group text-[13.5px] cursor-pointer ${
-														isExpanded
-															? "bg-emerald-50/20 dark:bg-slate-800/30"
-															: ""
-													}`}
-													title="Bấm đúp để sửa số liệu hộ này"
-												>
-													<td className="py-3 px-2 border-r border-b border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors">
-														<input
-															type="checkbox"
-															aria-label={`Chọn hộ ${hh.full_name}`}
-															className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
-															checked={selectedIds.includes(hh.id!)}
-															onChange={() =>
-																onToggleSelect && onToggleSelect(hh.id!)
-															}
-															onClick={(e) => e.stopPropagation()}
-														/>
-													</td>
-													<td className="py-3 px-2 border-r border-b border-slate-100 dark:border-slate-800/60 text-center font-mono font-bold text-slate-500 dark:text-slate-400 sticky left-10 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 whitespace-nowrap">
-														{stt}
-													</td>
-													<td className="py-3 px-3.5 border-r border-b border-slate-100 dark:border-slate-800/60 font-bold text-[13.5px] text-slate-900 dark:text-slate-100 sticky left-[88px] z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_10px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.25)] whitespace-nowrap">
-														<div className="flex items-center gap-1.5">
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	toggleRowExpand(hh.id!);
-																}}
-																aria-label={`Chi tiết 18 chỉ số hộ ${hh.full_name}`}
-																title="Xem/thu gọn 18 chỉ số"
-																className="p-1 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-															>
-																{isExpanded ? (
-																	<ChevronDown
-																		className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"
-																		strokeWidth={1.5}
-																	/>
-																) : (
-																	<ChevronRight
-																		className="w-3.5 h-3.5"
-																		strokeWidth={1.5}
-																	/>
-																)}
-															</button>
-															<span>{hh.full_name}</span>
-														</div>
-														{hh.notes && (
-															<div className="flex items-center gap-1 mt-0.5 text-[11px] font-normal text-slate-400 dark:text-slate-500 pl-6">
-																<button
-																	type="button"
-																	onClick={(e) => {
-																		e.stopPropagation();
-																		toggleMask(hh.id!);
-																	}}
-																	aria-label="Bật/Tắt che thông tin"
-																	className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded cursor-pointer"
-																	title={
-																		showMasked[hh.id!]
-																			? "Che thông tin"
-																			: "Hiện thông tin"
+												return (
+													<React.Fragment key={hh.id}>
+														<tr
+															onDoubleClick={() => !readOnly && onEdit(hh)}
+															className={`${TABLE_STYLES.tr} ${
+																isExpanded ? TABLE_STYLES.trExpanded : ""
+															}`}
+															title="Bấm đúp để sửa số liệu hộ này"
+														>
+															<td className={TABLE_STYLES.stickyLeftCheckbox}>
+																<input
+																	type="checkbox"
+																	aria-label={`Chọn hộ ${hh.full_name}`}
+																	className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
+																	checked={selectedIds.includes(hh.id!)}
+																	onChange={() =>
+																		onToggleSelect && onToggleSelect(hh.id!)
 																	}
-																>
-																	{showMasked[hh.id!] ? (
-																		<EyeOff
-																			className="w-3 h-3"
-																			strokeWidth={1.5}
-																		/>
-																	) : (
-																		<Eye
-																			className="w-3 h-3"
-																			strokeWidth={1.5}
-																		/>
-																	)}
-																</button>
-																<span className="truncate max-w-[170px]">
-																	{showMasked[hh.id!]
-																		? hh.notes
-																		: hh.notes.replace(
-																				/\d{4,}/g,
-																				(match) => "••••" + match.slice(-3),
-																			)}
-																</span>
-															</div>
-														)}
-													</td>
-													<td className="py-3 px-3.5 border-r border-b border-slate-100 dark:border-slate-800/60 whitespace-nowrap">
-														<span
-															className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold border ${villageColor}`}
-														>
-															{hh.village_name || "Chưa gán"}
-														</span>
-													</td>
-													<td className="py-3 px-3 text-right border-r border-b border-slate-100 dark:border-slate-800/60 font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
-														{cryptoHelper.formatArea(totalCrops)}
-													</td>
-													<td className="py-3 px-3 text-right border-r border-b border-slate-100 dark:border-slate-800/60 font-mono tabular-nums font-bold text-teal-700 dark:text-teal-400 whitespace-nowrap">
-														{cryptoHelper.formatArea(totalHerbs)}
-													</td>
-													<td className="py-3 px-3 text-right border-r border-b border-slate-100 dark:border-slate-800/60 font-mono tabular-nums font-bold text-amber-700 dark:text-amber-400 whitespace-nowrap">
-														{totalAnimals > 0 ? `${totalAnimals} con` : "-"}
-													</td>
-													<td className="py-3 px-3 text-right border-r border-b border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-														{hh.fish_pond && hh.fish_cage
-															? `${cryptoHelper.formatArea(hh.fish_pond)} • ${hh.fish_cage} lồng`
-															: hh.fish_pond
-																? cryptoHelper.formatArea(hh.fish_pond)
-																: hh.fish_cage
-																	? `${hh.fish_cage} lồng`
-																	: "-"}
-													</td>
-													<td className="py-3 px-3 text-center border-b border-slate-100 dark:border-slate-800/60 sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 group-hover:bg-emerald-50/70 dark:group-hover:bg-slate-800 transition-colors whitespace-nowrap">
-														<div className="flex items-center justify-center gap-1">
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	onEdit(hh);
-																}}
-																aria-label={`Sửa số liệu hộ ${hh.full_name}`}
-																className="p-1.5 text-slate-500 hover:text-emerald-700 dark:text-slate-400 dark:hover:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950 rounded-xl transition-colors cursor-pointer"
-															>
-																<Edit3 className="w-4 h-4" strokeWidth={1.5} />
-															</button>
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	onDelete(hh);
-																}}
-																aria-label={`Xóa hộ ${hh.full_name}`}
-																className="p-1.5 text-slate-400 hover:text-rose-700 dark:text-slate-400 dark:hover:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-950 rounded-xl transition-colors cursor-pointer"
-															>
-																<Trash2 className="w-4 h-4" strokeWidth={1.5} />
-															</button>
-														</div>
-													</td>
-												</tr>
+																	onClick={(e) => e.stopPropagation()}
+																/>
+															</td>
+															<td className={TABLE_STYLES.stickyLeftSTT}>
+																{stt}
+															</td>
+															{renderNameCell(hh, true, isExpanded)}
+															<td className={TABLE_STYLES.td}>
+																<VillageBadge name={hh.village_name} />
+															</td>
+															<td className={TABLE_STYLES.tdRight}>
+																<NumberCell value={totalCrops} unit="ha" />
+															</td>
+															<td className={TABLE_STYLES.tdRight}>
+																<NumberCell value={totalHerbs} unit="ha" />
+															</td>
+															<td className={TABLE_STYLES.tdRight}>
+																<NumberCell
+																	value={totalAnimals}
+																	unit="con"
+																	maxFractionDigits={0}
+																/>
+															</td>
+															<td className={TABLE_STYLES.tdRight}>
+																{!hh.fish_pond && !hh.fish_cage ? (
+																	<span className={TABLE_STYLES.emptyCell}>
+																		—
+																	</span>
+																) : (
+																	<div className="flex flex-col items-end gap-0.5 justify-center">
+																		{hh.fish_pond ? (
+																			<NumberCell
+																				value={hh.fish_pond}
+																				unit="ha"
+																			/>
+																		) : null}
+																		{hh.fish_cage ? (
+																			<NumberCell
+																				value={hh.fish_cage}
+																				unit="lồng"
+																				maxFractionDigits={0}
+																			/>
+																		) : null}
+																	</div>
+																)}
+															</td>
+															{renderActionCell(hh)}
+														</tr>
 
-												{/* Accordion Child Row showing all 18 indicators */}
-												{isExpanded && (
-													<tr className="bg-slate-50/90 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800">
-														<td
-															colSpan={9}
-															className="p-4 border-b border-slate-200 dark:border-slate-800"
-														>
-															<div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-inner space-y-3">
-																<div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-																	<span className="font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-2">
-																		<span>
-																			Bảng kê chi tiết 18 chỉ số nông nghiệp:
-																		</span>
-																		<strong className="text-emerald-600 dark:text-emerald-400">
-																			{hh.full_name}
-																		</strong>
-																	</span>
-																	<span className="text-[11px] text-slate-400">
-																		Thôn: {hh.village_name || "Chưa gán"}
-																	</span>
-																</div>
-																<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs whitespace-normal">
-																	{/* Cây trồng */}
-																	<div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
-																		<h4 className="font-bold text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-1.5">
-																			<Trees
-																				className="w-3.5 h-3.5"
-																				strokeWidth={1.5}
-																			/>
-																			<span>Cây Trồng Chính (8)</span>
-																		</h4>
-																		<div className="space-y-1 text-[11px]">
-																			<div className="flex justify-between">
-																				<span>Cà phê (Hộ):</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(
-																						hh.cafe_household,
-																					)}
-																				</b>
+														{/* Dòng accordion hiển thị chi tiết 18 chỉ số */}
+														{isExpanded && (
+															<tr className="bg-slate-50/90 dark:bg-slate-950/80 border-b border-slate-200/90 dark:border-slate-800">
+																<td
+																	colSpan={readOnly ? 8 : 9}
+																	className="p-4 border-b border-slate-200/90 dark:border-slate-800"
+																>
+																	<div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-inner space-y-3">
+																		<div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+																			<span className="font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-2">
+																				<span>
+																					Bảng kê chi tiết 18 chỉ số nông
+																					nghiệp:
+																				</span>
+																				<strong className="text-emerald-600 dark:text-emerald-400">
+																					{hh.full_name}
+																				</strong>
+																			</span>
+																			<div className="flex items-center gap-2">
+																				<span className="text-[11px] text-slate-400">
+																					Thôn:
+																				</span>
+																				<VillageBadge name={hh.village_name} />
 																			</div>
-																			<div className="flex justify-between">
-																				<span>Cà phê (Khoán):</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(
-																						hh.cafe_contracted,
-																					)}
-																				</b>
+																		</div>
+																		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs whitespace-normal">
+																			{/* Cây trồng chính */}
+																			<div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+																				<h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
+																					<Trees
+																						className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"
+																						strokeWidth={1.5}
+																					/>
+																					<span>Cây Trồng Chính (8)</span>
+																				</h4>
+																				<div className="space-y-1 text-[11px]">
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Cà phê (Hộ):
+																						</span>
+																						<NumberCell
+																							value={hh.cafe_household}
+																							unit="ha"
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Cà phê (Khoán):
+																						</span>
+																						<NumberCell
+																							value={hh.cafe_contracted}
+																							unit="ha"
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Cao su (Hộ):
+																						</span>
+																						<NumberCell
+																							value={hh.rubber_household}
+																							unit="ha"
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Cao su (Khoán):
+																						</span>
+																						<NumberCell
+																							value={hh.rubber_contracted}
+																							unit="ha"
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Cây ăn quả:
+																						</span>
+																						<NumberCell
+																							value={hh.fruit_tree}
+																							unit="ha"
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Mắc ca:
+																						</span>
+																						<NumberCell
+																							value={hh.macadamia}
+																							unit="ha"
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Lúa nước:
+																						</span>
+																						<NumberCell
+																							value={hh.wet_rice}
+																							unit="ha"
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Hàng năm khác:
+																						</span>
+																						<NumberCell
+																							value={hh.other_annual_crops}
+																							unit="ha"
+																						/>
+																					</div>
+																				</div>
 																			</div>
-																			<div className="flex justify-between">
-																				<span>Cao su (Hộ):</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(
-																						hh.rubber_household,
-																					)}
-																				</b>
+
+																			{/* Dược liệu */}
+																			<div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+																				<h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
+																					<Flower2
+																						className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400"
+																						strokeWidth={1.5}
+																					/>
+																					<span>Dược Liệu (4)</span>
+																				</h4>
+																				<div className="space-y-1 text-[11px]">
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Đinh lăng:
+																						</span>
+																						<NumberCell
+																							value={hh.herb_dinh_lang}
+																							unit="ha"
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Gừng:
+																						</span>
+																						<NumberCell
+																							value={hh.herb_gung}
+																							unit="ha"
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Nghệ:
+																						</span>
+																						<NumberCell
+																							value={hh.herb_nghe}
+																							unit="ha"
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Sả:
+																						</span>
+																						<NumberCell
+																							value={hh.herb_sa}
+																							unit="ha"
+																						/>
+																					</div>
+																				</div>
 																			</div>
-																			<div className="flex justify-between">
-																				<span>Cao su (Khoán):</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(
-																						hh.rubber_contracted,
-																					)}
-																				</b>
+
+																			{/* Vật nuôi */}
+																			<div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+																				<h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
+																					<PawPrint
+																						className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400"
+																						strokeWidth={1.5}
+																					/>
+																					<span>Vật Nuôi (4)</span>
+																				</h4>
+																				<div className="space-y-1 text-[11px]">
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Đàn trâu:
+																						</span>
+																						<NumberCell
+																							value={hh.buffalo}
+																							unit="con"
+																							maxFractionDigits={0}
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Đàn bò:
+																						</span>
+																						<NumberCell
+																							value={hh.cow}
+																							unit="con"
+																							maxFractionDigits={0}
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Đàn heo:
+																						</span>
+																						<NumberCell
+																							value={hh.pig}
+																							unit="con"
+																							maxFractionDigits={0}
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Gia cầm:
+																						</span>
+																						<NumberCell
+																							value={hh.poultry}
+																							unit="con"
+																							maxFractionDigits={0}
+																						/>
+																					</div>
+																				</div>
 																			</div>
-																			<div className="flex justify-between">
-																				<span>Cây ăn quả:</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(
-																						hh.fruit_tree,
-																					)}
-																				</b>
-																			</div>
-																			<div className="flex justify-between">
-																				<span>Mắc ca:</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(
-																						hh.macadamia,
-																					)}
-																				</b>
-																			</div>
-																			<div className="flex justify-between">
-																				<span>Lúa nước:</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(hh.wet_rice)}
-																				</b>
-																			</div>
-																			<div className="flex justify-between">
-																				<span>Hàng năm khác:</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(
-																						hh.other_annual_crops,
-																					)}
-																				</b>
+
+																			{/* Thủy sản */}
+																			<div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+																				<h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5">
+																					<Fish
+																						className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400"
+																						strokeWidth={1.5}
+																					/>
+																					<span>Thủy Sản (2)</span>
+																				</h4>
+																				<div className="space-y-1 text-[11px]">
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Cá ao hồ:
+																						</span>
+																						<NumberCell
+																							value={hh.fish_pond}
+																							unit="ha"
+																						/>
+																					</div>
+																					<div className="flex justify-between items-center">
+																						<span className="text-slate-600 dark:text-slate-400">
+																							Cá lồng bè:
+																						</span>
+																						<NumberCell
+																							value={hh.fish_cage}
+																							unit="lồng"
+																							maxFractionDigits={0}
+																						/>
+																					</div>
+																				</div>
 																			</div>
 																		</div>
 																	</div>
-																	{/* Dược liệu */}
-																	<div className="p-3 bg-teal-50/50 dark:bg-teal-950/20 rounded-xl border border-teal-100 dark:border-teal-900/40">
-																		<h4 className="font-bold text-teal-800 dark:text-teal-300 mb-2 flex items-center gap-1.5">
-																			<Flower2
-																				className="w-3.5 h-3.5"
-																				strokeWidth={1.5}
-																			/>
-																			<span>Dược Liệu (4)</span>
-																		</h4>
-																		<div className="space-y-1 text-[11px]">
-																			<div className="flex justify-between">
-																				<span>Đinh lăng:</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(
-																						hh.herb_dinh_lang,
-																					)}
-																				</b>
-																			</div>
-																			<div className="flex justify-between">
-																				<span>Gừng:</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(
-																						hh.herb_gung,
-																					)}
-																				</b>
-																			</div>
-																			<div className="flex justify-between">
-																				<span>Nghệ:</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(
-																						hh.herb_nghe,
-																					)}
-																				</b>
-																			</div>
-																			<div className="flex justify-between">
-																				<span>Sả:</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(hh.herb_sa)}
-																				</b>
-																			</div>
-																		</div>
-																	</div>
-																	{/* Vật nuôi */}
-																	<div className="p-3 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-100 dark:border-amber-900/40">
-																		<h4 className="font-bold text-amber-800 dark:text-amber-300 mb-2 flex items-center gap-1.5">
-																			<PawPrint
-																				className="w-3.5 h-3.5"
-																				strokeWidth={1.5}
-																			/>
-																			<span>Vật Nuôi (4)</span>
-																		</h4>
-																		<div className="space-y-1 text-[11px]">
-																			<div className="flex justify-between">
-																				<span>Đàn trâu:</span>
-																				<b className="font-mono">
-																					{hh.buffalo
-																						? `${hh.buffalo} con`
-																						: "-"}
-																				</b>
-																			</div>
-																			<div className="flex justify-between">
-																				<span>Đàn bò:</span>
-																				<b className="font-mono">
-																					{hh.cow ? `${hh.cow} con` : "-"}
-																				</b>
-																			</div>
-																			<div className="flex justify-between">
-																				<span>Đàn heo:</span>
-																				<b className="font-mono">
-																					{hh.pig ? `${hh.pig} con` : "-"}
-																				</b>
-																			</div>
-																			<div className="flex justify-between">
-																				<span>Gia cầm:</span>
-																				<b className="font-mono">
-																					{hh.poultry
-																						? `${hh.poultry} con`
-																						: "-"}
-																				</b>
-																			</div>
-																		</div>
-																	</div>
-																	{/* Thủy sản */}
-																	<div className="p-3 bg-sky-50/50 dark:bg-sky-950/20 rounded-xl border border-sky-100 dark:border-sky-900/40">
-																		<h4 className="font-bold text-sky-800 dark:text-sky-300 mb-2 flex items-center gap-1.5">
-																			<Fish
-																				className="w-3.5 h-3.5"
-																				strokeWidth={1.5}
-																			/>
-																			<span>Thủy Sản (2)</span>
-																		</h4>
-																		<div className="space-y-1 text-[11px]">
-																			<div className="flex justify-between">
-																				<span>Cá ao hồ:</span>
-																				<b className="font-mono">
-																					{cryptoHelper.formatArea(
-																						hh.fish_pond,
-																					)}
-																				</b>
-																			</div>
-																			<div className="flex justify-between">
-																				<span>Cá lồng bè:</span>
-																				<b className="font-mono">
-																					{hh.fish_cage
-																						? `${hh.fish_cage} lồng`
-																						: "-"}
-																				</b>
-																			</div>
-																		</div>
-																	</div>
-																</div>
-															</div>
-														</td>
-													</tr>
-												)}
-											</React.Fragment>
-										);
-									})
-								)}
+																</td>
+															</tr>
+														)}
+													</React.Fragment>
+												);
+											})}
 							</tbody>
 						</>
 					)}
 
 					{/* ========================================================================= */}
-					{/* 2. VIEW MODE: CROPS (8 CHỈ SỐ CÂY TRỒNG CHÍNH) */}
+					{/* 2. VIEW MODE: CROPS (CÂY TRỒNG CHÍNH) */}
 					{/* ========================================================================= */}
 					{viewMode === "crops" && (
 						<>
 							<thead>
-								<tr className="bg-emerald-100/70 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border-b border-emerald-200 dark:border-emerald-800 text-[11px] font-black uppercase tracking-wider">
-									<th className="py-3 px-2 text-center w-10 border-r border-emerald-200 dark:border-emerald-800 sticky left-0 z-20 bg-emerald-100 dark:bg-emerald-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]">
+								<tr>
+									<th
+										className={`${TABLE_STYLES.thCenter} sticky left-0 z-20 w-10`}
+									>
 										<input
 											type="checkbox"
 											aria-label="Chọn tất cả hộ dân"
@@ -727,175 +805,123 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 											onChange={() => onToggleSelectAll && onToggleSelectAll()}
 										/>
 									</th>
-									<th className="py-3 px-3.5 text-center w-12 border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
+									<th
+										className={`${TABLE_STYLES.thCenter} sticky left-10 z-20 w-12`}
+									>
 										STT
 									</th>
-									<th className="py-3 px-4 min-w-[180px] border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
+									<th
+										className={`${TABLE_STYLES.th} sticky left-[88px] z-20 min-w-[200px] shadow-[4px_0_10px_-2px_rgba(0,0,0,0.04)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.2)]`}
+									>
 										Họ và Tên Chủ Hộ
 									</th>
-									<th className="py-3 px-3.5 border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
-										Thôn
-									</th>
-									<th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
-										Cà phê (Hộ)
-									</th>
-									<th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
-										Cà phê (Khoán)
-									</th>
-									<th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
-										Cao su (Hộ)
-									</th>
-									<th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
-										Cao su (Khoán)
-									</th>
-									<th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
-										Ăn Quả
-									</th>
-									<th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
-										Mắc Ca
-									</th>
-									<th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
-										Lúa Nước
-									</th>
-									<th className="py-3 px-2 text-right border-r border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
-										Hàng Năm
-									</th>
+									<th className={`${TABLE_STYLES.th} min-w-[120px]`}>Thôn</th>
+									<th className={TABLE_STYLES.thRight}>Cà phê (Hộ)</th>
+									<th className={TABLE_STYLES.thRight}>Cà phê (Khoán)</th>
+									<th className={TABLE_STYLES.thRight}>Cao su (Hộ)</th>
+									<th className={TABLE_STYLES.thRight}>Cao su (Khoán)</th>
+									<th className={TABLE_STYLES.thRight}>Ăn Quả</th>
+									<th className={TABLE_STYLES.thRight}>Mắc Ca</th>
+									<th className={TABLE_STYLES.thRight}>Lúa Nước</th>
+									<th className={TABLE_STYLES.thRight}>Hàng Năm</th>
 									{!readOnly && (
-										<th className="py-3 px-3 text-center min-w-[90px] sticky right-0 z-20 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-emerald-100 dark:bg-emerald-950 whitespace-nowrap">
+										<th
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
+										>
 											Thao Tác
 										</th>
 									)}
 								</tr>
 							</thead>
-							<tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-								{loading ? (
-									<tr>
-										<td
-											colSpan={readOnly ? 12 : 13}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mx-auto mb-2" />
-											<span className="font-bold text-sm">
-												Đang tải dữ liệu cây trồng...
-											</span>
-										</td>
-									</tr>
-								) : households.length === 0 ? (
-									<tr>
-										<td
-											colSpan={readOnly ? 12 : 13}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="text-base font-bold text-slate-600 dark:text-slate-300">
-												Không tìm thấy hộ nông nghiệp nào
-											</div>
-										</td>
-									</tr>
-								) : (
-									households.map((hh, idx) => {
-										const villageColor =
-											villageColorMap[hh.village_name || ""] ||
-											"bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
-										return (
-											<tr
-												key={hh.id}
-												onDoubleClick={() => !readOnly && onEdit(hh)}
-												className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
-											>
-												<td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
-													<input
-														type="checkbox"
-														aria-label={`Chọn hộ ${hh.full_name}`}
-														className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
-														checked={selectedIds.includes(hh.id!)}
-														onChange={() =>
-															onToggleSelect && onToggleSelect(hh.id!)
-														}
-														onClick={(e) => e.stopPropagation()}
-													/>
-												</td>
-												<td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">
-													{(page - 1) * limit + idx + 1}
-												</td>
-												<td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-													{hh.full_name}
-												</td>
-												<td className="py-3 px-3.5 whitespace-nowrap">
-													<span
-														className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColor}`}
+							<tbody>
+								{loading
+									? renderLoading(
+											readOnly ? 12 : 13,
+											"Đang tải dữ liệu cây trồng...",
+										)
+									: households.length === 0
+										? renderEmpty(readOnly ? 12 : 13)
+										: households.map((hh, idx) => {
+												const stt = (page - 1) * limit + idx + 1;
+												return (
+													<tr
+														key={hh.id}
+														onDoubleClick={() => !readOnly && onEdit(hh)}
+														className={TABLE_STYLES.tr}
 													>
-														{hh.village_name || "Chưa gán"}
-													</span>
-												</td>
-												<td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.cafe_household)}
-												</td>
-												<td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.cafe_contracted)}
-												</td>
-												<td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.rubber_household)}
-												</td>
-												<td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.rubber_contracted)}
-												</td>
-												<td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.fruit_tree)}
-												</td>
-												<td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.macadamia)}
-												</td>
-												<td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.wet_rice)}
-												</td>
-												<td className="py-3 px-2 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.other_annual_crops)}
-												</td>
-												{!readOnly && (
-													<td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors whitespace-nowrap">
-														<div className="flex items-center justify-center gap-1">
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	!isDisconnected && onEdit(hh);
-																}}
-																disabled={isDisconnected}
-																aria-label="Sửa hộ"
-																className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-xl transition-colors cursor-pointer"
-															>
-																<Edit3 className="w-4 h-4" strokeWidth={1.5} />
-															</button>
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	onDelete(hh);
-																}}
-																aria-label="Xóa hộ"
-																className="p-1.5 text-slate-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-xl transition-colors cursor-pointer"
-															>
-																<Trash2 className="w-4 h-4" strokeWidth={1.5} />
-															</button>
-														</div>
-													</td>
-												)}
-											</tr>
-										);
-									})
-								)}
+														<td className={TABLE_STYLES.stickyLeftCheckbox}>
+															<input
+																type="checkbox"
+																aria-label={`Chọn hộ ${hh.full_name}`}
+																className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
+																checked={selectedIds.includes(hh.id!)}
+																onChange={() =>
+																	onToggleSelect && onToggleSelect(hh.id!)
+																}
+																onClick={(e) => e.stopPropagation()}
+															/>
+														</td>
+														<td className={TABLE_STYLES.stickyLeftSTT}>
+															{stt}
+														</td>
+														{renderNameCell(hh)}
+														<td className={TABLE_STYLES.td}>
+															<VillageBadge name={hh.village_name} />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.cafe_household} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.cafe_contracted}
+																unit="ha"
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.rubber_household}
+																unit="ha"
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.rubber_contracted}
+																unit="ha"
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.fruit_tree} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.macadamia} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.wet_rice} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.other_annual_crops}
+																unit="ha"
+															/>
+														</td>
+														{renderActionCell(hh)}
+													</tr>
+												);
+											})}
 							</tbody>
 						</>
 					)}
 
 					{/* ========================================================================= */}
-					{/* 3. VIEW MODE: HERBS (4 CHỈ SỐ DƯỢC LIỆU ĐĂK HÀ) */}
+					{/* 3. VIEW MODE: HERBS (DƯỢC LIỆU ĐĂK HÀ) */}
 					{/* ========================================================================= */}
 					{viewMode === "herbs" && (
 						<>
 							<thead>
-								<tr className="bg-teal-100/70 dark:bg-teal-950/80 text-teal-950 dark:text-teal-200 border-b border-teal-200 dark:border-teal-800 text-[11px] font-black uppercase tracking-wider">
-									<th className="py-3 px-2 text-center w-10 border-r border-teal-200 dark:border-teal-800 sticky left-0 z-20 bg-teal-100 dark:bg-teal-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]">
+								<tr>
+									<th
+										className={`${TABLE_STYLES.thCenter} sticky left-0 z-20 w-10`}
+									>
 										<input
 											type="checkbox"
 											aria-label="Chọn tất cả hộ dân"
@@ -907,161 +933,105 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 											onChange={() => onToggleSelectAll && onToggleSelectAll()}
 										/>
 									</th>
-									<th className="py-3 px-3.5 text-center w-12 border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">
+									<th
+										className={`${TABLE_STYLES.thCenter} sticky left-10 z-20 w-12`}
+									>
 										STT
 									</th>
-									<th className="py-3 px-4 min-w-[200px] border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">
+									<th
+										className={`${TABLE_STYLES.th} sticky left-[88px] z-20 min-w-[200px] shadow-[4px_0_10px_-2px_rgba(0,0,0,0.04)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.2)]`}
+									>
 										Họ và Tên Chủ Hộ
 									</th>
-									<th className="py-3 px-3.5 border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">
-										Thôn
-									</th>
-									<th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">
-										Đinh Lăng (ha)
-									</th>
-									<th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">
-										Gừng (ha)
-									</th>
-									<th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">
-										Nghệ (ha)
-									</th>
-									<th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 whitespace-nowrap">
-										Sả (ha)
-									</th>
-									<th className="py-3 px-3 text-right border-r border-teal-200 dark:border-teal-800 font-bold bg-teal-200/50 dark:bg-teal-900/40 whitespace-nowrap">
-										Tổng Dược Liệu (ha)
-									</th>
+									<th className={`${TABLE_STYLES.th} min-w-[120px]`}>Thôn</th>
+									<th className={TABLE_STYLES.thRight}>Đinh Lăng</th>
+									<th className={TABLE_STYLES.thRight}>Gừng</th>
+									<th className={TABLE_STYLES.thRight}>Nghệ</th>
+									<th className={TABLE_STYLES.thRight}>Sả</th>
+									<th className={TABLE_STYLES.thRight}>Tổng Dược Liệu</th>
 									{!readOnly && (
-										<th className="py-3 px-3 text-center min-w-[90px] sticky right-0 z-20 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-teal-100 dark:bg-teal-950 whitespace-nowrap">
+										<th
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
+										>
 											Thao Tác
 										</th>
 									)}
 								</tr>
 							</thead>
-							<tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-								{loading ? (
-									<tr>
-										<td
-											colSpan={readOnly ? 9 : 10}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="w-8 h-8 border-3 border-teal-500/30 border-t-teal-600 rounded-full animate-spin mx-auto mb-2" />
-											<span className="font-bold text-sm">
-												Đang tải dữ liệu dược liệu...
-											</span>
-										</td>
-									</tr>
-								) : households.length === 0 ? (
-									<tr>
-										<td
-											colSpan={readOnly ? 9 : 10}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="text-base font-bold text-slate-600 dark:text-slate-300">
-												Không tìm thấy hộ nông nghiệp nào
-											</div>
-										</td>
-									</tr>
-								) : (
-									households.map((hh, idx) => {
-										const totalHerbs =
-											(hh.herb_dinh_lang || 0) +
-											(hh.herb_gung || 0) +
-											(hh.herb_nghe || 0) +
-											(hh.herb_sa || 0);
-										const villageColor =
-											villageColorMap[hh.village_name || ""] ||
-											"bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
-										return (
-											<tr
-												key={hh.id}
-												onDoubleClick={() => !readOnly && onEdit(hh)}
-												className="hover:bg-teal-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
-											>
-												<td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
-													<input
-														type="checkbox"
-														aria-label={`Chọn hộ ${hh.full_name}`}
-														className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
-														checked={selectedIds.includes(hh.id!)}
-														onChange={() =>
-															onToggleSelect && onToggleSelect(hh.id!)
-														}
-														onClick={(e) => e.stopPropagation()}
-													/>
-												</td>
-												<td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">
-													{(page - 1) * limit + idx + 1}
-												</td>
-												<td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-													{hh.full_name}
-												</td>
-												<td className="py-3 px-3.5 whitespace-nowrap">
-													<span
-														className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColor}`}
+							<tbody>
+								{loading
+									? renderLoading(
+											readOnly ? 9 : 10,
+											"Đang tải dữ liệu dược liệu...",
+										)
+									: households.length === 0
+										? renderEmpty(readOnly ? 9 : 10)
+										: households.map((hh, idx) => {
+												const stt = (page - 1) * limit + idx + 1;
+												const totalHerbs =
+													(hh.herb_dinh_lang || 0) +
+													(hh.herb_gung || 0) +
+													(hh.herb_nghe || 0) +
+													(hh.herb_sa || 0);
+
+												return (
+													<tr
+														key={hh.id}
+														onDoubleClick={() => !readOnly && onEdit(hh)}
+														className={TABLE_STYLES.tr}
 													>
-														{hh.village_name || "Chưa gán"}
-													</span>
-												</td>
-												<td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.herb_dinh_lang)}
-												</td>
-												<td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.herb_gung)}
-												</td>
-												<td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.herb_nghe)}
-												</td>
-												<td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.herb_sa)}
-												</td>
-												<td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-teal-700 dark:text-teal-400 bg-teal-50/30 dark:bg-teal-950/20 whitespace-nowrap">
-													{cryptoHelper.formatArea(totalHerbs)}
-												</td>
-												{!readOnly && (
-													<td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors whitespace-nowrap">
-														<div className="flex items-center justify-center gap-1">
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	onEdit(hh);
-																}}
-																aria-label="Sửa hộ"
-																className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-xl transition-colors cursor-pointer"
-															>
-																<Edit3 className="w-4 h-4" strokeWidth={1.5} />
-															</button>
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	onDelete(hh);
-																}}
-																aria-label="Xóa hộ"
-																className="p-1.5 text-slate-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-xl transition-colors cursor-pointer"
-															>
-																<Trash2 className="w-4 h-4" strokeWidth={1.5} />
-															</button>
-														</div>
-													</td>
-												)}
-											</tr>
-										);
-									})
-								)}
+														<td className={TABLE_STYLES.stickyLeftCheckbox}>
+															<input
+																type="checkbox"
+																aria-label={`Chọn hộ ${hh.full_name}`}
+																className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
+																checked={selectedIds.includes(hh.id!)}
+																onChange={() =>
+																	onToggleSelect && onToggleSelect(hh.id!)
+																}
+																onClick={(e) => e.stopPropagation()}
+															/>
+														</td>
+														<td className={TABLE_STYLES.stickyLeftSTT}>
+															{stt}
+														</td>
+														{renderNameCell(hh)}
+														<td className={TABLE_STYLES.td}>
+															<VillageBadge name={hh.village_name} />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.herb_dinh_lang} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.herb_gung} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.herb_nghe} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.herb_sa} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={totalHerbs} unit="ha" />
+														</td>
+														{renderActionCell(hh)}
+													</tr>
+												);
+											})}
 							</tbody>
 						</>
 					)}
 
 					{/* ========================================================================= */}
-					{/* 4. VIEW MODE: LIVESTOCK (4 CHỈ SỐ VẬT NUÔI) */}
+					{/* 4. VIEW MODE: LIVESTOCK (ĐÀN VẬT NUÔI) */}
 					{/* ========================================================================= */}
 					{viewMode === "livestock" && (
 						<>
 							<thead>
-								<tr className="bg-amber-100/70 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border-b border-amber-200 dark:border-amber-800 text-[11px] font-black uppercase tracking-wider">
-									<th className="py-3 px-2 text-center w-10 border-r border-amber-200 dark:border-amber-800 sticky left-0 z-20 bg-amber-100 dark:bg-amber-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]">
+								<tr>
+									<th
+										className={`${TABLE_STYLES.thCenter} sticky left-0 z-20 w-10`}
+									>
 										<input
 											type="checkbox"
 											aria-label="Chọn tất cả hộ dân"
@@ -1073,161 +1043,125 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 											onChange={() => onToggleSelectAll && onToggleSelectAll()}
 										/>
 									</th>
-									<th className="py-3 px-3.5 text-center w-12 border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">
+									<th
+										className={`${TABLE_STYLES.thCenter} sticky left-10 z-20 w-12`}
+									>
 										STT
 									</th>
-									<th className="py-3 px-4 min-w-[200px] border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">
+									<th
+										className={`${TABLE_STYLES.th} sticky left-[88px] z-20 min-w-[200px] shadow-[4px_0_10px_-2px_rgba(0,0,0,0.04)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.2)]`}
+									>
 										Họ và Tên Chủ Hộ
 									</th>
-									<th className="py-3 px-3.5 border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">
-										Thôn
-									</th>
-									<th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">
-										Đàn Trâu (con)
-									</th>
-									<th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">
-										Đàn Bò (con)
-									</th>
-									<th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">
-										Đàn Heo (con)
-									</th>
-									<th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 whitespace-nowrap">
-										Đàn Gia Cầm (con)
-									</th>
-									<th className="py-3 px-3 text-right border-r border-amber-200 dark:border-amber-800 font-bold bg-amber-200/50 dark:bg-amber-900/40 whitespace-nowrap">
-										Tổng Đàn (con)
-									</th>
+									<th className={`${TABLE_STYLES.th} min-w-[120px]`}>Thôn</th>
+									<th className={TABLE_STYLES.thRight}>Đàn Trâu</th>
+									<th className={TABLE_STYLES.thRight}>Đàn Bò</th>
+									<th className={TABLE_STYLES.thRight}>Đàn Heo</th>
+									<th className={TABLE_STYLES.thRight}>Gia Cầm</th>
+									<th className={TABLE_STYLES.thRight}>Tổng Đàn</th>
 									{!readOnly && (
-										<th className="py-3 px-3 text-center min-w-[90px] sticky right-0 z-20 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-amber-100 dark:bg-amber-950 whitespace-nowrap">
+										<th
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
+										>
 											Thao Tác
 										</th>
 									)}
 								</tr>
 							</thead>
-							<tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-								{loading ? (
-									<tr>
-										<td
-											colSpan={readOnly ? 9 : 10}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="w-8 h-8 border-3 border-amber-500/30 border-t-amber-600 rounded-full animate-spin mx-auto mb-2" />
-											<span className="font-bold text-sm">
-												Đang tải dữ liệu vật nuôi...
-											</span>
-										</td>
-									</tr>
-								) : households.length === 0 ? (
-									<tr>
-										<td
-											colSpan={readOnly ? 9 : 10}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="text-base font-bold text-slate-600 dark:text-slate-300">
-												Không tìm thấy hộ nông nghiệp nào
-											</div>
-										</td>
-									</tr>
-								) : (
-									households.map((hh, idx) => {
-										const totalAnimals =
-											(hh.buffalo || 0) +
-											(hh.cow || 0) +
-											(hh.pig || 0) +
-											(hh.poultry || 0);
-										const villageColor =
-											villageColorMap[hh.village_name || ""] ||
-											"bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
-										return (
-											<tr
-												key={hh.id}
-												onDoubleClick={() => !readOnly && onEdit(hh)}
-												className="hover:bg-amber-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
-											>
-												<td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
-													<input
-														type="checkbox"
-														aria-label={`Chọn hộ ${hh.full_name}`}
-														className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
-														checked={selectedIds.includes(hh.id!)}
-														onChange={() =>
-															onToggleSelect && onToggleSelect(hh.id!)
-														}
-														onClick={(e) => e.stopPropagation()}
-													/>
-												</td>
-												<td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">
-													{(page - 1) * limit + idx + 1}
-												</td>
-												<td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-													{hh.full_name}
-												</td>
-												<td className="py-3 px-3.5 whitespace-nowrap">
-													<span
-														className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColor}`}
+							<tbody>
+								{loading
+									? renderLoading(
+											readOnly ? 9 : 10,
+											"Đang tải dữ liệu vật nuôi...",
+										)
+									: households.length === 0
+										? renderEmpty(readOnly ? 9 : 10)
+										: households.map((hh, idx) => {
+												const stt = (page - 1) * limit + idx + 1;
+												const totalAnimals =
+													(hh.buffalo || 0) +
+													(hh.cow || 0) +
+													(hh.pig || 0) +
+													(hh.poultry || 0);
+
+												return (
+													<tr
+														key={hh.id}
+														onDoubleClick={() => !readOnly && onEdit(hh)}
+														className={TABLE_STYLES.tr}
 													>
-														{hh.village_name || "Chưa gán"}
-													</span>
-												</td>
-												<td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{hh.buffalo || "-"}
-												</td>
-												<td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{hh.cow || "-"}
-												</td>
-												<td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{hh.pig || "-"}
-												</td>
-												<td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{hh.poultry || "-"}
-												</td>
-												<td className="py-3 px-3 text-right font-mono tabular-nums font-bold text-amber-700 dark:text-amber-400 bg-amber-50/30 dark:bg-amber-950/20 whitespace-nowrap">
-													{totalAnimals || "-"}
-												</td>
-												{!readOnly && (
-													<td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors whitespace-nowrap">
-														<div className="flex items-center justify-center gap-1">
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	onEdit(hh);
-																}}
-																aria-label="Sửa hộ"
-																className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-xl transition-colors cursor-pointer"
-															>
-																<Edit3 className="w-4 h-4" strokeWidth={1.5} />
-															</button>
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	onDelete(hh);
-																}}
-																aria-label="Xóa hộ"
-																className="p-1.5 text-slate-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-xl transition-colors cursor-pointer"
-															>
-																<Trash2 className="w-4 h-4" strokeWidth={1.5} />
-															</button>
-														</div>
-													</td>
-												)}
-											</tr>
-										);
-									})
-								)}
+														<td className={TABLE_STYLES.stickyLeftCheckbox}>
+															<input
+																type="checkbox"
+																aria-label={`Chọn hộ ${hh.full_name}`}
+																className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
+																checked={selectedIds.includes(hh.id!)}
+																onChange={() =>
+																	onToggleSelect && onToggleSelect(hh.id!)
+																}
+																onClick={(e) => e.stopPropagation()}
+															/>
+														</td>
+														<td className={TABLE_STYLES.stickyLeftSTT}>
+															{stt}
+														</td>
+														{renderNameCell(hh)}
+														<td className={TABLE_STYLES.td}>
+															<VillageBadge name={hh.village_name} />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.buffalo}
+																unit="con"
+																maxFractionDigits={0}
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.cow}
+																unit="con"
+																maxFractionDigits={0}
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.pig}
+																unit="con"
+																maxFractionDigits={0}
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.poultry}
+																unit="con"
+																maxFractionDigits={0}
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={totalAnimals}
+																unit="con"
+																maxFractionDigits={0}
+															/>
+														</td>
+														{renderActionCell(hh)}
+													</tr>
+												);
+											})}
 							</tbody>
 						</>
 					)}
 
 					{/* ========================================================================= */}
-					{/* 5. VIEW MODE: AQUACULTURE (2 CHỈ SỐ THỦY SẢN) */}
+					{/* 5. VIEW MODE: AQUACULTURE (THỦY SẢN) */}
 					{/* ========================================================================= */}
 					{viewMode === "aquaculture" && (
 						<>
 							<thead>
-								<tr className="bg-sky-100/70 dark:bg-sky-950/80 text-sky-950 dark:text-sky-200 border-b border-sky-200 dark:border-sky-800 text-[11px] font-black uppercase tracking-wider">
-									<th className="py-3 px-2 text-center w-10 border-r border-sky-200 dark:border-sky-800 sticky left-0 z-20 bg-sky-100 dark:bg-sky-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]">
+								<tr>
+									<th
+										className={`${TABLE_STYLES.thCenter} sticky left-0 z-20 w-10`}
+									>
 										<input
 											type="checkbox"
 											aria-label="Chọn tất cả hộ dân"
@@ -1239,140 +1173,91 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 											onChange={() => onToggleSelectAll && onToggleSelectAll()}
 										/>
 									</th>
-									<th className="py-3 px-3.5 text-center w-12 border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">
+									<th
+										className={`${TABLE_STYLES.thCenter} sticky left-10 z-20 w-12`}
+									>
 										STT
 									</th>
-									<th className="py-3 px-4 min-w-[220px] border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">
+									<th
+										className={`${TABLE_STYLES.th} sticky left-[88px] z-20 min-w-[200px] shadow-[4px_0_10px_-2px_rgba(0,0,0,0.04)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.2)]`}
+									>
 										Họ và Tên Chủ Hộ
 									</th>
-									<th className="py-3 px-3.5 border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">
-										Thôn
-									</th>
-									<th className="py-3 px-4 text-right border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">
-										Cá Ao Hồ (ha)
-									</th>
-									<th className="py-3 px-4 text-right border-r border-sky-200 dark:border-sky-800 whitespace-nowrap">
-										Cá Lồng Bè (lồng)
-									</th>
+									<th className={`${TABLE_STYLES.th} min-w-[120px]`}>Thôn</th>
+									<th className={TABLE_STYLES.thRight}>Cá Ao Hồ</th>
+									<th className={TABLE_STYLES.thRight}>Cá Lồng Bè</th>
 									{!readOnly && (
-										<th className="py-3 px-3 text-center min-w-[90px] sticky right-0 z-20 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-sky-100 dark:bg-sky-950 whitespace-nowrap">
+										<th
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
+										>
 											Thao Tác
 										</th>
 									)}
 								</tr>
 							</thead>
-							<tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-								{loading ? (
-									<tr>
-										<td
-											colSpan={readOnly ? 6 : 7}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="w-8 h-8 border-3 border-sky-500/30 border-t-sky-600 rounded-full animate-spin mx-auto mb-2" />
-											<span className="font-bold text-sm">
-												Đang tải dữ liệu thủy sản...
-											</span>
-										</td>
-									</tr>
-								) : households.length === 0 ? (
-									<tr>
-										<td
-											colSpan={readOnly ? 6 : 7}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="text-base font-bold text-slate-600 dark:text-slate-300">
-												Không tìm thấy hộ nông nghiệp nào
-											</div>
-										</td>
-									</tr>
-								) : (
-									households.map((hh, idx) => {
-										const villageColor =
-											villageColorMap[hh.village_name || ""] ||
-											"bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
-										return (
-											<tr
-												key={hh.id}
-												onDoubleClick={() => !readOnly && onEdit(hh)}
-												className="hover:bg-sky-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
-											>
-												<td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
-													<input
-														type="checkbox"
-														aria-label={`Chọn hộ ${hh.full_name}`}
-														className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
-														checked={selectedIds.includes(hh.id!)}
-														onChange={() =>
-															onToggleSelect && onToggleSelect(hh.id!)
-														}
-														onClick={(e) => e.stopPropagation()}
-													/>
-												</td>
-												<td className="py-3 px-3.5 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">
-													{(page - 1) * limit + idx + 1}
-												</td>
-												<td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-													{hh.full_name}
-												</td>
-												<td className="py-3 px-3.5 whitespace-nowrap">
-													<span
-														className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${villageColor}`}
+							<tbody>
+								{loading
+									? renderLoading(
+											readOnly ? 6 : 7,
+											"Đang tải dữ liệu thủy sản...",
+										)
+									: households.length === 0
+										? renderEmpty(readOnly ? 6 : 7)
+										: households.map((hh, idx) => {
+												const stt = (page - 1) * limit + idx + 1;
+												return (
+													<tr
+														key={hh.id}
+														onDoubleClick={() => !readOnly && onEdit(hh)}
+														className={TABLE_STYLES.tr}
 													>
-														{hh.village_name || "Chưa gán"}
-													</span>
-												</td>
-												<td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.fish_pond)}
-												</td>
-												<td className="py-3 px-4 text-right font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{hh.fish_cage ? `${hh.fish_cage} lồng` : "-"}
-												</td>
-												{!readOnly && (
-													<td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors whitespace-nowrap">
-														<div className="flex items-center justify-center gap-1">
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	onEdit(hh);
-																}}
-																aria-label="Sửa hộ"
-																className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-xl transition-colors cursor-pointer"
-															>
-																<Edit3 className="w-4 h-4" strokeWidth={1.5} />
-															</button>
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	onDelete(hh);
-																}}
-																aria-label="Xóa hộ"
-																className="p-1.5 text-slate-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-xl transition-colors cursor-pointer"
-															>
-																<Trash2 className="w-4 h-4" strokeWidth={1.5} />
-															</button>
-														</div>
-													</td>
-												)}
-											</tr>
-										);
-									})
-								)}
+														<td className={TABLE_STYLES.stickyLeftCheckbox}>
+															<input
+																type="checkbox"
+																aria-label={`Chọn hộ ${hh.full_name}`}
+																className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
+																checked={selectedIds.includes(hh.id!)}
+																onChange={() =>
+																	onToggleSelect && onToggleSelect(hh.id!)
+																}
+																onClick={(e) => e.stopPropagation()}
+															/>
+														</td>
+														<td className={TABLE_STYLES.stickyLeftSTT}>
+															{stt}
+														</td>
+														{renderNameCell(hh)}
+														<td className={TABLE_STYLES.td}>
+															<VillageBadge name={hh.village_name} />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.fish_pond} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.fish_cage}
+																unit="lồng"
+																maxFractionDigits={0}
+															/>
+														</td>
+														{renderActionCell(hh)}
+													</tr>
+												);
+											})}
 							</tbody>
 						</>
 					)}
 
 					{/* ========================================================================= */}
-					{/* 6. VIEW MODE: FULL (21 CỘT ĐẦY ĐỦ MA TRẬN) */}
+					{/* 6. VIEW MODE: FULL (21 CỘT MA TRẬN ĐẦY ĐỦ) */}
 					{/* ========================================================================= */}
 					{viewMode === "full" && (
 						<>
 							<thead>
-								<tr className="bg-slate-100/90 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-black uppercase tracking-wider">
+								<tr>
 									<th
 										rowSpan={2}
-										className="py-3 px-2 text-center w-10 border-r border-slate-200/80 dark:border-slate-800 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]"
+										className={`${TABLE_STYLES.thCenter} sticky left-0 z-20 w-10`}
 									>
 										<input
 											type="checkbox"
@@ -1387,261 +1272,214 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 									</th>
 									<th
 										rowSpan={2}
-										className="py-3 px-3.5 border-r border-slate-200/80 dark:border-slate-800 text-center w-12 whitespace-nowrap"
+										className={`${TABLE_STYLES.thCenter} sticky left-10 z-20 w-12`}
 									>
 										STT
 									</th>
 									<th
 										rowSpan={2}
-										className="py-3 px-4 border-r border-slate-200/80 dark:border-slate-800 min-w-[190px] whitespace-nowrap"
+										className={`${TABLE_STYLES.th} sticky left-[88px] z-20 min-w-[200px] shadow-[4px_0_10px_-2px_rgba(0,0,0,0.04)] dark:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.2)]`}
 									>
 										Họ và Tên Chủ Hộ
 									</th>
 									<th
 										rowSpan={2}
-										className="py-3 px-3.5 border-r border-slate-200/80 dark:border-slate-800 min-w-[130px] whitespace-nowrap"
+										className={`${TABLE_STYLES.th} min-w-[120px]`}
 									>
 										Thôn Quản Lý
 									</th>
 
-									<th
-										colSpan={8}
-										className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 whitespace-nowrap"
-									>
+									<th colSpan={8} className={TABLE_STYLES.thCenter}>
 										1. Cây Trồng Chính (ha)
 									</th>
-									<th
-										colSpan={4}
-										className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-teal-50/70 dark:bg-teal-950/40 text-teal-900 dark:text-teal-300 whitespace-nowrap"
-									>
+									<th colSpan={4} className={TABLE_STYLES.thCenter}>
 										2. Dược Liệu Đăk Hà (ha)
 									</th>
-									<th
-										colSpan={4}
-										className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-amber-50/70 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 whitespace-nowrap"
-									>
+									<th colSpan={4} className={TABLE_STYLES.thCenter}>
 										3. Đàn Vật Nuôi (con)
 									</th>
-									<th
-										colSpan={2}
-										className="py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-800 text-center bg-sky-50/70 dark:bg-sky-950/40 text-sky-900 dark:text-sky-300 whitespace-nowrap"
-									>
+									<th colSpan={2} className={TABLE_STYLES.thCenter}>
 										4. Thủy Sản
 									</th>
 									{!readOnly && (
 										<th
 											rowSpan={2}
-											className="py-3 px-3 text-center min-w-[90px] sticky right-0 z-20 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-slate-100 dark:bg-slate-950 shadow-xs whitespace-nowrap"
+											className={`${TABLE_STYLES.thCenter} sticky right-0 z-20 min-w-[96px] shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.04)] dark:shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.2)]`}
 										>
 											Thao Tác
 										</th>
 									)}
 								</tr>
 
-								<tr className="bg-slate-50 dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-bold">
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Cà phê (Hộ)
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Cà phê (Khoán)
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Cao su (Hộ)
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Cao su (Khoán)
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Ăn quả
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Mắc ca
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Lúa nước
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 whitespace-nowrap">
-										Hàng năm
-									</th>
+								<tr>
+									{/* Cây trồng */}
+									<th className={TABLE_STYLES.thRight}>Cà phê (Hộ)</th>
+									<th className={TABLE_STYLES.thRight}>Cà phê (Khoán)</th>
+									<th className={TABLE_STYLES.thRight}>Cao su (Hộ)</th>
+									<th className={TABLE_STYLES.thRight}>Cao su (Khoán)</th>
+									<th className={TABLE_STYLES.thRight}>Ăn quả</th>
+									<th className={TABLE_STYLES.thRight}>Mắc ca</th>
+									<th className={TABLE_STYLES.thRight}>Lúa nước</th>
+									<th className={TABLE_STYLES.thRight}>Hàng năm</th>
 
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Đinh lăng
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Gừng
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Nghệ
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 whitespace-nowrap">
-										Sả
-									</th>
+									{/* Dược liệu */}
+									<th className={TABLE_STYLES.thRight}>Đinh lăng</th>
+									<th className={TABLE_STYLES.thRight}>Gừng</th>
+									<th className={TABLE_STYLES.thRight}>Nghệ</th>
+									<th className={TABLE_STYLES.thRight}>Sả</th>
 
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Trâu
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Bò
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Heo
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 whitespace-nowrap">
-										Gia cầm
-									</th>
+									{/* Vật nuôi */}
+									<th className={TABLE_STYLES.thRight}>Trâu</th>
+									<th className={TABLE_STYLES.thRight}>Bò</th>
+									<th className={TABLE_STYLES.thRight}>Heo</th>
+									<th className={TABLE_STYLES.thRight}>Gia cầm</th>
 
-									<th className="py-2 px-2 text-right border-r border-slate-200/60 dark:border-slate-800 whitespace-nowrap">
-										Cá ao (ha)
-									</th>
-									<th className="py-2 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 whitespace-nowrap">
-										Cá lồng (lồng)
-									</th>
+									{/* Thủy sản */}
+									<th className={TABLE_STYLES.thRight}>Cá ao (ha)</th>
+									<th className={TABLE_STYLES.thRight}>Cá lồng (lồng)</th>
 								</tr>
 							</thead>
-							<tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-								{loading ? (
-									<tr>
-										<td
-											colSpan={readOnly ? 22 : 23}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mx-auto mb-2" />
-											<span className="font-bold text-sm">
-												Đang tải dữ liệu tổng hợp 21 chỉ số...
-											</span>
-										</td>
-									</tr>
-								) : households.length === 0 ? (
-									<tr>
-										<td
-											colSpan={readOnly ? 22 : 23}
-											className="py-16 text-center text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800"
-										>
-											<div className="text-base font-bold text-slate-600 dark:text-slate-300">
-												Không tìm thấy hộ nông nghiệp nào
-											</div>
-										</td>
-									</tr>
-								) : (
-									households.map((hh, idx) => {
-										const villageColor =
-											villageColorMap[hh.village_name || ""] ||
-											"bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
-										return (
-											<tr
-												key={hh.id}
-												onDoubleClick={() => !readOnly && onEdit(hh)}
-												className="hover:bg-emerald-50/40 dark:hover:bg-slate-800/60 transition-colors text-[13.5px]"
-											>
-												<td className="py-3 px-2 border-r border-slate-100 dark:border-slate-800/60 text-center sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors">
-													<input
-														type="checkbox"
-														aria-label={`Chọn hộ ${hh.full_name}`}
-														className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
-														checked={selectedIds.includes(hh.id!)}
-														onChange={() =>
-															onToggleSelect && onToggleSelect(hh.id!)
-														}
-														onClick={(e) => e.stopPropagation()}
-													/>
-												</td>
-												<td className="py-3 px-3.5 border-r border-slate-100 dark:border-slate-800/60 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">
-													{(page - 1) * limit + idx + 1}
-												</td>
-												<td className="py-3 px-4 border-r border-slate-100 dark:border-slate-800/60 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-													{hh.full_name}
-												</td>
-												<td className="py-3 px-3.5 border-r border-slate-100 dark:border-slate-800/60 whitespace-nowrap">
-													<span
-														className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${villageColor}`}
+							<tbody>
+								{loading
+									? renderLoading(
+											readOnly ? 22 : 23,
+											"Đang tải dữ liệu tổng hợp 21 chỉ số...",
+										)
+									: households.length === 0
+										? renderEmpty(readOnly ? 22 : 23)
+										: households.map((hh, idx) => {
+												const stt = (page - 1) * limit + idx + 1;
+												return (
+													<tr
+														key={hh.id}
+														onDoubleClick={() => !readOnly && onEdit(hh)}
+														className={TABLE_STYLES.tr}
 													>
-														{hh.village_name || "Chưa gán"}
-													</span>
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.cafe_household)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.cafe_contracted)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.rubber_household)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.rubber_contracted)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.fruit_tree)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.macadamia)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.wet_rice)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.other_annual_crops)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.herb_dinh_lang)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.herb_gung)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.herb_nghe)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 bg-teal-50/20 dark:bg-teal-950/20 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.herb_sa)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{hh.buffalo || "-"}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{hh.cow || "-"}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{hh.pig || "-"}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{hh.poultry || "-"}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-100 dark:border-slate-800/60 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{cryptoHelper.formatArea(hh.fish_pond)}
-												</td>
-												<td className="py-3 px-2 text-right border-r border-slate-200/80 dark:border-slate-800 font-mono tabular-nums text-slate-800 dark:text-slate-200 whitespace-nowrap">
-													{hh.fish_cage ? `${hh.fish_cage} lồng` : "-"}
-												</td>
-												{!readOnly && (
-													<td className="py-3 px-3 text-center sticky right-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors whitespace-nowrap">
-														<button
-															type="button"
-															onClick={() => onEdit(hh)}
-															aria-label="Sửa hộ"
-															className="p-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer"
-														>
-															<Edit3 className="w-4 h-4" />
-														</button>
-														<button
-															type="button"
-															onClick={() => onDelete(hh)}
-															aria-label="Xóa hộ"
-															className="p-1.5 text-slate-400 hover:text-rose-700 cursor-pointer"
-														>
-															<Trash2 className="w-4 h-4" />
-														</button>
-													</td>
-												)}
-											</tr>
-										);
-									})
-								)}
+														<td className={TABLE_STYLES.stickyLeftCheckbox}>
+															<input
+																type="checkbox"
+																aria-label={`Chọn hộ ${hh.full_name}`}
+																className="w-4 h-4 cursor-pointer accent-emerald-600 rounded"
+																checked={selectedIds.includes(hh.id!)}
+																onChange={() =>
+																	onToggleSelect && onToggleSelect(hh.id!)
+																}
+																onClick={(e) => e.stopPropagation()}
+															/>
+														</td>
+														<td className={TABLE_STYLES.stickyLeftSTT}>
+															{stt}
+														</td>
+														{renderNameCell(hh)}
+														<td className={TABLE_STYLES.td}>
+															<VillageBadge name={hh.village_name} />
+														</td>
+
+														{/* Cây trồng */}
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.cafe_household} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.cafe_contracted}
+																unit="ha"
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.rubber_household}
+																unit="ha"
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.rubber_contracted}
+																unit="ha"
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.fruit_tree} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.macadamia} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.wet_rice} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.other_annual_crops}
+																unit="ha"
+															/>
+														</td>
+
+														{/* Dược liệu */}
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.herb_dinh_lang} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.herb_gung} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.herb_nghe} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.herb_sa} unit="ha" />
+														</td>
+
+														{/* Vật nuôi */}
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.buffalo}
+																unit="con"
+																maxFractionDigits={0}
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.cow}
+																unit="con"
+																maxFractionDigits={0}
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.pig}
+																unit="con"
+																maxFractionDigits={0}
+															/>
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.poultry}
+																unit="con"
+																maxFractionDigits={0}
+															/>
+														</td>
+
+														{/* Thủy sản */}
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell value={hh.fish_pond} unit="ha" />
+														</td>
+														<td className={TABLE_STYLES.tdRight}>
+															<NumberCell
+																value={hh.fish_cage}
+																unit="lồng"
+																maxFractionDigits={0}
+															/>
+														</td>
+
+														{renderActionCell(hh)}
+													</tr>
+												);
+											})}
 							</tbody>
 						</>
 					)}
 				</table>
 			</div>
 
+			{/* 4. Phân trang chuẩn */}
 			<TablePagination
 				itemCount={households.length}
 				total={total}

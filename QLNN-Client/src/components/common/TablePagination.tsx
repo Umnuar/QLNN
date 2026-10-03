@@ -28,7 +28,7 @@ export const TablePagination: React.FC<TablePaginationProps> = ({
 			<div className="text-slate-600 dark:text-slate-300 font-medium">
 				Hiển thị{" "}
 				<strong className="text-slate-900 dark:text-white font-bold">
-					{start}-{end}
+					{start}–{end}
 				</strong>{" "}
 				trong tổng số{" "}
 				<strong className="text-slate-900 dark:text-white font-bold">
