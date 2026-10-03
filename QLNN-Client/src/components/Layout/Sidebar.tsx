@@ -12,6 +12,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import type React from "react";
+import { useEffect } from "react";
 import { useApp } from "../../AppContext";
 
 interface NavItem {
@@ -33,6 +34,21 @@ export const Sidebar: React.FC = () => {
 		setSelectedVillageId,
 		selectedVillageName,
 	} = useApp();
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (
+				e.key === "Escape" &&
+				!isSidebarCollapsed &&
+				typeof window !== "undefined" &&
+				window.innerWidth < 768
+			) {
+				toggleSidebar();
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [isSidebarCollapsed, toggleSidebar]);
 
 	let navItems: NavItem[] = [];
 

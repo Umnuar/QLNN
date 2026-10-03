@@ -135,9 +135,10 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
 					</div>
 
 					<div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-						<label className="flex items-start gap-3 cursor-pointer group">
+						<label htmlFor="export-scope-all" className="flex items-start gap-3 cursor-pointer group">
 							<div className="relative flex items-start">
 								<input
+									id="export-scope-all"
 									type="radio"
 									name="exportScope"
 									checked={exportScope === "all"}
@@ -155,10 +156,12 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
 							</div>
 						</label>
 						<label
+							htmlFor="export-scope-selected"
 							className={`flex items-start gap-3 ${selectedCount === 0 ? "opacity-50 cursor-not-allowed" : "cursor-pointer group"}`}
 						>
 							<div className="relative flex items-start">
 								<input
+									id="export-scope-selected"
 									type="radio"
 									name="exportScope"
 									disabled={selectedCount === 0}

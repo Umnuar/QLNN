@@ -1,6 +1,6 @@
 import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
 import type React from "react";
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 interface ModalOptions {
 	title: string;
@@ -52,17 +52,33 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({
 		}
 	};
 
-	const handleCancel = () => {
+	const handleCancel = useCallback(() => {
 		if (modal?.onCancel) modal.onCancel();
 		hideModal();
-	};
+	}, [modal, hideModal]);
+
+	useEffect(() => {
+		if (!isOpen) return;
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				handleCancel();
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [isOpen, handleCancel]);
 
 	return (
 		<ModalContext.Provider value={{ showModal, hideModal }}>
 			{children}
 			{isOpen && modal && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
-					<div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden scale-100 transition-all text-slate-900 dark:text-slate-100">
+					<div
+						role="dialog"
+						aria-modal="true"
+						aria-labelledby="generic-modal-title"
+						className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden scale-100 transition-all text-slate-900 dark:text-slate-100"
+					>
 						<div className="p-6 flex items-start gap-4">
 							<div
 								className={`p-3 rounded-2xl shrink-0 ${
@@ -84,7 +100,7 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({
 								)}
 							</div>
 							<div className="flex-1 min-w-0">
-								<h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+								<h3 id="generic-modal-title" className="text-base font-black text-slate-900 dark:text-white tracking-tight">
 									{modal.title}
 								</h3>
 								<p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">

@@ -37,8 +37,9 @@
 | `P4-L4-ANALYTICS` | Phase 4 | Layer 4 Screen Group: Analytics Dashboard | `L4-analytics` | completed | `ui-sync/layer4-analytics.md` | Summary cards, charts, village comparison (Tests PASS) |
 | `P4-L4-RECYCLE-AUDIT` | Phase 4 | Layer 4 Screen Group: Recycle Bin & Audit Log | `L4-recycle-audit` | completed | `ui-sync/layer4-recycle-audit.md` | Restore, permanent delete, timeline diff (Tests PASS) |
 | `P4-L4-SETTINGS` | Phase 4 | Layer 4 Screen Group: System Settings & Users | `L4-settings` | completed | `ui-sync/layer4-settings.md` | Profile, user management, backup/restore (Tests PASS) |
-| `P5-VER-CONTENT` | Phase 5 | Independent Content Invariant Verification | `V-content` | pending | `ui-sync/verify-content.md` | 100% Vietnamese labels, columns, data intact |
-| `P5-VER-VISUAL` | Phase 5 | Independent Visual Parity Audit | `V-visual` | pending | `ui-sync/verify-visual.md` | Token compliance, spacing, dark mode |
-| `P5-VER-FUNCTIONAL` | Phase 5 | Independent Automated Test & Flow Verification | `V-functional` | pending | `ui-sync/verify-functional.md` | 100% tests pass, 0 console errors |
-| `P5-VER-A11Y` | Phase 5 | Independent A11y & Responsive Viewport Audit | `V-a11y-responsive` | pending | `ui-sync/verify-a11y.md` | 360px, 768px, 1280px, 1920px checks |
-| `P6-FINAL-REPORT` | Phase 6 | Final Synthesis & Before/After Report | Orchestrator | pending | `ui-sync/FINAL_REPORT.md` | Complete executive & technical handoff |
+| `P5-VER-CONTENT` | Phase 5 | Independent Content Invariant Verification | `V-content` | completed | `ui-sync/verify-content.md` | 100% Vietnamese labels, 18 indicators, 21 cols, OCC intact |
+| `P5-VER-VISUAL` | Phase 5 | Independent Visual Parity Audit | `V-visual` | completed | `ui-sync/verify-visual.md` | 100% Visual Parity Score, tokens, spacing, dark mode |
+| `P5-VER-FUNCTIONAL` | Phase 5 | Independent Automated Test & Flow Verification | `V-functional` | completed | `ui-sync/verify-functional.md` | 56/56 tests PASS (30 BE + 26 FE), 0 TS errors, Vite build PASS |
+| `P5-VER-A11Y` | Phase 5 | Independent A11y & Responsive Viewport Audit | `V-a11y-responsive` | completed | `ui-sync/verify-a11y.md` | 360px, 768px, 1280px, 1920px pass; Focus Trap & ARIA 100% |
+| `P6-FINAL-REPORT` | Phase 6 | Final Synthesis & Before/After Report | Orchestrator | completed | `ui-sync/FINAL_REPORT.md` | Complete executive & technical handoff |
+

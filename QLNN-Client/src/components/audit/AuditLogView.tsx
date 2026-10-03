@@ -887,6 +887,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
 							value={search}
 							onChange={(e) => setSearch(e.target.value)}
 							placeholder="Tìm theo nội dung, tên chủ hộ, tên cán bộ..."
+							aria-label="Tìm kiếm nhật ký theo nội dung, tên chủ hộ, tên cán bộ"
 							className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:bg-slate-800 rounded-2xl text-xs font-medium focus:outline-hidden"
 						/>
 					</div>

@@ -428,6 +428,7 @@ export const VillagesPage: React.FC = () => {
 						<input
 							type="text"
 							placeholder="Tìm kiếm thôn..."
+							aria-label="Tìm kiếm thôn theo tên"
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 							className="w-full sm:w-60 px-2 py-1.5 bg-transparent text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-hidden"
@@ -587,8 +588,17 @@ export const VillagesPage: React.FC = () => {
 					return (
 						<div
 							key={village.id}
+							role="button"
+							tabIndex={0}
+							aria-label={`Thôn ${village.name}, ${householdCount} hộ nông nghiệp`}
 							onClick={() => handleVillageClick(village.id)}
-							className="bg-white dark:bg-slate-900 rounded-3xl p-5 border-2 transition-all border-slate-200 dark:border-slate-800 hover:border-emerald-500 hover:shadow-xl hover:shadow-emerald-500/10 min-h-[160px] flex flex-col justify-between cursor-pointer group"
+							onKeyDown={(e) => {
+								if (e.key === "Enter" || e.key === " ") {
+									e.preventDefault();
+									handleVillageClick(village.id);
+								}
+							}}
+							className="bg-white dark:bg-slate-900 rounded-3xl p-5 border-2 transition-all border-slate-200 dark:border-slate-800 hover:border-emerald-500 hover:shadow-xl hover:shadow-emerald-500/10 min-h-[160px] flex flex-col justify-between cursor-pointer group focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
 						>
 							<div>
 								<div className="flex items-center justify-between gap-2 mb-3">
