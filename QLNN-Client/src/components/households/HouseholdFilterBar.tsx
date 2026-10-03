@@ -90,12 +90,12 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 	onDeleteSelected,
 }) => {
 	const isSelectionActive = Boolean(selectedCount && selectedCount > 0);
-	const hasActiveFilter = Boolean(
-		search.trim() !== "" ||
-			scaleFilter !== "all" ||
-			typeFilter !== "all" ||
-			sortBy !== "default",
-	);
+	const activeFilterCount =
+		(search.trim() !== "" ? 1 : 0) +
+		(scaleFilter !== "all" ? 1 : 0) +
+		(typeFilter !== "all" ? 1 : 0) +
+		(sortBy !== "default" ? 1 : 0);
+	const hasActiveFilter = activeFilterCount > 0;
 
 	const handleReset = () => {
 		setSearch("");
@@ -110,7 +110,11 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 			{/* 1. Ô tìm kiếm tích hợp */}
 			<div className="relative w-56 sm:w-80 shrink-0">
 				<Search
-					className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none"
+					className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
+						search.trim() !== ""
+							? "text-emerald-600 dark:text-emerald-400"
+							: "text-slate-400 dark:text-slate-500"
+					}`}
 					strokeWidth={1.5}
 					aria-hidden="true"
 				/>
@@ -121,7 +125,11 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 					onChange={(e) => setSearch(e.target.value)}
 					placeholder="Tìm theo họ tên chủ hộ..."
 					aria-label="Tìm theo họ tên chủ hộ"
-					className="w-full h-8 sm:h-9 pl-8.5 pr-14 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-hidden font-medium transition-all"
+					className={`w-full h-8 sm:h-9 pl-8.5 pr-14 rounded-xl text-xs placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden transition-all ${
+						search.trim() !== ""
+							? "bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-500/80 dark:border-emerald-700 text-emerald-900 dark:text-emerald-100 font-bold focus:ring-2 focus:ring-emerald-500/20 shadow-xs"
+							: "bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-medium focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+					}`}
 				/>
 				<div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center">
 					{search && (
@@ -164,18 +172,15 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 			{/* 2. Dropdown Quy mô */}
 			<div className="w-40 shrink-0">
 				<CustomSelect
+					variant="filter"
+					defaultValue="all"
 					value={scaleFilter}
 					onChange={(val) => setScaleFilter?.(val as ScaleFilter)}
 					options={SCALE_OPTIONS}
 					placeholder="Tất cả quy mô"
 					size="sm"
-					icon={
-						<Layers
-							className="w-3.5 h-3.5 text-slate-400 shrink-0"
-							strokeWidth={1.5}
-						/>
-					}
-					clearable={scaleFilter !== "all"}
+					icon={<Layers className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />}
+					clearable={true}
 					onClear={() => setScaleFilter?.("all")}
 				/>
 			</div>
@@ -183,18 +188,15 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 			{/* 3. Dropdown Loại hình */}
 			<div className="w-42 shrink-0">
 				<CustomSelect
+					variant="filter"
+					defaultValue="all"
 					value={typeFilter}
 					onChange={(val) => setTypeFilter?.(val as ProductionTypeFilter)}
 					options={TYPE_OPTIONS}
 					placeholder="Tất cả loại hình"
 					size="sm"
-					icon={
-						<Sprout
-							className="w-3.5 h-3.5 text-slate-400 shrink-0"
-							strokeWidth={1.5}
-						/>
-					}
-					clearable={typeFilter !== "all"}
+					icon={<Sprout className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />}
+					clearable={true}
 					onClear={() => setTypeFilter?.("all")}
 				/>
 			</div>
@@ -202,18 +204,17 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 			{/* 4. Dropdown Sắp xếp */}
 			<div className="w-40 shrink-0">
 				<CustomSelect
+					variant="filter"
+					defaultValue="default"
 					value={sortBy}
 					onChange={(val) => setSortBy?.(val as SortOption)}
 					options={SORT_OPTIONS}
 					placeholder="Mặc định (STT)"
 					size="sm"
 					icon={
-						<ArrowUpDown
-							className="w-3.5 h-3.5 text-slate-400 shrink-0"
-							strokeWidth={1.5}
-						/>
+						<ArrowUpDown className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />
 					}
-					clearable={sortBy !== "default"}
+					clearable={true}
 					onClear={() => setSortBy?.("default")}
 				/>
 			</div>
@@ -228,14 +229,25 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 				title={
 					isAllExpanded ? "Thu gọn tất cả chi tiết" : "Bung tất cả chi tiết"
 				}
-				className={`h-8 px-2.5 flex items-center gap-1.5 rounded-xl text-xs font-bold border shrink-0 transition-all cursor-pointer ${
+				className={`h-8 px-2.5 flex items-center gap-1.5 rounded-xl text-xs border shrink-0 transition-all cursor-pointer ${
 					isAllExpanded
-						? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-800"
-						: "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700"
+						? "bg-emerald-50/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border-emerald-500/80 dark:border-emerald-700 font-bold shadow-xs"
+						: "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium"
 				}`}
 			>
+				{isAllExpanded && (
+					<span
+						className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0"
+						aria-hidden="true"
+						title="Đang bật bung chi tiết"
+					/>
+				)}
 				<ChevronsUpDown
-					className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400"
+					className={`w-3.5 h-3.5 transition-colors ${
+						isAllExpanded
+							? "text-emerald-600 dark:text-emerald-400"
+							: "text-slate-400 dark:text-slate-500"
+					}`}
 					strokeWidth={1.5}
 					aria-hidden="true"
 				/>
@@ -249,16 +261,23 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 				<button
 					type="button"
 					onClick={handleReset}
-					aria-label="Xóa bộ lọc"
+					aria-label={
+						activeFilterCount > 1 ? "Xóa tất cả bộ lọc" : "Xóa bộ lọc"
+					}
 					title="Xóa bộ lọc về mặc định"
-					className="h-8 px-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0 transition-all"
+					className="h-8 px-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0 transition-all hover:bg-rose-100 dark:hover:bg-rose-900/50"
 				>
 					<RotateCcw
 						className="w-3.5 h-3.5"
 						strokeWidth={1.5}
 						aria-hidden="true"
 					/>
-					<span>Xóa lọc</span>
+					<span>{activeFilterCount > 1 ? "Xóa tất cả bộ lọc" : "Xóa lọc"}</span>
+					{activeFilterCount > 1 && (
+						<span className="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-rose-200 text-rose-800 dark:bg-rose-900 dark:text-rose-200">
+							{activeFilterCount}
+						</span>
+					)}
 				</button>
 			)}
 

@@ -267,4 +267,61 @@ describe("HouseholdFilterBar UI and Interactions", () => {
 		fireEvent.click(clearSearchBtn);
 		expect(setSearch).toHaveBeenCalledWith("");
 	});
+
+	it("8. Quy tắc highlight: mặc định dùng kiểu trung tính, chỉ tô xanh + chấm khi đang lọc thật, hiện 'Xóa tất cả bộ lọc' khi nhiều lọc bật", () => {
+		const { rerender } = render(
+			<HouseholdFilterBar
+				{...defaultProps}
+				search=""
+				scaleFilter="all"
+				typeFilter="all"
+				sortBy="default"
+				isAllExpanded={false}
+			/>,
+		);
+
+		// Trạng thái mặc định: các trigger không có class emerald highlight
+		const scaleTrigger = screen.getByRole("button", { name: /Tất cả quy mô/i });
+		expect(scaleTrigger.className).not.toContain("bg-emerald-50");
+		expect(scaleTrigger.className).toContain("bg-slate-50");
+
+		const expandBtn = screen.getByRole("button", {
+			name: /Bung tất cả chi tiết/i,
+		});
+		expect(expandBtn.className).not.toContain("bg-emerald-50");
+		expect(expandBtn.className).toContain("bg-slate-50");
+
+		// Khi lọc 1 tiêu chí: scaleFilter="large"
+		rerender(
+			<HouseholdFilterBar
+				{...defaultProps}
+				search=""
+				scaleFilter="large"
+				typeFilter="all"
+				sortBy="default"
+				isAllExpanded={false}
+			/>,
+		);
+		const activeScaleTrigger = screen.getByRole("button", { name: /Lớn/i });
+		expect(activeScaleTrigger.className).toContain("bg-emerald-50");
+		expect(screen.getByTitle("Đang áp dụng bộ lọc")).toBeInTheDocument();
+		expect(screen.getByText("Xóa lọc")).toBeInTheDocument();
+
+		// Khi có nhiều lọc bật: search="A Blong" và scaleFilter="large"
+		rerender(
+			<HouseholdFilterBar
+				{...defaultProps}
+				search="A Blong"
+				scaleFilter="large"
+				typeFilter="all"
+				sortBy="default"
+				isAllExpanded={true}
+			/>,
+		);
+		expect(screen.getByText("Xóa tất cả bộ lọc")).toBeInTheDocument();
+		const activeExpandBtn = screen.getByRole("button", {
+			name: /Thu gọn tất cả chi tiết/i,
+		});
+		expect(activeExpandBtn.className).toContain("bg-emerald-50");
+	});
 });

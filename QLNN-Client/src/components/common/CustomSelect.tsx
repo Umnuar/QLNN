@@ -24,6 +24,8 @@ export interface CustomSelectProps<T = string | number> {
 	clearable?: boolean;
 	onClear?: () => void;
 	isActive?: boolean;
+	variant?: "form" | "filter";
+	defaultValue?: T;
 	className?: string;
 	containerClassName?: string;
 	dropdownClassName?: string;
@@ -45,7 +47,9 @@ export function CustomSelect<T extends string | number = string | number>({
 	icon,
 	clearable = false,
 	onClear,
-	isActive = false,
+	isActive,
+	variant = "form",
+	defaultValue,
 	className = "",
 	containerClassName = "",
 	dropdownClassName = "",
@@ -215,6 +219,38 @@ export function CustomSelect<T extends string | number = string | number>({
 		},
 	}[size];
 
+	const isFiltering = useMemo(() => {
+		if (variant === "form") {
+			return false;
+		}
+
+		if (isActive !== undefined) {
+			return isActive;
+		}
+
+		if (variant === "filter") {
+			if (defaultValue !== undefined) {
+				return value !== defaultValue;
+			}
+			const valStr = String(value).toLowerCase();
+			return valStr !== "" && valStr !== "all" && valStr !== "default";
+		}
+
+		return false;
+	}, [variant, isActive, defaultValue, value]);
+
+	const showClearButton =
+		clearable &&
+		!disabled &&
+		(variant === "filter"
+			? isFiltering
+			: Boolean(
+					selectedOption &&
+						selectedOption.value !== "" &&
+						(defaultValue === undefined ||
+							selectedOption.value !== defaultValue),
+				));
+
 	return (
 		<div className={`relative w-full ${containerClassName}`} ref={containerRef}>
 			{label && (
@@ -267,41 +303,50 @@ export function CustomSelect<T extends string | number = string | number>({
 					aria-haspopup="listbox"
 					aria-expanded={isOpen}
 					onClick={toggleDropdown}
-					className={`w-full flex items-center justify-between gap-2 font-medium transition-all outline-hidden cursor-pointer select-none text-left
+					className={`w-full flex items-center justify-between gap-2 transition-all outline-hidden cursor-pointer select-none text-left
 	          ${
-							isActive ||
-							(
-								selectedOption &&
-									selectedOption.value !== "" &&
-									selectedOption.value !== "ALL"
-							)
-								? "border-emerald-500/80 bg-emerald-50/50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700"
-								: "bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 hover:border-slate-300 dark:hover:border-slate-600"
+							isFiltering
+								? "border-emerald-500/80 bg-emerald-50/70 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100 dark:border-emerald-600 font-bold shadow-xs"
+								: "bg-slate-50 border border-slate-200 text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 hover:border-slate-300 dark:hover:border-slate-600 font-medium"
 						}
 	          focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
 	          ${isOpen ? "border-emerald-500 dark:border-emerald-500 ring-2 ring-emerald-500/20" : ""}
 	          ${error ? "border-rose-500 dark:border-rose-500 focus:ring-rose-500/20" : ""}
 	          ${disabled ? "opacity-60 cursor-not-allowed pointer-events-none" : ""}
 	          ${sizeStyles.trigger}
-	          ${clearable && selectedOption && selectedOption.value !== "" && !disabled ? "pr-8" : ""}
+	          ${showClearButton ? "pr-8" : ""}
 	          ${className}
 	        `}
 				>
 					<div className="flex items-center gap-2 min-w-0 flex-1">
 						{icon && (
 							<span
-								className={`shrink-0 flex items-center ${
-									selectedOption && selectedOption.value !== ""
+								className={`shrink-0 flex items-center transition-colors ${
+									isFiltering
 										? "text-emerald-600 dark:text-emerald-400"
-										: "text-slate-400"
+										: "text-slate-400 dark:text-slate-500"
 								}`}
 							>
 								{icon}
 							</span>
 						)}
 
+						{isFiltering && (
+							<span
+								className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0"
+								title="Đang áp dụng bộ lọc"
+								aria-hidden="true"
+							/>
+						)}
+
 						{selectedOption && selectedOption.value !== "" ? (
-							<span className="truncate block font-medium">
+							<span
+								className={`truncate block ${
+									isFiltering
+										? "font-bold text-emerald-900 dark:text-emerald-100"
+										: "font-medium text-slate-800 dark:text-slate-100"
+								}`}
+							>
 								{selectedOption.label}
 							</span>
 						) : size === "sm" || icon ? (
@@ -323,7 +368,11 @@ export function CustomSelect<T extends string | number = string | number>({
 
 					<div className="flex items-center shrink-0">
 						<ChevronDown
-							className={`shrink-0 text-slate-400 dark:text-slate-400 transition-transform duration-200 ${
+							className={`shrink-0 transition-transform duration-200 ${
+								isFiltering
+									? "text-emerald-600 dark:text-emerald-400"
+									: "text-slate-400 dark:text-slate-500"
+							} ${
 								isOpen
 									? "rotate-180 text-emerald-600 dark:text-emerald-400"
 									: ""
@@ -334,27 +383,26 @@ export function CustomSelect<T extends string | number = string | number>({
 					</div>
 				</button>
 
-				{clearable &&
-					selectedOption &&
-					selectedOption.value !== "" &&
-					!disabled && (
-						<button
-							type="button"
-							tabIndex={0}
-							aria-label="Xóa lựa chọn"
-							onClick={(e) => {
-								e.stopPropagation();
-								if (onClear) {
-									onClear();
-								} else {
-									onChange("" as unknown as T);
-								}
-							}}
-							className="absolute right-7 p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-						>
-							<X className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" />
-						</button>
-					)}
+				{showClearButton && (
+					<button
+						type="button"
+						tabIndex={0}
+						aria-label="Xóa lựa chọn"
+						onClick={(e) => {
+							e.stopPropagation();
+							if (onClear) {
+								onClear();
+							} else if (defaultValue !== undefined) {
+								onChange(defaultValue);
+							} else {
+								onChange("" as unknown as T);
+							}
+						}}
+						className="absolute right-7 p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+					>
+						<X className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" />
+					</button>
+				)}
 			</div>
 
 			{error && (
