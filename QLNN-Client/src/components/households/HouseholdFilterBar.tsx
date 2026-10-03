@@ -1,13 +1,9 @@
 import {
-	ArrowUpDown,
 	ChevronDown,
-	ChevronsUpDown,
 	Download,
-	Layers,
 	RefreshCw,
 	RotateCcw,
 	Search,
-	Sprout,
 	Trash2,
 	X,
 } from "lucide-react";
@@ -201,7 +197,6 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 					options={SCALE_OPTIONS}
 					placeholder="Tất cả quy mô"
 					size="sm"
-					icon={<Layers className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />}
 					clearable={true}
 					onClear={() => setScaleFilter?.("all")}
 				/>
@@ -217,7 +212,6 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 					options={TYPE_OPTIONS}
 					placeholder="Tất cả loại hình"
 					size="sm"
-					icon={<Sprout className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />}
 					clearable={true}
 					onClear={() => setTypeFilter?.("all")}
 				/>
@@ -233,9 +227,6 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 					options={SORT_OPTIONS}
 					placeholder="Mặc định (STT)"
 					size="sm"
-					icon={
-						<ArrowUpDown className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />
-					}
 					clearable={true}
 					onClear={() => setSortBy?.("default")}
 				/>
@@ -251,7 +242,7 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 				title={
 					isAllExpanded ? "Thu gọn tất cả chi tiết" : "Bung tất cả chi tiết"
 				}
-				className={`h-8 px-2.5 flex items-center gap-1.5 rounded-xl text-xs border shrink-0 transition-all cursor-pointer ${
+				className={`h-8 px-3 flex items-center gap-1.5 rounded-xl text-xs border shrink-0 transition-all cursor-pointer ${
 					isAllExpanded
 						? "bg-emerald-50/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border-emerald-500/80 dark:border-emerald-700 font-bold shadow-xs"
 						: "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium"
@@ -264,16 +255,7 @@ export const HouseholdFilterBar: React.FC<HouseholdFilterBarProps> = ({
 						title="Đang bật bung chi tiết"
 					/>
 				)}
-				<ChevronsUpDown
-					className={`w-3.5 h-3.5 transition-colors ${
-						isAllExpanded
-							? "text-emerald-600 dark:text-emerald-400"
-							: "text-slate-400 dark:text-slate-500"
-					}`}
-					strokeWidth={1.5}
-					aria-hidden="true"
-				/>
-				<span className="hidden sm:inline">
+				<span>
 					{isAllExpanded ? "Thu gọn tất cả" : "Bung tất cả"}
 				</span>
 			</button>
