@@ -6,6 +6,10 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+:root {
+  --stat-accent: #22c55e;
+}
+
 @layer base {
   * {
     box-sizing: border-box;
