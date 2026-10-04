@@ -180,4 +180,95 @@ describe("Excel 21 Columns Preview Verification", () => {
 		fireEvent.click(confirmBtn);
 		expect(mockOnConfirm).toHaveBeenCalledWith(sampleFile);
 	});
+
+	it("6. Bước 1 (Chọn tệp): Render chuẩn QLCS với tiêu đề, khung kéo thả và 2 nút nằm trong khung", () => {
+		render(
+			<ImportPreviewModal
+				isOpen={true}
+				onClose={() => {}}
+				file={null}
+				parsedData={[]}
+				onConfirm={() => {}}
+				importing={false}
+			/>,
+		);
+
+		// Tiêu đề & mô tả chuẩn
+		expect(
+			screen.getByText("Nhập dữ liệu Excel — Hộ nông nghiệp"),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText("Chọn tệp Excel để bắt đầu đối soát dữ liệu"),
+		).toBeInTheDocument();
+
+		// Stepper
+		expect(screen.getByText("Chọn tệp")).toBeInTheDocument();
+		expect(screen.getByText("Xem trước")).toBeInTheDocument();
+
+		// Khung kéo thả
+		expect(
+			screen.getByText("Kéo thả tệp Excel vào đây hoặc bấm để chọn"),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText(/Định dạng hỗ trợ:/),
+		).toBeInTheDocument();
+		expect(screen.getByText(/(tối đa 10 MB)/)).toBeInTheDocument();
+
+		// 2 nút nằm trong khung kéo thả
+		expect(
+			screen.getByRole("button", { name: /Chọn tệp Excel/i }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: /Tải biểu mẫu chuẩn \(\.xlsx\)/i }),
+		).toBeInTheDocument();
+	});
+
+	it("7. Bước 1: Không có chân modal (không có nút Hủy và phân trang)", () => {
+		render(
+			<ImportPreviewModal
+				isOpen={true}
+				onClose={() => {}}
+				file={null}
+				parsedData={[]}
+				onConfirm={() => {}}
+				importing={false}
+			/>,
+		);
+
+		// Không có nút Hủy ở bước 1
+		expect(screen.queryByRole("button", { name: /^Hủy$/i })).toBeNull();
+		// Không có nút phân trang ở bước 1
+		expect(screen.queryByText("Trước")).toBeNull();
+		expect(screen.queryByText("Sau")).toBeNull();
+		// Đóng bằng nút X
+		expect(screen.getByRole("button", { name: /Đóng modal/i })).toBeInTheDocument();
+	});
+
+	it("8. Bước 1: Từ chối tệp vượt quá 10 MB", async () => {
+		render(
+			<ImportPreviewModal
+				isOpen={true}
+				onClose={() => {}}
+				file={null}
+				parsedData={[]}
+				onConfirm={() => {}}
+				importing={false}
+			/>,
+		);
+
+		// Tạo file giả lập vượt quá 10 MB (11 MB)
+		const oversizedFile = new File(["x"], "heavy_data.xlsx", {
+			type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		});
+		Object.defineProperty(oversizedFile, "size", { value: 11 * 1024 * 1024 });
+
+		const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+		expect(fileInput).not.toBeNull();
+
+		fireEvent.change(fileInput, { target: { files: [oversizedFile] } });
+
+		expect(
+			await screen.findByText("Dung lượng tệp vượt quá giới hạn 10 MB. Vui lòng chọn tệp nhỏ hơn."),
+		).toBeInTheDocument();
+	});
 });

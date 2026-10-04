@@ -5,9 +5,9 @@ import {
 	CheckCircle2,
 	ChevronLeft,
 	ChevronRight,
-	Download,
-	FileSpreadsheet,
+	FileDown,
 	Filter,
+	FolderOpen,
 	RefreshCw,
 	UploadCloud,
 	X,
@@ -119,6 +119,13 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 
 			if (selectedFile.size === 0) {
 				setFileError("Tệp tin rỗng, vui lòng chọn tệp có dữ liệu.");
+				return;
+			}
+
+			if (selectedFile.size > 10 * 1024 * 1024) {
+				setFileError(
+					"Dung lượng tệp vượt quá giới hạn 10 MB. Vui lòng chọn tệp nhỏ hơn.",
+				);
 				return;
 			}
 
@@ -420,7 +427,9 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 
 		const handleMouseDown = (e: MouseEvent) => {
 			if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-				onClose();
+				if (activeStep === "file") {
+					onClose();
+				}
 			}
 		};
 
@@ -431,7 +440,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 			window.removeEventListener("keydown", handleKeyDown);
 			document.removeEventListener("mousedown", handleMouseDown);
 		};
-	}, [isOpen, onClose]);
+	}, [isOpen, onClose, activeStep]);
 
 	if (!isOpen) return null;
 
@@ -447,58 +456,69 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 
 	return createPortal(
 		<div
-			className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/45 dark:bg-black/60 animate-in fade-in duration-150"
+			className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-[rgba(15,23,42,0.45)] dark:bg-[rgba(0,0,0,0.6)] animate-in fade-in duration-150 select-none"
 			aria-hidden="false"
+			onClick={(e) => {
+				if (e.target === e.currentTarget && activeStep === "file") {
+					onClose();
+				}
+			}}
 		>
 			<div
 				ref={modalRef}
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby={titleId}
-				className="w-full max-w-[min(1240px,94vw)] max-h-[85vh] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl shadow-xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-colors animate-in zoom-in-95 duration-150 relative"
+				onClick={(e) => e.stopPropagation()}
+				className={`bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[85vh] flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-[max-width,width] duration-150 motion-reduce:transition-none select-text ${
+					activeStep === "preview"
+						? "max-w-[1240px] w-[92vw]"
+						: "max-w-[670px] w-full"
+				}`}
 			>
 				{/* 1. Tiêu đề cố định */}
-				<div className="px-5 py-4 sm:px-6 sm:py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0 bg-white dark:bg-slate-900">
-					<div className="flex items-center gap-3.5 min-w-0">
-						<div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center shrink-0">
-							<FileSpreadsheet className="w-5 h-5" strokeWidth={1.5} />
+				<div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50 shrink-0">
+					<div className="flex items-center gap-3 min-w-0">
+						<div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
+							<UploadCloud className="w-5 h-5" strokeWidth={1.5} />
 						</div>
 						<div className="min-w-0">
 							<h2
 								id={titleId}
-								className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate"
+								className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate"
 							>
 								{activeStep === "file"
 									? "Nhập dữ liệu Excel — Hộ nông nghiệp"
 									: "Xem trước dữ liệu"}
 							</h2>
-							<p className="text-xs text-slate-500 dark:text-slate-400 font-normal truncate mt-0.5">
+							<p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
 								{activeStep === "file"
-									? "Kéo thả hoặc tải lên tệp danh sách 18 chỉ tiêu nông nghiệp xã Đăk Hà"
+									? "Chọn tệp Excel để bắt đầu đối soát dữ liệu"
 									: currentFile
-										? `Tệp: ${currentFile.name} • ${dataRows.length} dòng dữ liệu`
-										: `Tổng cộng ${dataRows.length} dòng dữ liệu`}
+										? `Tệp: ${currentFile.name} • ${formatVietnameseNumber(dataRows.length)} dòng dữ liệu`
+										: `Tổng cộng ${formatVietnameseNumber(dataRows.length)} dòng dữ liệu`}
 							</p>
 						</div>
 					</div>
 
-					<div className="flex items-center gap-2 shrink-0">
+					<div className="flex items-center gap-2 shrink-0 ml-3">
 						{activeStep === "preview" && (
 							<button
 								type="button"
 								onClick={handleSwitchToFileStep}
-								className="h-10 px-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5"
+								className="min-h-[44px] px-3.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
 								title="Quay lại bước chọn tệp khác"
 							>
-								<RefreshCw className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+								<RefreshCw className="w-3.5 h-3.5" strokeWidth={1.5} />
 								<span>Đổi tệp khác</span>
 							</button>
 						)}
 						<button
 							type="button"
 							onClick={onClose}
-							className="w-11 h-11 rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-							aria-label="Đóng"
+							aria-label="Đóng modal"
+							title="Đóng (Escape)"
+							className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
 						>
 							<X className="w-5 h-5" strokeWidth={1.5} />
 						</button>
@@ -506,111 +526,52 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 				</div>
 
 				{/* 2. Thanh bước thống nhất (Stepper) */}
-				<div className="px-5 py-2.5 sm:px-6 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 shrink-0">
-					<div className="flex items-center gap-3 sm:gap-6 text-xs">
-						<button
-							type="button"
-							onClick={() => setActiveStep("file")}
-							className={`flex items-center gap-2 cursor-pointer font-bold transition-colors ${
-								activeStep === "file"
-									? "text-emerald-600 dark:text-emerald-400"
-									: "text-slate-500 hover:text-slate-700 dark:text-slate-400"
-							}`}
-						>
-							<span
-								className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-									currentFile && activeStep === "preview"
-										? "bg-emerald-600 text-white"
-										: activeStep === "file"
-											? "bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-500"
-											: "bg-slate-200 dark:bg-slate-800 text-slate-500"
-								}`}
-							>
-								{currentFile && activeStep === "preview" ? (
-									<Check className="w-3 h-3" />
-								) : (
-									"1"
-								)}
-							</span>
-							<span>1. Chọn tệp</span>
-						</button>
-
-						<div className="w-6 sm:w-10 h-px bg-slate-200 dark:bg-slate-800" />
-
-						<button
-							type="button"
-							onClick={() => currentFile && setActiveStep("preview")}
-							disabled={!currentFile || dataRows.length === 0}
-							className={`flex items-center gap-2 font-bold transition-colors ${
-								activeStep === "preview"
-									? "text-emerald-600 dark:text-emerald-400"
-									: "text-slate-400 dark:text-slate-600 cursor-not-allowed"
-							}`}
-						>
-							<span
-								className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-									activeStep === "preview"
-										? "bg-emerald-600 text-white"
-										: "bg-slate-200 dark:bg-slate-800 text-slate-500"
-								}`}
-							>
-								2
-							</span>
-							<span>2. Xem trước & xác nhận</span>
-						</button>
-					</div>
-
-					{activeStep === "preview" && (
-						<div className="flex items-center gap-2">
-							{/* Chip Hợp lệ */}
-							<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/80 dark:border-emerald-800/80">
-								<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-								<span>Hợp lệ: {validCount}</span>
-							</div>
-
-							{/* Chip Cảnh báo nếu > 0 */}
-							{warningCount > 0 && (
-								<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-xs font-bold border border-amber-200/80 dark:border-amber-800/80">
-									<AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-									<span>Cảnh báo: {warningCount}</span>
-								</div>
-							)}
-
-							{/* Chip Lỗi nếu > 0 */}
-							{errorCount > 0 && (
-								<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 text-xs font-bold border border-rose-200/80 dark:border-rose-800/80">
-									<AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-									<span>Lỗi: {errorCount}</span>
-								</div>
-							)}
-
-							{/* Nút lọc chỉ dòng sự cố */}
-							{(warningCount > 0 || errorCount > 0) && (
+				<div className="px-6 py-2.5 bg-slate-50/80 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 sm:gap-6 text-xs shrink-0 select-none">
+					{[
+						{ num: 1, label: "Chọn tệp" },
+						{ num: 2, label: "Xem trước" },
+					].map((st, idx, arr) => {
+						const currentStepNum = activeStep === "preview" ? 2 : 1;
+						const isCompleted = currentStepNum > st.num;
+						const isActive = currentStepNum === st.num;
+						return (
+							<div key={st.num} className="flex items-center gap-2 sm:gap-4">
 								<button
 									type="button"
 									onClick={() => {
-										setOnlyShowIssues((prev) => !prev);
-										setImportPage(1);
+										if (st.num === 1 && activeStep === "preview") {
+											setActiveStep("file");
+										}
 									}}
-									className={`h-7 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
-										onlyShowIssues
-											? "bg-amber-500 text-white border-amber-600"
-											: "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100"
+									disabled={st.num === 2 && (!currentFile || dataRows.length === 0)}
+									className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${
+										isActive
+											? "bg-emerald-600 text-white shadow-xs"
+											: isCompleted
+												? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 cursor-pointer"
+												: "text-slate-700 dark:text-slate-200 bg-slate-200/90 dark:bg-slate-800 font-semibold cursor-not-allowed"
 									}`}
 								>
-									<Filter className="w-3 h-3" />
-									<span>{onlyShowIssues ? "Hiện tất cả" : "Chỉ lỗi/cảnh báo"}</span>
+									{isCompleted ? (
+										<Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+									) : (
+										<span className="w-4 text-center">{st.num}</span>
+									)}
+									<span>{st.label}</span>
 								</button>
-							)}
-						</div>
-					)}
+								{idx < arr.length - 1 && (
+									<ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+								)}
+							</div>
+						);
+					})}
 				</div>
 
 				{/* 3. Nội dung thân modal */}
-				<div className="flex-1 overflow-y-auto flex flex-col p-4 sm:p-6 custom-scrollbar">
+				<div className="flex-1 overflow-y-auto flex flex-col custom-scrollbar">
 					{/* BƯỚC 1: CHỌN TỆP EXCEL */}
 					{activeStep === "file" && (
-						<div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 space-y-6 max-w-xl mx-auto w-full">
+						<div className="p-6 sm:p-10 flex flex-col items-center justify-center flex-1 space-y-4">
 							<input
 								ref={fileInputRef}
 								type="file"
@@ -624,60 +585,130 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 								}}
 							/>
 
+							{fileError && (
+								<div className="w-full max-w-xl p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-2.5 animate-in fade-in">
+									<AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+									<span>{fileError}</span>
+								</div>
+							)}
+
 							<div
 								onDragOver={handleDragOver}
 								onDragLeave={handleDragLeave}
 								onDrop={handleDrop}
 								onClick={() => fileInputRef.current?.click()}
-								className={`w-full p-8 sm:p-12 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-150 ${
+								className={`w-full max-w-xl p-8 sm:p-10 border-2 border-dashed rounded-3xl transition-all cursor-pointer text-center flex flex-col items-center justify-center space-y-4 ${
 									isDragging
-										? "border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30 scale-[1.01]"
-										: "border-slate-200 dark:border-slate-700 hover:border-emerald-500/80 hover:bg-slate-50 dark:hover:bg-slate-800/40"
+										? "border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20"
+										: "border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 hover:border-emerald-500 hover:bg-emerald-50/20 dark:hover:bg-slate-800/40"
 								}`}
 							>
-								<div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center mb-4 transition-transform group-hover:scale-105">
+								<div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1">
 									{isReading ? (
-										<div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin" />
+										<div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin" />
 									) : (
-										<UploadCloud className="w-8 h-8" strokeWidth={1.5} />
+										<UploadCloud className="w-7 h-7" strokeWidth={1.5} />
 									)}
 								</div>
 
-								<div className="space-y-1.5">
-									<h3 className="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100">
+								<div>
+									<h3 className="text-base font-bold text-slate-900 dark:text-white">
 										{isReading
-											? "Đang phân tích tệp dữ liệu..."
-											: "Kéo và thả tệp Excel vào đây hoặc bấm để chọn tệp"}
+											? "Đang đọc dữ liệu tệp Excel..."
+											: "Kéo thả tệp Excel vào đây hoặc bấm để chọn"}
 									</h3>
-									<p className="text-xs text-slate-500 dark:text-slate-400 font-normal">
-										Chấp nhận định dạng .xlsx, .xls, .csv (tối đa 10MB)
+									<p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+										{isReading ? (
+											"Vui lòng đợi trong giây lát"
+										) : (
+											<>
+												Định dạng hỗ trợ:{" "}
+												<strong className="text-emerald-600 dark:text-emerald-400">
+													.xlsx, .xls, .csv
+												</strong>{" "}
+												(tối đa 10 MB)
+											</>
+										)}
 									</p>
 								</div>
-							</div>
 
-							{fileError && (
-								<div className="w-full p-3.5 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/80 rounded-2xl flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300 animate-in fade-in">
-									<AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
-									<span className="font-medium">{fileError}</span>
-								</div>
-							)}
-
-							<div className="flex items-center gap-3 pt-2">
-								<button
-									type="button"
-									onClick={handleDownloadTemplate}
-									className="h-10 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 flex items-center gap-2"
+								<div
+									className="flex items-center gap-3 pt-2"
+									onClick={(e) => e.stopPropagation()}
 								>
-									<Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-									<span>Tải biểu mẫu chuẩn (.xlsx)</span>
-								</button>
+									<button
+										type="button"
+										onClick={() => fileInputRef.current?.click()}
+										className="min-h-[44px] px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer active:scale-95"
+									>
+										<FolderOpen className="w-4 h-4" strokeWidth={1.5} />
+										<span>Chọn tệp Excel</span>
+									</button>
+
+									<button
+										type="button"
+										onClick={handleDownloadTemplate}
+										className="min-h-[44px] px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+									>
+										<FileDown
+											className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+											strokeWidth={1.5}
+										/>
+										<span>Tải biểu mẫu chuẩn (.xlsx)</span>
+									</button>
+								</div>
 							</div>
 						</div>
 					)}
 
 					{/* BƯỚC 2: XEM TRƯỚC DỮ LIỆU BẢNG 21 CỘT */}
 					{activeStep === "preview" && (
-						<div className="flex-1 flex flex-col min-h-0">
+						<div className="flex-1 flex flex-col min-h-0 p-4 sm:p-6">
+							{/* Dải trạng thái kiểm tra dữ liệu */}
+							<div className="pb-3 flex items-center justify-between gap-3 flex-wrap shrink-0">
+								<div className="flex items-center gap-2 flex-wrap">
+									{/* Chip Hợp lệ */}
+									<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold shadow-2xs">
+										<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+										<span>Hợp lệ: {validCount}</span>
+									</div>
+
+									{/* Chip Cảnh báo nếu > 0 */}
+									{warningCount > 0 && (
+										<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-xs font-bold shadow-2xs">
+											<AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+											<span>Cảnh báo: {warningCount}</span>
+										</div>
+									)}
+
+									{/* Chip Lỗi nếu > 0 */}
+									{errorCount > 0 && (
+										<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold shadow-2xs">
+											<AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+											<span>Lỗi: {errorCount}</span>
+										</div>
+									)}
+								</div>
+
+								{/* Nút lọc chỉ dòng sự cố */}
+								{(warningCount > 0 || errorCount > 0) && (
+									<button
+										type="button"
+										onClick={() => {
+											setOnlyShowIssues((prev) => !prev);
+											setImportPage(1);
+										}}
+										className={`h-7 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+											onlyShowIssues
+												? "bg-amber-500 text-white border-amber-600"
+												: "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100"
+										}`}
+									>
+										<Filter className="w-3 h-3" />
+										<span>{onlyShowIssues ? "Hiện tất cả" : "Chỉ lỗi/cảnh báo"}</span>
+									</button>
+								)}
+							</div>
 							<div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
 								<table className="w-full min-w-[2100px] text-left border-collapse text-xs whitespace-nowrap">
 									<thead className="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider sticky top-0 z-30">
@@ -878,36 +909,30 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 					)}
 				</div>
 
-				{/* 4. Chân modal cố định (1 DÒNG DUY NHẤT, KHÔNG NGẮT DÒNG) */}
-				<div className="px-5 py-3 sm:px-6 sm:py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 shrink-0 flex items-center justify-between gap-4 text-xs whitespace-nowrap">
-					{/* Trái: Hiển thị [20 v] / N bản ghi */}
-					<div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 shrink-0">
-						{activeStep === "preview" ? (
-							<>
-								<span>Hiển thị</span>
-								<CustomSelect
-									size="sm"
-									value={importLimit}
-									onChange={(val) => {
-										setImportLimit(Number(val));
-										setImportPage(1);
-									}}
-									options={[
-										{ value: 20, label: "20" },
-										{ value: 50, label: "50" },
-										{ value: 100, label: "100" },
-									]}
-									className="w-20"
-								/>
-								<span>/ {filteredRows.length} bản ghi</span>
-							</>
-						) : (
-							<span>Định dạng 18 chỉ tiêu nông nghiệp chuẩn</span>
-						)}
-					</div>
+				{/* 4. Chân modal cố định (chỉ hiển thị khi activeStep === 'preview') */}
+				{activeStep === "preview" && (
+					<div className="px-5 py-3 sm:px-6 sm:py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 shrink-0 flex items-center justify-between gap-4 text-xs whitespace-nowrap">
+						{/* Trái: Hiển thị [20 v] / N bản ghi */}
+						<div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 shrink-0">
+							<span>Hiển thị</span>
+							<CustomSelect
+								size="sm"
+								value={importLimit}
+								onChange={(val) => {
+									setImportLimit(Number(val));
+									setImportPage(1);
+								}}
+								options={[
+									{ value: 20, label: "20" },
+									{ value: 50, label: "50" },
+									{ value: 100, label: "100" },
+								]}
+								className="w-20"
+							/>
+							<span>/ {filteredRows.length} bản ghi</span>
+						</div>
 
-					{/* Giữa: Phân trang Trước / Sau */}
-					{activeStep === "preview" && (
+						{/* Giữa: Phân trang Trước / Sau */}
 						<div className="flex items-center gap-1.5 shrink-0">
 							<button
 								type="button"
@@ -933,19 +958,17 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 								<ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} />
 							</button>
 						</div>
-					)}
 
-					{/* Phải: Nút Hủy và Nút Xác nhận nhập */}
-					<div className="flex items-center gap-2.5 shrink-0">
-						<button
-							type="button"
-							onClick={onClose}
-							aria-label="Hủy"
-							className="h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-2xl text-xs transition-colors cursor-pointer"
-						>
-							Hủy
-						</button>
-						{activeStep === "preview" ? (
+						{/* Phải: Nút Hủy và Nút Xác nhận nhập */}
+						<div className="flex items-center gap-2.5 shrink-0">
+							<button
+								type="button"
+								onClick={onClose}
+								aria-label="Hủy"
+								className="h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-2xl text-xs transition-colors cursor-pointer"
+							>
+								Hủy
+							</button>
 							<button
 								type="button"
 								onClick={() => currentFile && onConfirm(currentFile)}
@@ -966,17 +989,9 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 									<span>Xác nhận nhập ({validCount} hợp lệ)</span>
 								)}
 							</button>
-						) : (
-							<button
-								type="button"
-								onClick={() => fileInputRef.current?.click()}
-								className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95"
-							>
-								<span>Chọn tệp Excel</span>
-							</button>
-						)}
+						</div>
 					</div>
-				</div>
+				)}
 			</div>
 		</div>,
 		document.body,
