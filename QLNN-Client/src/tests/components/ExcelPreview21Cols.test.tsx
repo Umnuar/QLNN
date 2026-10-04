@@ -104,8 +104,8 @@ describe("Excel 21 Columns Preview Verification", () => {
 		expect(dataCells[16]).toHaveTextContent("20");
 		// Cột 17: Gia cầm (con) = 150
 		expect(dataCells[17]).toHaveTextContent("150");
-		// Cột 18: Ao cá (ha) = 0.75
-		expect(dataCells[18]).toHaveTextContent("0.75");
+		// Cột 18: Ao cá (ha) = 0,75 (chuẩn định dạng số VN)
+		expect(dataCells[18]).toHaveTextContent("0,75");
 		// Cột 19: Lồng bè = 2
 		expect(dataCells[19]).toHaveTextContent("2");
 		// Cột 20: Ghi chú = 'Hộ mẫu đạt chuẩn NTM'
@@ -131,7 +131,7 @@ describe("Excel 21 Columns Preview Verification", () => {
 		expect(emptyCell).toHaveAttribute("colspan", "21");
 	});
 
-	it("4. Header hiển thị đúng thông tin, badge trạng thái hợp lệ và nút Đổi Tệp Khác gọi onChangeFile", () => {
+	it("4. Header hiển thị đúng thông tin, badge trạng thái hợp lệ và nút Đổi tệp khác", () => {
 		const mockOnChangeFile = vi.fn();
 		render(
 			<ImportPreviewModal
@@ -145,13 +145,13 @@ describe("Excel 21 Columns Preview Verification", () => {
 			/>,
 		);
 
+		expect(screen.getByText("Xem trước dữ liệu")).toBeInTheDocument();
 		expect(
-			screen.getByText("Preview Bảng Đối Soát 21 Cột – File test_import.xlsx"),
+			screen.getByText(/Tệp: test_import\.xlsx • 1 dòng dữ liệu/),
 		).toBeInTheDocument();
-		expect(screen.getByText(/Tổng cộng 1 dòng dữ liệu/)).toBeInTheDocument();
-		expect(screen.getByText("Hợp lệ: 1 hộ nông nghiệp")).toBeInTheDocument();
+		expect(screen.getByText("Hợp lệ: 1")).toBeInTheDocument();
 
-		const changeFileBtn = screen.getByRole("button", { name: /Đổi Tệp Khác/i });
+		const changeFileBtn = screen.getByRole("button", { name: /Đổi tệp khác/i });
 		expect(changeFileBtn).toBeInTheDocument();
 		fireEvent.click(changeFileBtn);
 		expect(mockOnChangeFile).toHaveBeenCalledTimes(1);
@@ -174,7 +174,7 @@ describe("Excel 21 Columns Preview Verification", () => {
 		expect(screen.getByText("Sau")).toBeInTheDocument();
 
 		const confirmBtn = screen.getByRole("button", {
-			name: /Xác Nhận Nhập \(1 Hợp Lệ\)/i,
+			name: /Xác nhận nhập \(1 hợp lệ\)/i,
 		});
 		expect(confirmBtn).toBeInTheDocument();
 		fireEvent.click(confirmBtn);

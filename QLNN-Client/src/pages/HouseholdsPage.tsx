@@ -471,7 +471,11 @@ export const HouseholdsPage: React.FC = () => {
 					/>
 					<button
 						type="button"
-						onClick={() => fileInputRef.current?.click()}
+						onClick={() => {
+							setImportFile(null);
+							setImportData([]);
+							setIsImportModalOpen(true);
+						}}
 						disabled={isDisconnected}
 						className="h-10 flex items-center gap-1.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all disabled:opacity-50 active:scale-[0.99] cursor-pointer border border-slate-200 dark:border-slate-700 shadow-xs"
 					>
@@ -568,7 +572,14 @@ export const HouseholdsPage: React.FC = () => {
 				parsedData={importData}
 				onConfirm={handleImportConfirm}
 				importing={importing}
-				onChangeFile={() => fileInputRef.current?.click()}
+				onChangeFile={() => {
+					setImportFile(null);
+					setImportData([]);
+				}}
+				onFileSelected={(file, rows) => {
+					setImportFile(file);
+					setImportData(rows);
+				}}
 			/>
 
 			<ExportSettingsModal

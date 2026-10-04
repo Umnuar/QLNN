@@ -1,16 +1,24 @@
 import {
+	AlertCircle,
+	AlertTriangle,
+	Check,
 	CheckCircle2,
 	ChevronLeft,
 	ChevronRight,
+	Download,
 	FileSpreadsheet,
+	Filter,
 	RefreshCw,
+	UploadCloud,
 	X,
 } from "lucide-react";
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { CustomSelect } from "../common/CustomSelect";
+import { formatVietnameseNumber } from "../common/statStyles";
 
-interface ImportPreviewModalProps {
+export interface ImportPreviewModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	file: File | null;
@@ -18,21 +26,349 @@ interface ImportPreviewModalProps {
 	onConfirm: (file: File) => void;
 	importing: boolean;
 	onChangeFile?: () => void;
+	onFileSelected?: (file: File, rows: (string | number | undefined)[][]) => void;
 }
+
+interface RowValidation {
+	row: (string | number | undefined)[];
+	index: number;
+	status: "valid" | "warning" | "error";
+	reason?: string;
+}
+
+export const COLUMNS_21 = [
+	"1. STT",
+	"2. Họ và Tên Chủ Hộ",
+	"3. Cà phê (Hộ)",
+	"4. Cà phê (Nhận k)",
+	"5. Cao su (Hộ)",
+	"6. Cao su (Nhận k)",
+	"7. Cây ăn quả",
+	"8. Macca",
+	"9. Đinh lăng",
+	"10. Gừng",
+	"11. Nghệ",
+	"12. Sả",
+	"13. Lúa nước",
+	"14. Cây HN khác",
+	"15. Trâu (con)",
+	"16. Bò (con)",
+	"17. Heo (con)",
+	"18. Gia cầm (con)",
+	"19. Ao cá (ha)",
+	"20. Lồng bè",
+	"21. Ghi chú",
+];
 
 export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 	isOpen,
 	onClose,
-	file,
-	parsedData,
+	file: initialFile,
+	parsedData: initialParsedData,
 	onConfirm,
 	importing,
 	onChangeFile,
+	onFileSelected,
 }) => {
+	const [activeStep, setActiveStep] = useState<"file" | "preview">(
+		initialFile ? "preview" : "file",
+	);
+	const [currentFile, setCurrentFile] = useState<File | null>(initialFile);
+	const [dataRows, setDataRows] = useState<(string | number | undefined)[][]>(
+		initialParsedData,
+	);
+	const [isDragging, setIsDragging] = useState(false);
+	const [fileError, setFileError] = useState<string | null>(null);
+	const [isReading, setIsReading] = useState(false);
+	const [onlyShowIssues, setOnlyShowIssues] = useState(false);
+
 	const [importPage, setImportPage] = useState(1);
 	const [importLimit, setImportLimit] = useState(20);
-	const modalRef = useRef<HTMLDivElement>(null);
 
+	const modalRef = useRef<HTMLDivElement>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
+	const titleId = useId();
+
+	// Đồng bộ khi prop file / parsedData thay đổi từ ngoài
+	useEffect(() => {
+		if (initialFile) {
+			setCurrentFile(initialFile);
+			setDataRows(initialParsedData);
+			setActiveStep("preview");
+		} else {
+			setCurrentFile(null);
+			setDataRows([]);
+			setActiveStep("file");
+		}
+	}, [initialFile, initialParsedData]);
+
+	// Xử lý đọc file Excel / CSV
+	const processFile = useCallback(
+		async (selectedFile: File) => {
+			setFileError(null);
+			const fileName = selectedFile.name.toLowerCase();
+			const isExcel =
+				fileName.endsWith(".xlsx") ||
+				fileName.endsWith(".xls") ||
+				fileName.endsWith(".csv");
+
+			if (!isExcel) {
+				setFileError("Chỉ chấp nhận tệp định dạng .xlsx, .xls hoặc .csv");
+				return;
+			}
+
+			if (selectedFile.size === 0) {
+				setFileError("Tệp tin rỗng, vui lòng chọn tệp có dữ liệu.");
+				return;
+			}
+
+			try {
+				setIsReading(true);
+				const XLSX = await import("xlsx");
+				const arrayBuffer = await selectedFile.arrayBuffer();
+				const wb = XLSX.read(arrayBuffer, { type: "array" });
+
+				if (!wb.SheetNames || wb.SheetNames.length === 0) {
+					setFileError("Tệp không chứa bảng tính (sheet) nào hợp lệ.");
+					setIsReading(false);
+					return;
+				}
+
+				const ws = wb.Sheets[wb.SheetNames[0]];
+				const rawData = XLSX.utils.sheet_to_json<
+					(string | number | undefined)[]
+				>(ws, { header: 1 });
+
+				// Chuẩn hóa lấy dữ liệu từ dòng 10 trở đi (index 9) theo mẫu 21 cột Đăk Hà
+				let parsed = rawData
+					.slice(9)
+					.filter(
+						(row) =>
+							row &&
+							row[1] !== undefined &&
+							row[1] !== null &&
+							String(row[1]).trim() !== "",
+					);
+
+				// Fallback nếu người dùng nạp file không có 9 dòng tiêu đề mà có header ở dòng đầu
+				if (parsed.length === 0 && rawData.length > 1) {
+					parsed = rawData
+						.slice(1)
+						.filter(
+							(row) =>
+								row &&
+								row[1] !== undefined &&
+								row[1] !== null &&
+								String(row[1]).trim() !== "",
+						);
+				}
+
+				if (parsed.length === 0) {
+					setFileError(
+						"Không tìm thấy dòng dữ liệu hộ dân hợp lệ trong tệp (cột Họ và tên chủ hộ phải có giá trị).",
+					);
+					setIsReading(false);
+					return;
+				}
+
+				setCurrentFile(selectedFile);
+				setDataRows(parsed);
+				setImportPage(1);
+				setActiveStep("preview");
+
+				if (onFileSelected) {
+					onFileSelected(selectedFile, parsed);
+				}
+			} catch (err) {
+				console.error("Lỗi khi đọc file Excel:", err);
+				setFileError("Không thể đọc tệp dữ liệu. Vui lòng kiểm tra lại định dạng tệp.");
+			} finally {
+				setIsReading(false);
+			}
+		},
+		[onFileSelected],
+	);
+
+	// Tải biểu mẫu chuẩn 21 cột
+	const handleDownloadTemplate = useCallback(async () => {
+		try {
+			const XLSX = await import("xlsx");
+			const templateHeaders = [
+				"STT",
+				"Họ và Tên Chủ Hộ",
+				"Cà phê (Hộ)",
+				"Cà phê (Nhận k)",
+				"Cao su (Hộ)",
+				"Cao su (Nhận k)",
+				"Cây ăn quả",
+				"Macca",
+				"Đinh lăng",
+				"Gừng",
+				"Nghệ",
+				"Sả",
+				"Lúa nước",
+				"Cây HN khác",
+				"Trâu (con)",
+				"Bò (con)",
+				"Heo (con)",
+				"Gia cầm (con)",
+				"Ao cá (ha)",
+				"Lồng bè",
+				"Ghi chú",
+			];
+
+			const rows = [
+				["UBND XÃ ĐĂK HÀ"],
+				["BIỂU MẪU THỐNG KÊ 18 CHỈ TIÊU NÔNG NGHIỆP & NÔNG THÔN MỚI"],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				templateHeaders,
+				[
+					1,
+					"A Đảo",
+					1.5,
+					0.5,
+					2.0,
+					0,
+					0.8,
+					1.2,
+					0.3,
+					0.2,
+					0.1,
+					0.4,
+					1.0,
+					0.6,
+					5,
+					10,
+					20,
+					150,
+					0.75,
+					2,
+					"Hộ mẫu đạt chuẩn NTM",
+				],
+			];
+
+			const ws = XLSX.utils.aoa_to_sheet(rows);
+			const wb = XLSX.utils.book_new();
+			XLSX.utils.book_append_sheet(wb, ws, "Nong_Nghiep");
+			XLSX.writeFile(wb, "Bieu_mau_nhap_lieu_nong_nghiep_Dak_Ha.xlsx");
+		} catch (err) {
+			console.error("Lỗi tạo mẫu excel:", err);
+		}
+	}, []);
+
+	// Kéo thả tệp
+	const handleDragOver = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(true);
+	};
+
+	const handleDragLeave = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(false);
+	};
+
+	const handleDrop = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(false);
+		if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+			const droppedFile = e.dataTransfer.files[0];
+			processFile(droppedFile);
+		}
+	};
+
+	// Chuyển sang bước chọn lại tệp khác
+	const handleSwitchToFileStep = () => {
+		if (onChangeFile) {
+			onChangeFile();
+		}
+		setActiveStep("file");
+		setFileError(null);
+	};
+
+	// Đánh giá dữ liệu từng dòng (Validation & Status Chips)
+	const validatedRows: RowValidation[] = useMemo(() => {
+		return dataRows.map((row, idx) => {
+			const fullName = row[1];
+			if (!fullName || String(fullName).trim() === "") {
+				return {
+					row,
+					index: idx,
+					status: "error",
+					reason: "Thiếu họ và tên chủ hộ",
+				};
+			}
+
+			// Kiểm tra chỉ tiêu âm
+			const hasNegative = row.slice(2, 20).some((val) => {
+				const num = Number(val);
+				return !Number.isNaN(num) && num < 0;
+			});
+			if (hasNegative) {
+				return {
+					row,
+					index: idx,
+					status: "error",
+					reason: "Có chỉ tiêu số lượng diện tích/vật nuôi mang giá trị âm",
+				};
+			}
+
+			// Kiểm tra cảnh báo: tất cả 18 chỉ tiêu đều bằng 0 hoặc rỗng
+			const allZero = row.slice(2, 20).every((val) => {
+				const num = Number(val);
+				return Number.isNaN(num) || num === 0 || val === "" || val === undefined;
+			});
+			if (allZero) {
+				return {
+					row,
+					index: idx,
+					status: "warning",
+					reason: "Hộ chưa kê khai chỉ số cây trồng, vật nuôi hay thủy sản",
+				};
+			}
+
+			return {
+				row,
+				index: idx,
+				status: "valid",
+			};
+		});
+	}, [dataRows]);
+
+	const validCount = useMemo(
+		() => validatedRows.filter((r) => r.status === "valid").length,
+		[validatedRows],
+	);
+	const warningCount = useMemo(
+		() => validatedRows.filter((r) => r.status === "warning").length,
+		[validatedRows],
+	);
+	const errorCount = useMemo(
+		() => validatedRows.filter((r) => r.status === "error").length,
+		[validatedRows],
+	);
+
+	// Dữ liệu hiển thị lọc và phân trang
+	const filteredRows = useMemo(() => {
+		if (!onlyShowIssues) return validatedRows;
+		return validatedRows.filter((r) => r.status === "warning" || r.status === "error");
+	}, [validatedRows, onlyShowIssues]);
+
+	const maxPage = Math.ceil(filteredRows.length / importLimit) || 1;
+	const displayRows = useMemo(() => {
+		const start = (importPage - 1) * importLimit;
+		return filteredRows.slice(start, start + importLimit);
+	}, [filteredRows, importPage, importLimit]);
+
+	// Keyboard Navigation & Focus Trap (WCAG 2.1 AA)
 	useEffect(() => {
 		if (!isOpen) return;
 
@@ -53,24 +389,30 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 
 			if (e.key === "Tab") {
 				if (!modalRef.current) return;
-				const focusableElements =
-					modalRef.current.querySelectorAll<HTMLElement>(
-						'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-					);
-				if (focusableElements.length === 0) return;
+				const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+					'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+				);
+				const focusable = Array.from(focusableElements).filter(
+					(el) =>
+						!el.hasAttribute("disabled") &&
+						el.getAttribute("aria-hidden") !== "true" &&
+						el.offsetParent !== null,
+				);
 
-				const firstElement = focusableElements[0];
-				const lastElement = focusableElements[focusableElements.length - 1];
+				if (focusable.length === 0) return;
+
+				const firstElement = focusable[0];
+				const lastElement = focusable[focusable.length - 1];
 
 				if (e.shiftKey) {
 					if (document.activeElement === firstElement) {
 						e.preventDefault();
-						lastElement.focus();
+						lastElement?.focus();
 					}
 				} else {
 					if (document.activeElement === lastElement) {
 						e.preventDefault();
-						firstElement.focus();
+						firstElement?.focus();
 					}
 				}
 			}
@@ -91,259 +433,482 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 		};
 	}, [isOpen, onClose]);
 
-	if (!isOpen || !file) return null;
+	if (!isOpen) return null;
 
-	const displayData = parsedData.slice(
-		(importPage - 1) * importLimit,
-		importPage * importLimit,
-	);
-	const maxPage = Math.ceil(parsedData.length / importLimit) || 1;
+	const formatCell = (val: unknown) => {
+		if (val === undefined || val === null || val === "") return "—";
+		const num = Number(val);
+		if (!Number.isNaN(num)) {
+			if (num === 0) return "—";
+			return formatVietnameseNumber(num);
+		}
+		return String(val);
+	};
 
-	const formatCell = (val: unknown) =>
-		val !== undefined && val !== null && val !== "" ? String(val) : "-";
-
-	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+	return createPortal(
+		<div
+			className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/45 dark:bg-black/60 animate-in fade-in duration-150"
+			aria-hidden="false"
+		>
 			<div
 				ref={modalRef}
 				role="dialog"
 				aria-modal="true"
-				aria-labelledby="preview-modal-title"
-				className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden"
+				aria-labelledby={titleId}
+				className="w-full max-w-[min(1240px,94vw)] max-h-[85vh] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl shadow-xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-colors animate-in zoom-in-95 duration-150 relative"
 			>
-				{/* Header */}
-				<div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center shrink-0">
-							<FileSpreadsheet
-								className="w-5 h-5"
-								strokeWidth={1.5}
-								aria-hidden="true"
-							/>
+				{/* 1. Tiêu đề cố định */}
+				<div className="px-5 py-4 sm:px-6 sm:py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0 bg-white dark:bg-slate-900">
+					<div className="flex items-center gap-3.5 min-w-0">
+						<div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center shrink-0">
+							<FileSpreadsheet className="w-5 h-5" strokeWidth={1.5} />
 						</div>
-						<div>
+						<div className="min-w-0">
 							<h2
-								id="preview-modal-title"
-								className="text-lg font-black text-slate-800 dark:text-white"
+								id={titleId}
+								className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate"
 							>
-								Preview Bảng Đối Soát 21 Cột – File {file.name}
+								{activeStep === "file"
+									? "Nhập dữ liệu Excel — Hộ nông nghiệp"
+									: "Xem trước dữ liệu"}
 							</h2>
-							<p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-								Tệp: {file.name} • Tổng cộng {parsedData.length} dòng dữ liệu
+							<p className="text-xs text-slate-500 dark:text-slate-400 font-normal truncate mt-0.5">
+								{activeStep === "file"
+									? "Kéo thả hoặc tải lên tệp danh sách 18 chỉ tiêu nông nghiệp xã Đăk Hà"
+									: currentFile
+										? `Tệp: ${currentFile.name} • ${dataRows.length} dòng dữ liệu`
+										: `Tổng cộng ${dataRows.length} dòng dữ liệu`}
 							</p>
 						</div>
 					</div>
-					<div className="flex items-center gap-2">
-						{onChangeFile && (
+
+					<div className="flex items-center gap-2 shrink-0">
+						{activeStep === "preview" && (
 							<button
 								type="button"
-								onClick={onChangeFile}
-								className="h-9 flex items-center gap-1.5 px-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 shadow-xs"
+								onClick={handleSwitchToFileStep}
+								className="h-10 px-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5"
+								title="Quay lại bước chọn tệp khác"
 							>
-								<RefreshCw
-									className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400"
-									strokeWidth={1.8}
-								/>
-								<span>Đổi Tệp Khác</span>
+								<RefreshCw className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+								<span>Đổi tệp khác</span>
 							</button>
 						)}
 						<button
 							type="button"
 							onClick={onClose}
-							aria-label="Đóng preview"
-							className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+							className="w-11 h-11 rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+							aria-label="Đóng"
 						>
 							<X className="w-5 h-5" strokeWidth={1.5} />
 						</button>
 					</div>
 				</div>
 
-				{/* Dải trạng thái */}
-				<div className="px-5 py-2.5 bg-slate-50/80 dark:bg-slate-900/40 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
-					<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/80 dark:border-emerald-800/80">
-						<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-						<span>Hợp lệ: {parsedData.length} hộ nông nghiệp</span>
-					</div>
-				</div>
-
-				<div className="p-5 overflow-x-auto overflow-y-auto flex-1">
-					<div className="border border-slate-200 dark:border-slate-800 rounded-2xl">
-						<table className="w-full min-w-[2000px] text-left border-collapse text-xs whitespace-nowrap">
-							<thead className="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-[11px] font-black uppercase tracking-wider">
-								<tr>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-center sticky left-0 z-30 bg-slate-100 dark:bg-slate-950 w-14">
-										1. STT
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 sticky left-14 z-30 bg-slate-100 dark:bg-slate-950 min-w-[200px] border-r-2 border-slate-300 dark:border-slate-700 shadow-xs">
-										2. Họ và Tên Chủ Hộ
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-right">
-										3. Cà phê (Hộ)
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-right">
-										4. Cà phê (Nhận k)
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-right">
-										5. Cao su (Hộ)
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-right">
-										6. Cao su (Nhận k)
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-right">
-										7. Cây ăn quả
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-right">
-										8. Macca
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-teal-700 dark:text-teal-400 text-right">
-										9. Đinh lăng
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-teal-700 dark:text-teal-400 text-right">
-										10. Gừng
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-teal-700 dark:text-teal-400 text-right">
-										11. Nghệ
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-teal-700 dark:text-teal-400 text-right">
-										12. Sả
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-right">
-										13. Lúa nước
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-right">
-										14. Cây HN khác
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-amber-700 dark:text-amber-400 text-right">
-										15. Trâu (con)
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-amber-700 dark:text-amber-400 text-right">
-										16. Bò (con)
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-amber-700 dark:text-amber-400 text-right">
-										17. Heo (con)
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-amber-700 dark:text-amber-400 text-right">
-										18. Gia cầm (con)
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-sky-700 dark:text-sky-400 text-right">
-										19. Ao cá (ha)
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-sky-700 dark:text-sky-400 text-right">
-										20. Lồng bè
-									</th>
-									<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800">
-										21. Ghi chú
-									</th>
-								</tr>
-							</thead>
-							<tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-								{displayData.map((row, idx) => (
-									<tr
-										key={`preview-row-${row[0] ?? ""}-${row[1] ?? ""}`}
-										className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
-									>
-										<td className="py-2 px-3 text-center sticky left-0 z-20 bg-white dark:bg-slate-900 w-14 font-mono text-slate-500">
-											{row[0] || (importPage - 1) * importLimit + idx + 1}
-										</td>
-										<td className="py-2 px-3 sticky left-14 z-20 bg-white dark:bg-slate-900 min-w-[200px] font-bold text-slate-800 dark:text-slate-200 border-r-2 border-slate-300 dark:border-slate-700 shadow-xs">
-											{row[1]}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[2])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[3])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[4])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[5])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[6])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[7])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[8])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[9])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[10])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[11])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[12])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[13])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[14])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[15])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[16])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[17])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[18])}
-										</td>
-										<td className="py-2 px-3 text-right tabular-nums font-mono">
-											{formatCell(row[19])}
-										</td>
-										<td className="py-2 px-3 text-slate-500">
-											{row[20] || ""}
-										</td>
-									</tr>
-								))}
-								{displayData.length === 0 && (
-									<tr>
-										<td
-											colSpan={21}
-											className="py-8 text-center text-slate-500"
-										>
-											Không tìm thấy dữ liệu hợp lệ trong file
-										</td>
-									</tr>
+				{/* 2. Thanh bước thống nhất (Stepper) */}
+				<div className="px-5 py-2.5 sm:px-6 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 shrink-0">
+					<div className="flex items-center gap-3 sm:gap-6 text-xs">
+						<button
+							type="button"
+							onClick={() => setActiveStep("file")}
+							className={`flex items-center gap-2 cursor-pointer font-bold transition-colors ${
+								activeStep === "file"
+									? "text-emerald-600 dark:text-emerald-400"
+									: "text-slate-500 hover:text-slate-700 dark:text-slate-400"
+							}`}
+						>
+							<span
+								className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+									currentFile && activeStep === "preview"
+										? "bg-emerald-600 text-white"
+										: activeStep === "file"
+											? "bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-500"
+											: "bg-slate-200 dark:bg-slate-800 text-slate-500"
+								}`}
+							>
+								{currentFile && activeStep === "preview" ? (
+									<Check className="w-3 h-3" />
+								) : (
+									"1"
 								)}
-							</tbody>
-						</table>
+							</span>
+							<span>1. Chọn tệp</span>
+						</button>
+
+						<div className="w-6 sm:w-10 h-px bg-slate-200 dark:bg-slate-800" />
+
+						<button
+							type="button"
+							onClick={() => currentFile && setActiveStep("preview")}
+							disabled={!currentFile || dataRows.length === 0}
+							className={`flex items-center gap-2 font-bold transition-colors ${
+								activeStep === "preview"
+									? "text-emerald-600 dark:text-emerald-400"
+									: "text-slate-400 dark:text-slate-600 cursor-not-allowed"
+							}`}
+						>
+							<span
+								className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+									activeStep === "preview"
+										? "bg-emerald-600 text-white"
+										: "bg-slate-200 dark:bg-slate-800 text-slate-500"
+								}`}
+							>
+								2
+							</span>
+							<span>2. Xem trước & xác nhận</span>
+						</button>
 					</div>
+
+					{activeStep === "preview" && (
+						<div className="flex items-center gap-2">
+							{/* Chip Hợp lệ */}
+							<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/80 dark:border-emerald-800/80">
+								<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+								<span>Hợp lệ: {validCount}</span>
+							</div>
+
+							{/* Chip Cảnh báo nếu > 0 */}
+							{warningCount > 0 && (
+								<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-xs font-bold border border-amber-200/80 dark:border-amber-800/80">
+									<AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+									<span>Cảnh báo: {warningCount}</span>
+								</div>
+							)}
+
+							{/* Chip Lỗi nếu > 0 */}
+							{errorCount > 0 && (
+								<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 text-xs font-bold border border-rose-200/80 dark:border-rose-800/80">
+									<AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+									<span>Lỗi: {errorCount}</span>
+								</div>
+							)}
+
+							{/* Nút lọc chỉ dòng sự cố */}
+							{(warningCount > 0 || errorCount > 0) && (
+								<button
+									type="button"
+									onClick={() => {
+										setOnlyShowIssues((prev) => !prev);
+										setImportPage(1);
+									}}
+									className={`h-7 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+										onlyShowIssues
+											? "bg-amber-500 text-white border-amber-600"
+											: "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100"
+									}`}
+								>
+									<Filter className="w-3 h-3" />
+									<span>{onlyShowIssues ? "Hiện tất cả" : "Chỉ lỗi/cảnh báo"}</span>
+								</button>
+							)}
+						</div>
+					)}
 				</div>
 
-				<div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
-					<div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-						<span>Hiển thị</span>
-						<CustomSelect
-							size="sm"
-							value={importLimit}
-							onChange={(val) => {
-								setImportLimit(Number(val));
-								setImportPage(1);
-							}}
-							options={[
-								{ value: 20, label: "20" },
-								{ value: 50, label: "50" },
-								{ value: 100, label: "100" },
-							]}
-							className="w-20"
-						/>
-						<span>/ {parsedData.length} bản ghi</span>
+				{/* 3. Nội dung thân modal */}
+				<div className="flex-1 overflow-y-auto flex flex-col p-4 sm:p-6 custom-scrollbar">
+					{/* BƯỚC 1: CHỌN TỆP EXCEL */}
+					{activeStep === "file" && (
+						<div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 space-y-6 max-w-xl mx-auto w-full">
+							<input
+								ref={fileInputRef}
+								type="file"
+								accept=".xlsx,.xls,.csv"
+								className="hidden"
+								onChange={(e) => {
+									if (e.target.files && e.target.files.length > 0) {
+										processFile(e.target.files[0]);
+										e.target.value = "";
+									}
+								}}
+							/>
+
+							<div
+								onDragOver={handleDragOver}
+								onDragLeave={handleDragLeave}
+								onDrop={handleDrop}
+								onClick={() => fileInputRef.current?.click()}
+								className={`w-full p-8 sm:p-12 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-150 ${
+									isDragging
+										? "border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30 scale-[1.01]"
+										: "border-slate-200 dark:border-slate-700 hover:border-emerald-500/80 hover:bg-slate-50 dark:hover:bg-slate-800/40"
+								}`}
+							>
+								<div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center mb-4 transition-transform group-hover:scale-105">
+									{isReading ? (
+										<div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin" />
+									) : (
+										<UploadCloud className="w-8 h-8" strokeWidth={1.5} />
+									)}
+								</div>
+
+								<div className="space-y-1.5">
+									<h3 className="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100">
+										{isReading
+											? "Đang phân tích tệp dữ liệu..."
+											: "Kéo và thả tệp Excel vào đây hoặc bấm để chọn tệp"}
+									</h3>
+									<p className="text-xs text-slate-500 dark:text-slate-400 font-normal">
+										Chấp nhận định dạng .xlsx, .xls, .csv (tối đa 10MB)
+									</p>
+								</div>
+							</div>
+
+							{fileError && (
+								<div className="w-full p-3.5 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/80 rounded-2xl flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300 animate-in fade-in">
+									<AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+									<span className="font-medium">{fileError}</span>
+								</div>
+							)}
+
+							<div className="flex items-center gap-3 pt-2">
+								<button
+									type="button"
+									onClick={handleDownloadTemplate}
+									className="h-10 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 flex items-center gap-2"
+								>
+									<Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+									<span>Tải biểu mẫu chuẩn (.xlsx)</span>
+								</button>
+							</div>
+						</div>
+					)}
+
+					{/* BƯỚC 2: XEM TRƯỚC DỮ LIỆU BẢNG 21 CỘT */}
+					{activeStep === "preview" && (
+						<div className="flex-1 flex flex-col min-h-0">
+							<div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+								<table className="w-full min-w-[2100px] text-left border-collapse text-xs whitespace-nowrap">
+									<thead className="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider sticky top-0 z-30">
+										<tr>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-center sticky left-0 z-30 bg-slate-100 dark:bg-slate-950 w-14">
+												<span className="text-slate-400 font-normal">1.</span> STT
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 sticky left-14 z-30 bg-slate-100 dark:bg-slate-950 min-w-[200px] border-r-2 border-slate-300 dark:border-slate-700 shadow-xs">
+												<span className="text-slate-400 font-normal">2.</span> Họ và
+												Tên Chủ Hộ
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">3.</span> Cà phê
+												(Hộ)
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">4.</span> Cà phê
+												(Nhận k)
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">5.</span> Cao su
+												(Hộ)
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">6.</span> Cao su
+												(Nhận k)
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">7.</span> Cây ăn
+												quả
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">8.</span> Macca
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">9.</span> Đinh
+												lăng
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">10.</span> Gừng
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">11.</span> Nghệ
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">12.</span> Sả
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">13.</span> Lúa
+												nước
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">14.</span> Cây
+												HN khác
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">15.</span> Trâu
+												(con)
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">16.</span> Bò
+												(con)
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">17.</span> Heo
+												(con)
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">18.</span> Gia
+												cầm (con)
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">19.</span> Ao cá
+												(ha)
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
+												<span className="text-slate-400 font-normal">20.</span> Lồng
+												bè
+											</th>
+											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800">
+												<span className="text-slate-400 font-normal">21.</span> Ghi
+												chú
+											</th>
+										</tr>
+									</thead>
+									<tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+										{displayRows.map(({ row, index, status, reason }) => (
+											<tr
+												key={`preview-row-${row[0] ?? ""}-${row[1] ?? ""}-${index}`}
+												className={`transition-colors ${
+													status === "error"
+														? "bg-rose-50/60 dark:bg-rose-950/30 hover:bg-rose-50 dark:hover:bg-rose-950/50"
+														: status === "warning"
+															? "bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+															: "hover:bg-slate-50 dark:hover:bg-slate-800/60"
+												}`}
+											>
+												<td
+													className="py-2 px-3 text-center sticky left-0 z-20 bg-white dark:bg-slate-900 w-14 font-mono text-slate-500"
+													title={reason}
+												>
+													<div className="flex items-center justify-center gap-1">
+														{status === "error" && (
+															<AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+														)}
+														{status === "warning" && (
+															<AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+														)}
+														<span>{row[0] || index + 1}</span>
+													</div>
+												</td>
+												<td
+													className="py-2 px-3 sticky left-14 z-20 bg-white dark:bg-slate-900 min-w-[200px] font-bold text-slate-800 dark:text-slate-200 border-r-2 border-slate-300 dark:border-slate-700 shadow-xs"
+													title={reason}
+												>
+													<div className="flex items-center justify-between gap-1">
+														<span>{row[1]}</span>
+														{reason && (
+															<span className="text-[10px] font-normal text-amber-600 dark:text-amber-400 italic">
+																{reason}
+															</span>
+														)}
+													</div>
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[2])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[3])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[4])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[5])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[6])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[7])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[8])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[9])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[10])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[11])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[12])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[13])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[14])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[15])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[16])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[17])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[18])}
+												</td>
+												<td className="py-2 px-3 text-right tabular-nums">
+													{formatCell(row[19])}
+												</td>
+												<td className="py-2 px-3 text-slate-500">
+													{row[20] || "—"}
+												</td>
+											</tr>
+										))}
+										{displayRows.length === 0 && (
+											<tr>
+												<td
+													colSpan={21}
+													className="py-8 text-center text-slate-500"
+												>
+													Không tìm thấy dữ liệu hợp lệ trong file
+												</td>
+											</tr>
+										)}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					)}
+				</div>
+
+				{/* 4. Chân modal cố định (1 DÒNG DUY NHẤT, KHÔNG NGẮT DÒNG) */}
+				<div className="px-5 py-3 sm:px-6 sm:py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 shrink-0 flex items-center justify-between gap-4 text-xs whitespace-nowrap">
+					{/* Trái: Hiển thị [20 v] / N bản ghi */}
+					<div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 shrink-0">
+						{activeStep === "preview" ? (
+							<>
+								<span>Hiển thị</span>
+								<CustomSelect
+									size="sm"
+									value={importLimit}
+									onChange={(val) => {
+										setImportLimit(Number(val));
+										setImportPage(1);
+									}}
+									options={[
+										{ value: 20, label: "20" },
+										{ value: 50, label: "50" },
+										{ value: 100, label: "100" },
+									]}
+									className="w-20"
+								/>
+								<span>/ {filteredRows.length} bản ghi</span>
+							</>
+						) : (
+							<span>Định dạng 18 chỉ tiêu nông nghiệp chuẩn</span>
+						)}
 					</div>
 
-					<div className="flex items-center gap-4">
-						<div className="flex items-center gap-1.5">
+					{/* Giữa: Phân trang Trước / Sau */}
+					{activeStep === "preview" && (
+						<div className="flex items-center gap-1.5 shrink-0">
 							<button
 								type="button"
 								disabled={importPage === 1}
@@ -351,56 +916,69 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 								aria-label="Trang trước"
 								className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95 text-xs font-bold flex items-center gap-1"
 							>
-								<ChevronLeft
-									className="w-3.5 h-3.5"
-									strokeWidth={1.5}
-									aria-hidden="true"
-								/>
+								<ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.5} />
 								<span>Trước</span>
 							</button>
-							<span className="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono font-bold text-xs text-slate-700 dark:text-slate-300">
+							<span className="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-300 tabular-nums">
 								{importPage} / {maxPage}
 							</span>
 							<button
 								type="button"
 								disabled={importPage >= maxPage}
 								onClick={() => setImportPage((p) => p + 1)}
-								aria-label="Trang tiếp theo"
+								aria-label="Trang sau"
 								className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95 text-xs font-bold flex items-center gap-1"
 							>
 								<span>Sau</span>
-								<ChevronRight
-									className="w-3.5 h-3.5"
-									strokeWidth={1.5}
-									aria-hidden="true"
-								/>
+								<ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} />
 							</button>
 						</div>
+					)}
 
-						<div className="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
-
-						<div className="flex items-center gap-2">
+					{/* Phải: Nút Hủy và Nút Xác nhận nhập */}
+					<div className="flex items-center gap-2.5 shrink-0">
+						<button
+							type="button"
+							onClick={onClose}
+							aria-label="Hủy"
+							className="h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-2xl text-xs transition-colors cursor-pointer"
+						>
+							Hủy
+						</button>
+						{activeStep === "preview" ? (
 							<button
 								type="button"
-								onClick={onClose}
-								className="h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-2xl text-xs transition-colors cursor-pointer active:scale-95"
+								onClick={() => currentFile && onConfirm(currentFile)}
+								disabled={importing || validCount === 0 || !currentFile}
+								title={
+									validCount === 0
+										? "Không có dòng dữ liệu hợp lệ để nhập vào hệ thống"
+										: undefined
+								}
+								className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs shadow-xs transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
 							>
-								Hủy Bỏ
+								{importing ? (
+									<>
+										<div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+										<span>Đang xử lý...</span>
+									</>
+								) : (
+									<span>Xác nhận nhập ({validCount} hợp lệ)</span>
+								)}
 							</button>
+						) : (
 							<button
 								type="button"
-								onClick={() => onConfirm(file)}
-								disabled={importing || parsedData.length === 0}
-								className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs shadow-xs transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95"
+								onClick={() => fileInputRef.current?.click()}
+								className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95"
 							>
-								{importing
-									? "Đang xử lý..."
-									: `Xác Nhận Nhập (${parsedData.length} Hợp Lệ)`}
+								<span>Chọn tệp Excel</span>
 							</button>
-						</div>
+						)}
 					</div>
 				</div>
 			</div>
-		</div>
+		</div>,
+		document.body,
 	);
 };
