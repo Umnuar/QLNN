@@ -930,21 +930,23 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
 						</div>
 					) : isAdmin ? (
 						<CustomSelect
-							variant="filter"
-							defaultValue=""
 							value={villageFilter}
 							onChange={(val) => setVillageFilter(String(val))}
 							options={[
 								{ value: "", label: "Toàn xã (Tất cả thôn)" },
 								...villages.map((v) => ({ value: v.id, label: v.name })),
 							]}
+							searchable
 							placeholder="Địa bàn thôn"
 							icon={
-								<MapPin className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />
+								<MapPin
+									className="w-3.5 h-3.5 text-slate-400 shrink-0"
+									strokeWidth={1.5}
+								/>
 							}
-							clearable={true}
+							clearable={Boolean(villageFilter)}
 							onClear={() => setVillageFilter("")}
-							className="rounded-2xl text-xs"
+							className="rounded-2xl text-xs font-bold"
 						/>
 					) : (
 						<div className="flex items-center px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
@@ -958,8 +960,6 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
 
 					{/* Lọc theo người thực hiện */}
 					<CustomSelect
-						variant="filter"
-						defaultValue=""
 						value={userFilter}
 						onChange={(val) => setUserFilter(String(val))}
 						options={[
@@ -974,11 +974,14 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
 						searchable
 						placeholder="Cán bộ thực hiện"
 						icon={
-							<UserCheck className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />
+							<UserCheck
+								className="w-3.5 h-3.5 text-slate-400 shrink-0"
+								strokeWidth={1.5}
+							/>
 						}
-						clearable={true}
+						clearable={Boolean(userFilter)}
 						onClear={() => setUserFilter("")}
-						className="rounded-2xl text-xs"
+						className="rounded-2xl text-xs font-bold"
 					/>
 				</div>
 			)}

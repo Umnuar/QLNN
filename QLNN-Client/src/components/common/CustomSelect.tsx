@@ -85,7 +85,7 @@ export function CustomSelect<T extends string | number = string | number>({
 		return normalizedOptions.find((opt) => opt.value === value);
 	}, [normalizedOptions, value]);
 
-	const shouldShowSearch = searchable || normalizedOptions.length > 8;
+	const shouldShowSearch = searchable || normalizedOptions.length >= 8;
 
 	const filteredOptions = useMemo(() => {
 		if (!shouldShowSearch || !searchQuery.trim()) {
@@ -500,8 +500,8 @@ export function CustomSelect<T extends string | number = string | number>({
 
 										{isSelected && (
 											<Check
-												className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 ml-1.5"
-												strokeWidth={1.5}
+												className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 ml-1.5"
+												strokeWidth={2}
 											/>
 										)}
 									</button>
