@@ -1,6 +1,7 @@
 import { DownloadCloud, X } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ExportSettingsModalProps {
 	isOpen: boolean;
@@ -82,18 +83,18 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
 
 	if (!isOpen) return null;
 
-	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+	return createPortal(
+		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/45 dark:bg-black/60 animate-in fade-in duration-150">
 			<div
 				ref={modalRef}
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby="export-settings-title"
-				className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl w-full max-w-md flex flex-col overflow-hidden"
+				className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl w-full max-w-md flex flex-col overflow-hidden text-slate-900 dark:text-slate-100"
 			>
-				<div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+				<div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center">
+						<div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center shrink-0">
 							<DownloadCloud
 								className="w-5 h-5"
 								strokeWidth={1.5}
@@ -103,11 +104,11 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
 						<div>
 							<h2
 								id="export-settings-title"
-								className="text-lg font-black text-slate-900 dark:text-white"
+								className="text-base sm:text-lg font-bold text-slate-900 dark:text-white"
 							>
-								Cài Đặt Xuất File Excel
+								Cài đặt xuất file Excel
 							</h2>
-							<p className="text-xs text-slate-500 dark:text-slate-400">
+							<p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
 								Xuất biểu mẫu 21 chỉ số nông nghiệp chuẩn Xã Đăk Hà
 							</p>
 						</div>
@@ -115,8 +116,8 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
 					<button
 						type="button"
 						onClick={onClose}
-						aria-label="Đóng cửa sổ"
-						className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+						aria-label="Đóng"
+						className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-800 rounded-2xl transition-colors cursor-pointer"
 					>
 						<X className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
 					</button>
@@ -185,12 +186,12 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
 					</div>
 				</div>
 
-				<div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-end gap-3">
+				<div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 flex items-center justify-end gap-3">
 					<button
 						type="button"
 						onClick={onClose}
 						aria-label="Hủy"
-						className="h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+						className="h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-2xl text-xs transition-colors cursor-pointer"
 					>
 						Hủy
 					</button>
@@ -199,12 +200,13 @@ export const ExportSettingsModal: React.FC<ExportSettingsModalProps> = ({
 						onClick={() => onExport(exportScope)}
 						disabled={exporting}
 						aria-label="Bắt đầu xuất Excel"
-						className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+						className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs shadow-xs transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95"
 					>
-						{exporting ? "Đang tạo..." : "Bắt đầu Xuất"}
+						{exporting ? "Đang tạo..." : "Bắt đầu xuất"}
 					</button>
 				</div>
 			</div>
-		</div>
+		</div>,
+		document.body,
 	);
 };

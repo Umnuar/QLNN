@@ -414,13 +414,13 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
 	};
 
 	return createPortal(
-		<div className="fixed inset-0 !m-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-xs select-none animate-in fade-in duration-150">
+		<div className="fixed inset-0 !m-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/45 dark:bg-black/60 select-none animate-in fade-in duration-150">
 			<div
 				ref={modalRef}
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby="household-modal-title"
-				className="w-full max-w-3xl h-[88vh] max-h-[88vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-150 animate-in zoom-in-95 duration-150 relative"
+				className="w-full max-w-3xl max-h-[85vh] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl shadow-xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-colors animate-in zoom-in-95 duration-150 relative"
 			>
 				{/* Top Bar cố định: Icon Trồng trọt/Chăn nuôi/Thủy sản, Tiêu đề Thêm/Sửa Hộ, Tên chủ hộ, Badge Thôn, Tab switch (Trồng trọt / Chăn nuôi / Thủy sản), nút đóng X */}
 				<div className="bg-slate-900 border-b border-slate-800 px-6 pt-5 pb-4 text-white shrink-0 space-y-4">
@@ -1217,7 +1217,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
 							onClick={onClose}
 							className="h-10 px-4 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs transition-colors cursor-pointer active:scale-95"
 						>
-							Hủy bỏ
+							Hủy
 						</button>
 						<button
 							type="submit"
@@ -1241,7 +1241,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
 											aria-hidden="true"
 										/>
 									)}
-									<span>{household ? "Cập Nhật Hồ Sơ" : "Lưu Hộ Mới"}</span>
+									<span>{household ? "Cập nhật hồ sơ" : "Lưu hộ mới"}</span>
 								</>
 							)}
 						</button>
