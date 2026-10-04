@@ -19,7 +19,8 @@ import {
 	X,
 } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useApp } from "../AppContext";
 import { apiClient } from "../api/apiClient";
 import { authApi } from "../api/authApi";
@@ -257,6 +258,33 @@ export const SettingsPage: React.FC = () => {
 			setLoadingAssign(false);
 		}
 	};
+
+	// Đóng modal khi nhấn Escape hoặc click outside
+	const activeModalRef = useRef<HTMLFormElement>(null);
+	useEffect(() => {
+		if (!resetPwdUser && !assignUser) return;
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				if (resetPwdUser) setResetPwdUser(null);
+				if (assignUser) setAssignUser(null);
+			}
+		};
+		const handleMouseDown = (e: MouseEvent) => {
+			if (
+				activeModalRef.current &&
+				!activeModalRef.current.contains(e.target as Node)
+			) {
+				if (resetPwdUser) setResetPwdUser(null);
+				if (assignUser) setAssignUser(null);
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		document.addEventListener("mousedown", handleMouseDown);
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+			document.removeEventListener("mousedown", handleMouseDown);
+		};
+	}, [resetPwdUser, assignUser]);
 
 	// Xóa tài khoản cán bộ
 	const handleDeleteUser = (u: User) => {
@@ -693,155 +721,173 @@ export const SettingsPage: React.FC = () => {
 					)}
 
 					{/* Modal đặt lại mật khẩu cán bộ */}
-					{resetPwdUser && (
-						<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/45 dark:bg-black/60 animate-in fade-in duration-150">
-							<form
-								onSubmit={handleResetPassword}
-								className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl space-y-4 max-w-md w-full animate-in zoom-in-95 duration-150"
-							>
-								<div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-									<h4 className="text-sm font-bold text-slate-900 dark:text-white">
-										Đặt lại mật khẩu cho:{" "}
-										<strong className="text-emerald-600">
-											{resetPwdUser.username}
-										</strong>
-									</h4>
-									<button
-										type="button"
-										onClick={() => setResetPwdUser(null)}
-										className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-										aria-label="Đóng"
-									>
-										<X className="w-4 h-4" strokeWidth={1.5} />
-									</button>
-								</div>
-								<div>
-									<label
-										htmlFor="reset-user-password"
-										className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1"
-									>
-										Mật khẩu mới (ít nhất 6 ký tự)
-									</label>
-									<div className="relative">
-										<input
-											id="reset-user-password"
-											type={showResetPwd ? "text" : "password"}
-											required
-											value={resetPwdValue}
-											onChange={(e) => setResetPwdValue(e.target.value)}
-											placeholder="Nhập mật khẩu mới..."
-											className="w-full px-3.5 py-2.5 pr-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-										/>
+					{resetPwdUser &&
+						createPortal(
+							<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/45 dark:bg-black/60 animate-in fade-in duration-150">
+								<form
+									ref={activeModalRef}
+									role="dialog"
+									aria-modal="true"
+									aria-labelledby="reset-pwd-title"
+									onSubmit={handleResetPassword}
+									className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl space-y-4 max-w-md w-full animate-in zoom-in-95 duration-150"
+								>
+									<div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+										<h4
+											id="reset-pwd-title"
+											className="text-sm font-bold text-slate-900 dark:text-white"
+										>
+											Đặt lại mật khẩu cho:{" "}
+											<strong className="text-emerald-600">
+												{resetPwdUser.username}
+											</strong>
+										</h4>
 										<button
 											type="button"
-											onClick={() => setShowResetPwd(!showResetPwd)}
-											className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+											onClick={() => setResetPwdUser(null)}
+											className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+											aria-label="Đóng"
 										>
-											{showResetPwd ? (
-												<EyeOff
-													className="w-4 h-4"
-													strokeWidth={1.5}
-													aria-hidden="true"
-												/>
-											) : (
-												<Eye
-													className="w-4 h-4"
-													strokeWidth={1.5}
-													aria-hidden="true"
-												/>
-											)}
+											<X className="w-4 h-4" strokeWidth={1.5} />
 										</button>
 									</div>
-								</div>
-								<div className="flex justify-end gap-2 pt-2">
-									<button
-										type="button"
-										onClick={() => setResetPwdUser(null)}
-										className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold cursor-pointer active:scale-95"
-									>
-										Hủy
-									</button>
-									<button
-										type="submit"
-										disabled={loadingResetPwd}
-										className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
-									>
-										{loadingResetPwd ? "Đang lưu..." : "Lưu mật khẩu"}
-									</button>
-								</div>
-							</form>
-						</div>
-					)}
+									<div>
+										<label
+											htmlFor="reset-user-password"
+											className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1"
+										>
+											Mật khẩu mới (ít nhất 6 ký tự)
+										</label>
+										<div className="relative">
+											<input
+												id="reset-user-password"
+												type={showResetPwd ? "text" : "password"}
+												required
+												value={resetPwdValue}
+												onChange={(e) => setResetPwdValue(e.target.value)}
+												placeholder="Nhập mật khẩu mới..."
+												className="w-full px-3.5 py-2.5 pr-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+											/>
+											<button
+												type="button"
+												onClick={() => setShowResetPwd(!showResetPwd)}
+												className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+											>
+												{showResetPwd ? (
+													<EyeOff
+														className="w-4 h-4"
+														strokeWidth={1.5}
+														aria-hidden="true"
+													/>
+												) : (
+													<Eye
+														className="w-4 h-4"
+														strokeWidth={1.5}
+														aria-hidden="true"
+													/>
+												)}
+											</button>
+										</div>
+									</div>
+									<div className="flex justify-end gap-2 pt-2">
+										<button
+											type="button"
+											onClick={() => setResetPwdUser(null)}
+											className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold cursor-pointer active:scale-95"
+										>
+											Hủy
+										</button>
+										<button
+											type="submit"
+											disabled={loadingResetPwd}
+											className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
+										>
+											{loadingResetPwd ? "Đang lưu..." : "Lưu mật khẩu"}
+										</button>
+									</div>
+								</form>
+							</div>,
+							document.body,
+						)}
 
 					{/* Modal phân công thôn cán bộ */}
-					{assignUser && (
-						<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/45 dark:bg-black/60 animate-in fade-in duration-150">
-							<form
-								onSubmit={handleAssignVillage}
-								className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl space-y-4 max-w-md w-full animate-in zoom-in-95 duration-150"
-							>
-								<div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-									<h4 className="text-sm font-bold text-slate-900 dark:text-white">
-										Phân công thôn cho:{" "}
-										<strong className="text-emerald-600">
-											{assignUser.username}
-										</strong>
-									</h4>
-									<button
-										type="button"
-										onClick={() => setAssignUser(null)}
-										className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-										aria-label="Đóng"
-									>
-										<X className="w-4 h-4" strokeWidth={1.5} />
-									</button>
-								</div>
-								<div className="space-y-3">
-									<div>
-										<CustomSelect
-											label="Vai trò"
-											value={assignRole}
-											onChange={(val) => setAssignRole(val as any)}
-											options={[
-												{ value: "user", label: "Cán bộ Thôn (User)" },
-												{ value: "admin", label: "Quản trị viên Xã (Admin)" },
-											]}
-										/>
+					{assignUser &&
+						createPortal(
+							<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/45 dark:bg-black/60 animate-in fade-in duration-150">
+								<form
+									ref={activeModalRef}
+									role="dialog"
+									aria-modal="true"
+									aria-labelledby="assign-village-title"
+									onSubmit={handleAssignVillage}
+									className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl space-y-4 max-w-md w-full animate-in zoom-in-95 duration-150"
+								>
+									<div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+										<h4
+											id="assign-village-title"
+											className="text-sm font-bold text-slate-900 dark:text-white"
+										>
+											Phân công thôn cho:{" "}
+											<strong className="text-emerald-600">
+												{assignUser.username}
+											</strong>
+										</h4>
+										<button
+											type="button"
+											onClick={() => setAssignUser(null)}
+											className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+											aria-label="Đóng"
+										>
+											<X className="w-4 h-4" strokeWidth={1.5} />
+										</button>
 									</div>
-									{assignRole === "user" && (
+									<div className="space-y-3">
 										<div>
 											<CustomSelect
-												label="Thôn Phụ Trách"
-												value={assignVillageId}
-												onChange={(val) => setAssignVillageId(String(val))}
-												options={villages.map((v) => ({
-													value: v.id,
-													label: v.name,
-												}))}
-												placeholder="-- Chọn thôn --"
+												label="Vai trò"
+												value={assignRole}
+												onChange={(val) => setAssignRole(val as any)}
+												options={[
+													{ value: "user", label: "Cán bộ Thôn (User)" },
+													{ value: "admin", label: "Quản trị viên Xã (Admin)" },
+												]}
 											/>
 										</div>
-									)}
-								</div>
-								<div className="flex justify-end gap-2 pt-2">
-									<button
-										type="button"
-										onClick={() => setAssignUser(null)}
-										className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold cursor-pointer active:scale-95"
-									>
-										Hủy
-									</button>
-									<button
-										type="submit"
-										disabled={loadingAssign}
-										className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
-									>
-										{loadingAssign ? "Đang lưu..." : "Lưu phân công"}
-									</button>
-								</div>
-							</form>
-						</div>
-					)}
+										{assignRole === "user" && (
+											<div>
+												<CustomSelect
+													label="Thôn Phụ Trách"
+													value={assignVillageId}
+													onChange={(val) => setAssignVillageId(String(val))}
+													options={villages.map((v) => ({
+														value: v.id,
+														label: v.name,
+													}))}
+													placeholder="-- Chọn thôn --"
+												/>
+											</div>
+										)}
+									</div>
+									<div className="flex justify-end gap-2 pt-2">
+										<button
+											type="button"
+											onClick={() => setAssignUser(null)}
+											className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold cursor-pointer active:scale-95"
+										>
+											Hủy
+										</button>
+										<button
+											type="submit"
+											disabled={loadingAssign}
+											className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
+										>
+											{loadingAssign ? "Đang lưu..." : "Lưu phân công"}
+										</button>
+									</div>
+								</form>
+							</div>,
+							document.body,
+						)}
 
 					{/* Bảng danh sách cán bộ chuẩn Chromium */}
 					<div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
