@@ -58,7 +58,7 @@ export const STAT_PANEL_GRID_CLASS = "grid grid-cols-1 lg:grid-cols-2 gap-6";
  * Khung vùng cuộn danh sách thanh tiến độ kèm hiệu ứng mờ mép
  */
 export const STAT_SCROLL_CONTAINER_CLASS =
-	"space-y-2 max-h-[340px] overflow-y-auto pr-1 custom-scrollbar";
+	"space-y-2 max-h-[340px] overflow-y-auto pr-1 custom-scrollbar stat-scroll-fade";
 
 /**
  * Interface cho Props của thẻ KPI
@@ -293,12 +293,18 @@ export const StatDonut: React.FC<StatDonutProps> = ({
 	const strokeWidth = 9;
 	const circumference = 2 * Math.PI * radius; // ~263.89
 
-	// Tính toán phần bù strokeDashoffset cho từng phân khúc
+	// Tính toán phần bù strokeDashoffset cho từng phân khúc kèm đường viền tách 2px
+	const activeItems = items.filter((it) => it.value > 0);
+	const hasMultipleSegments = activeItems.length > 1;
+	const gap = hasMultipleSegments ? 2 : 0; // Đường viền tách 2px chuẩn
+
 	let accumulatedPercent = 0;
 	const segments = items.map((item) => {
 		const pct = total > 0 ? (item.value / total) * 100 : 0;
-		const dashArray = `${(pct / 100) * circumference} ${circumference}`;
-		const dashOffset = -(accumulatedPercent / 100) * circumference;
+		const arcLen = (pct / 100) * circumference;
+		const visibleLen = Math.max(0, arcLen - gap);
+		const dashArray = `${visibleLen} ${circumference - visibleLen}`;
+		const dashOffset = -(accumulatedPercent / 100) * circumference - gap / 2;
 		accumulatedPercent += pct;
 		return {
 			...item,
@@ -348,7 +354,7 @@ export const StatDonut: React.FC<StatDonutProps> = ({
 							strokeWidth={strokeWidth}
 							strokeDasharray={seg.dashArray}
 							strokeDashoffset={seg.dashOffset}
-							strokeLinecap="round"
+							strokeLinecap={hasMultipleSegments ? "butt" : "round"}
 							className="transition-all duration-500"
 						/>
 					))}

@@ -8,6 +8,23 @@
 
 :root {
   --stat-accent: #22c55e;
+  /* Categorical color tokens (Light mode: >= 3.5:1 contrast) */
+  --cat-1: #16a34a; /* Green chủ đạo */
+  --cat-2: #d97706; /* Amber / Cam */
+  --cat-3: #2563eb; /* Blue / Xanh dương */
+  --cat-4: #7c3aed; /* Purple / Tím */
+  --cat-5: #db2777; /* Pink / Hồng */
+  --cat-other: #64748b; /* Slate / Xám */
+}
+
+html.dark {
+  /* Categorical color tokens (Dark mode: >= 5.5:1 contrast) */
+  --cat-1: #22c55e; /* Green chủ đạo */
+  --cat-2: #f59e0b; /* Amber / Cam */
+  --cat-3: #3b82f6; /* Blue / Xanh dương */
+  --cat-4: #a78bfa; /* Purple / Tím */
+  --cat-5: #f472b6; /* Pink / Hồng */
+  --cat-other: #94a3b8; /* Slate / Xám */
 }
 
 @layer base {
@@ -79,6 +96,14 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Bottom fade mask for long scrollable stat panels */
+.stat-scroll-fade {
+  max-height: 340px;
+  overflow-y: auto;
+  mask-image: linear-gradient(to bottom, black calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 28px), transparent 100%);
 }
 
 /* ==========================================================================

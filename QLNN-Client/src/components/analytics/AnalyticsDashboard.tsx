@@ -272,12 +272,12 @@ export const AnalyticsDashboard: React.FC = () => {
 	const livestock = overview.livestock;
 	const aqua = overview.aquaculture;
 
-	// Sắc độ xanh lá đồng nhất cho màn Nông nghiệp
+	// Bảng màu phân loại (categorical palette): các nhóm khác nhau dùng màu khác biệt
 	const cropDonutItems = [
 		{
 			label: "Cây CN",
 			value: crops.total_cafe + crops.total_rubber,
-			color: "#16a34a", // Xanh lá đậm
+			color: "var(--cat-1, #16a34a)", // Xanh lá chủ đạo
 			unit: "ha",
 		},
 		{
@@ -286,7 +286,7 @@ export const AnalyticsDashboard: React.FC = () => {
 				0,
 				crops.total_crops_area - (crops.total_cafe + crops.total_rubber),
 			),
-			color: "#4ade80", // Xanh lá nhạt
+			color: "var(--cat-2, #d97706)", // Cam / Hổ phách
 			unit: "ha",
 		},
 	];
@@ -295,13 +295,13 @@ export const AnalyticsDashboard: React.FC = () => {
 		{
 			label: "Gia súc",
 			value: livestock.total_cattle + livestock.pig,
-			color: "#16a34a", // Xanh lá đậm
+			color: "var(--cat-1, #16a34a)", // Xanh lá chủ đạo
 			unit: "con",
 		},
 		{
 			label: "Gia cầm",
 			value: livestock.poultry,
-			color: "#4ade80", // Xanh lá nhạt
+			color: "var(--cat-3, #2563eb)", // Xanh dương
 			unit: "con",
 		},
 	];
@@ -435,77 +435,77 @@ export const AnalyticsDashboard: React.FC = () => {
 							centerLabel="Cây CN"
 						/>
 
-						{/* Danh sách thanh tiến độ: khung riêng, bo 12px, sắc độ xanh lá */}
+						{/* Danh sách thanh tiến độ: khung riêng, bo 12px, màu chủ đạo xanh lá thống nhất */}
 						<div className={STAT_SCROLL_CONTAINER_CLASS}>
 							<StatBarRow
 								label="Cà phê (Hộ gia đình)"
 								value={crops.cafe_household}
 								total={crops.total_crops_area}
 								unit="ha"
-								barColor="#15803d" // green-700
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Cà phê (Nhận khoán)"
 								value={crops.cafe_contracted}
 								total={crops.total_crops_area}
 								unit="ha"
-								barColor="#16a34a" // green-600
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Cao su (Hộ gia đình)"
 								value={crops.rubber_household}
 								total={crops.total_crops_area}
 								unit="ha"
-								barColor="#22c55e" // green-500
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Cao su (Nhận khoán)"
 								value={crops.rubber_contracted}
 								total={crops.total_crops_area}
 								unit="ha"
-								barColor="#4ade80" // green-400
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Cây ăn quả (Sầu riêng, mít, bơ...)"
 								value={crops.fruit_tree}
 								total={crops.total_crops_area}
 								unit="ha"
-								barColor="#86efac" // green-300
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Cây Mắc ca"
 								value={crops.macadamia}
 								total={crops.total_crops_area}
 								unit="ha"
-								barColor="#10b981" // emerald-500
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Dược liệu: Đinh lăng"
 								value={crops.herb_dinh_lang}
 								total={crops.total_crops_area}
 								unit="ha"
-								barColor="#059669" // emerald-600
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Dược liệu: Gừng, Nghệ, Sả"
 								value={crops.herb_gung + crops.herb_nghe + crops.herb_sa}
 								total={crops.total_crops_area}
 								unit="ha"
-								barColor="#34d399" // emerald-400
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Lúa nước"
 								value={crops.wet_rice}
 								total={crops.total_crops_area}
 								unit="ha"
-								barColor="#14b8a6" // teal-500
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Cây hàng năm khác"
 								value={crops.other_annual_crops}
 								total={crops.total_crops_area}
 								unit="ha"
-								barColor="#64748b" // slate-500 (nhóm khác/không dùng xám trung tính)
+								barColor="var(--cat-other, #64748b)" // Xám trung tính cho nhóm Khác
 							/>
 						</div>
 					</div>
@@ -526,35 +526,35 @@ export const AnalyticsDashboard: React.FC = () => {
 							centerLabel="Gia súc"
 						/>
 
-						{/* Danh sách thanh tiến độ: khung riêng, bo 12px, sắc độ xanh lá */}
+						{/* Danh sách thanh tiến độ: khung riêng, bo 12px, màu chủ đạo thống nhất */}
 						<div className={STAT_SCROLL_CONTAINER_CLASS}>
 							<StatBarRow
 								label="Đàn Gia Cầm (Gà, Vịt, Ngan)"
 								value={livestock.poultry}
 								total={livestock.total_animals}
 								unit="con"
-								barColor="#22c55e" // green-500
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Đàn Heo"
 								value={livestock.pig}
 								total={livestock.total_animals}
 								unit="con"
-								barColor="#16a34a" // green-600
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Đàn Bò"
 								value={livestock.cow}
 								total={livestock.total_animals}
 								unit="con"
-								barColor="#15803d" // green-700
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Đàn Trâu"
 								value={livestock.buffalo}
 								total={livestock.total_animals}
 								unit="con"
-								barColor="#166534" // green-800
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Nuôi Cá Ao Hồ (Mặt nước nuôi thả)"
@@ -562,7 +562,7 @@ export const AnalyticsDashboard: React.FC = () => {
 								total={aqua.fish_pond > 0 ? aqua.fish_pond : 1}
 								unit="ha"
 								customPercent={100}
-								barColor="#059669" // emerald-600
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 							<StatBarRow
 								label="Nuôi Cá Lồng Bè (Lòng hồ thủy điện)"
@@ -570,7 +570,7 @@ export const AnalyticsDashboard: React.FC = () => {
 								total={aqua.fish_cage > 0 ? aqua.fish_cage : 1}
 								unit="lồng"
 								customPercent={100}
-								barColor="#10b981" // emerald-500
+								barColor={DEFAULT_STAT_ACCENT}
 							/>
 						</div>
 					</div>
