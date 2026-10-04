@@ -1,10 +1,7 @@
 import axios from "axios";
 import { secureStorage } from "../utils/secureStorage";
 
-const isDev = import.meta.env.DEV;
-export const API_BASE_URL = isDev
-	? "/api"
-	: import.meta.env.VITE_API_URL || "https://qlnn.dulieudakha.vn/api";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://qlnn.dulieudakha.vn/api";
 
 export const apiClient = axios.create({
 	baseURL: API_BASE_URL,
