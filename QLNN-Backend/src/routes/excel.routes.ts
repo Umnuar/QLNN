@@ -16,12 +16,14 @@ const excelFileFilter = (
 	file: Express.Multer.File,
 	cb: multer.FileFilterCallback,
 ) => {
-	const allowedExtensions = [".xlsx", ".xls"];
+	const allowedExtensions = [".xlsx", ".xls", ".csv"];
 	const ext = file.originalname
 		.toLowerCase()
 		.slice(file.originalname.lastIndexOf("."));
 	if (!allowedExtensions.includes(ext)) {
-		return cb(new Error("Chỉ chấp nhận tệp định dạng Excel (.xlsx, .xls)"));
+		return cb(
+			new Error("Chỉ chấp nhận tệp định dạng Excel hoặc CSV (.xlsx, .xls, .csv)"),
+		);
 	}
 	cb(null, true);
 };

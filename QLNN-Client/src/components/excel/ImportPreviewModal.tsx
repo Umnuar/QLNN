@@ -13,8 +13,20 @@ import {
 	X,
 } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+	useCallback,
+	useEffect,
+	useId,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { createPortal } from "react-dom";
+import {
+	type ExcelPreviewItem,
+	type ExcelPreviewResponse,
+	excelApi,
+} from "../../api/excelApi";
 import { CustomSelect } from "../common/CustomSelect";
 import { formatVietnameseNumber } from "../common/statStyles";
 
@@ -22,11 +34,15 @@ export interface ImportPreviewModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	file: File | null;
+	villageId?: string | null;
 	parsedData: (string | number | undefined)[][];
 	onConfirm: (file: File) => void;
 	importing: boolean;
 	onChangeFile?: () => void;
-	onFileSelected?: (file: File, rows: (string | number | undefined)[][]) => void;
+	onFileSelected?: (
+		file: File,
+		rows: (string | number | undefined)[][],
+	) => void;
 }
 
 interface RowValidation {
@@ -64,6 +80,7 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 	isOpen,
 	onClose,
 	file: initialFile,
+	villageId,
 	parsedData: initialParsedData,
 	onConfirm,
 	importing,
@@ -74,13 +91,17 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 		initialFile ? "preview" : "file",
 	);
 	const [currentFile, setCurrentFile] = useState<File | null>(initialFile);
-	const [dataRows, setDataRows] = useState<(string | number | undefined)[][]>(
-		initialParsedData,
-	);
+	const [dataRows, setDataRows] =
+		useState<(string | number | undefined)[][]>(initialParsedData);
 	const [isDragging, setIsDragging] = useState(false);
 	const [fileError, setFileError] = useState<string | null>(null);
 	const [isReading, setIsReading] = useState(false);
 	const [onlyShowIssues, setOnlyShowIssues] = useState(false);
+
+	const [smartPreview, setSmartPreview] = useState<ExcelPreviewResponse | null>(
+		null,
+	);
+	const [loadingSmartPreview, setLoadingSmartPreview] = useState(false);
 
 	const [importPage, setImportPage] = useState(1);
 	const [importLimit, setImportLimit] = useState(20);
@@ -99,8 +120,41 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 			setCurrentFile(null);
 			setDataRows([]);
 			setActiveStep("file");
+			setSmartPreview(null);
 		}
 	}, [initialFile, initialParsedData]);
+
+	// Nạp thông tin đối chiếu Smart-Upsert từ Backend khi ở bước xem trước
+	useEffect(() => {
+		let isMounted = true;
+		if (isOpen && activeStep === "preview" && currentFile && villageId) {
+			setLoadingSmartPreview(true);
+			excelApi
+				.previewExcel(currentFile, villageId)
+				.then((res) => {
+					if (isMounted) {
+						setSmartPreview(res);
+					}
+				})
+				.catch((err) => {
+					console.warn("Smart preview warning:", err);
+					if (isMounted) {
+						setSmartPreview(null);
+					}
+				})
+				.finally(() => {
+					if (isMounted) {
+						setLoadingSmartPreview(false);
+					}
+				});
+		} else {
+			setSmartPreview(null);
+			setLoadingSmartPreview(false);
+		}
+		return () => {
+			isMounted = false;
+		};
+	}, [isOpen, activeStep, currentFile, villageId]);
 
 	// Xử lý đọc file Excel / CSV
 	const processFile = useCallback(
@@ -188,7 +242,9 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 				}
 			} catch (err) {
 				console.error("Lỗi khi đọc file Excel:", err);
-				setFileError("Không thể đọc tệp dữ liệu. Vui lòng kiểm tra lại định dạng tệp.");
+				setFileError(
+					"Không thể đọc tệp dữ liệu. Vui lòng kiểm tra lại định dạng tệp.",
+				);
 			} finally {
 				setIsReading(false);
 			}
@@ -298,8 +354,19 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 			onChangeFile();
 		}
 		setActiveStep("file");
+		setSmartPreview(null);
 		setFileError(null);
 	};
+
+	// Bản đồ đối soát Smart-Upsert theo tên chuẩn hóa
+	const smartMap = useMemo(() => {
+		if (!smartPreview?.previewList) return new Map<string, ExcelPreviewItem>();
+		const map = new Map<string, ExcelPreviewItem>();
+		for (const item of smartPreview.previewList) {
+			map.set(item.full_name.trim().toLowerCase(), item);
+		}
+		return map;
+	}, [smartPreview]);
 
 	// Đánh giá dữ liệu từng dòng (Validation & Status Chips)
 	const validatedRows: RowValidation[] = useMemo(() => {
@@ -331,7 +398,9 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 			// Kiểm tra cảnh báo: tất cả 18 chỉ tiêu đều bằng 0 hoặc rỗng
 			const allZero = row.slice(2, 20).every((val) => {
 				const num = Number(val);
-				return Number.isNaN(num) || num === 0 || val === "" || val === undefined;
+				return (
+					Number.isNaN(num) || num === 0 || val === "" || val === undefined
+				);
 			});
 			if (allZero) {
 				return {
@@ -366,7 +435,9 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 	// Dữ liệu hiển thị lọc và phân trang
 	const filteredRows = useMemo(() => {
 		if (!onlyShowIssues) return validatedRows;
-		return validatedRows.filter((r) => r.status === "warning" || r.status === "error");
+		return validatedRows.filter(
+			(r) => r.status === "warning" || r.status === "error",
+		);
 	}, [validatedRows, onlyShowIssues]);
 
 	const maxPage = Math.ceil(filteredRows.length / importLimit) || 1;
@@ -396,9 +467,10 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 
 			if (e.key === "Tab") {
 				if (!modalRef.current) return;
-				const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
-					'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-				);
+				const focusableElements =
+					modalRef.current.querySelectorAll<HTMLElement>(
+						'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+					);
 				const focusable = Array.from(focusableElements).filter(
 					(el) =>
 						!el.hasAttribute("disabled") &&
@@ -543,7 +615,9 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 											setActiveStep("file");
 										}
 									}}
-									disabled={st.num === 2 && (!currentFile || dataRows.length === 0)}
+									disabled={
+										st.num === 2 && (!currentFile || dataRows.length === 0)
+									}
 									className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${
 										isActive
 											? "bg-emerald-600 text-white shadow-xs"
@@ -673,6 +747,27 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 										<span>Hợp lệ: {validCount}</span>
 									</div>
 
+									{/* Chips Smart-Upsert từ đối soát Backend */}
+									{smartPreview && (
+										<>
+											<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 text-xs font-bold shadow-2xs">
+												<span className="w-2 h-2 rounded-full bg-sky-500" />
+												<span>Tạo mới: {smartPreview.createCount}</span>
+											</div>
+											<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-bold shadow-2xs">
+												<span className="w-2 h-2 rounded-full bg-indigo-500" />
+												<span>Cập nhật: {smartPreview.updateCount}</span>
+											</div>
+										</>
+									)}
+
+									{loadingSmartPreview && (
+										<div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-medium">
+											<div className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+											<span>Đang đối soát CSDL...</span>
+										</div>
+									)}
+
 									{/* Chip Cảnh báo nếu > 0 */}
 									{warningCount > 0 && (
 										<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-xs font-bold shadow-2xs">
@@ -705,7 +800,9 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 										}`}
 									>
 										<Filter className="w-3 h-3" />
-										<span>{onlyShowIssues ? "Hiện tất cả" : "Chỉ lỗi/cảnh báo"}</span>
+										<span>
+											{onlyShowIssues ? "Hiện tất cả" : "Chỉ lỗi/cảnh báo"}
+										</span>
 									</button>
 								)}
 							</div>
@@ -714,184 +811,206 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 									<thead className="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider sticky top-0 z-30">
 										<tr>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-center sticky left-0 z-30 bg-slate-100 dark:bg-slate-950 w-14">
-												<span className="text-slate-400 font-normal">1.</span> STT
+												<span className="text-slate-400 font-normal">1.</span>{" "}
+												STT
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 sticky left-14 z-30 bg-slate-100 dark:bg-slate-950 min-w-[200px] border-r-2 border-slate-300 dark:border-slate-700 shadow-xs">
-												<span className="text-slate-400 font-normal">2.</span> Họ và
-												Tên Chủ Hộ
+												<span className="text-slate-400 font-normal">2.</span>{" "}
+												Họ và Tên Chủ Hộ
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">3.</span> Cà phê
-												(Hộ)
+												<span className="text-slate-400 font-normal">3.</span>{" "}
+												Cà phê (Hộ)
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">4.</span> Cà phê
-												(Nhận k)
+												<span className="text-slate-400 font-normal">4.</span>{" "}
+												Cà phê (Nhận k)
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">5.</span> Cao su
-												(Hộ)
+												<span className="text-slate-400 font-normal">5.</span>{" "}
+												Cao su (Hộ)
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">6.</span> Cao su
-												(Nhận k)
+												<span className="text-slate-400 font-normal">6.</span>{" "}
+												Cao su (Nhận k)
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">7.</span> Cây ăn
-												quả
+												<span className="text-slate-400 font-normal">7.</span>{" "}
+												Cây ăn quả
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">8.</span> Macca
+												<span className="text-slate-400 font-normal">8.</span>{" "}
+												Macca
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">9.</span> Đinh
-												lăng
+												<span className="text-slate-400 font-normal">9.</span>{" "}
+												Đinh lăng
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">10.</span> Gừng
+												<span className="text-slate-400 font-normal">10.</span>{" "}
+												Gừng
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">11.</span> Nghệ
+												<span className="text-slate-400 font-normal">11.</span>{" "}
+												Nghệ
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">12.</span> Sả
+												<span className="text-slate-400 font-normal">12.</span>{" "}
+												Sả
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">13.</span> Lúa
-												nước
+												<span className="text-slate-400 font-normal">13.</span>{" "}
+												Lúa nước
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">14.</span> Cây
-												HN khác
+												<span className="text-slate-400 font-normal">14.</span>{" "}
+												Cây HN khác
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">15.</span> Trâu
-												(con)
+												<span className="text-slate-400 font-normal">15.</span>{" "}
+												Trâu (con)
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">16.</span> Bò
-												(con)
+												<span className="text-slate-400 font-normal">16.</span>{" "}
+												Bò (con)
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">17.</span> Heo
-												(con)
+												<span className="text-slate-400 font-normal">17.</span>{" "}
+												Heo (con)
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">18.</span> Gia
-												cầm (con)
+												<span className="text-slate-400 font-normal">18.</span>{" "}
+												Gia cầm (con)
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">19.</span> Ao cá
-												(ha)
+												<span className="text-slate-400 font-normal">19.</span>{" "}
+												Ao cá (ha)
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800 text-right">
-												<span className="text-slate-400 font-normal">20.</span> Lồng
-												bè
+												<span className="text-slate-400 font-normal">20.</span>{" "}
+												Lồng bè
 											</th>
 											<th className="py-2.5 px-3 border-b border-slate-200 dark:border-slate-800">
-												<span className="text-slate-400 font-normal">21.</span> Ghi
-												chú
+												<span className="text-slate-400 font-normal">21.</span>{" "}
+												Ghi chú
 											</th>
 										</tr>
 									</thead>
 									<tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-										{displayRows.map(({ row, index, status, reason }) => (
-											<tr
-												key={`preview-row-${row[0] ?? ""}-${row[1] ?? ""}-${index}`}
-												className={`transition-colors ${
-													status === "error"
-														? "bg-rose-50/60 dark:bg-rose-950/30 hover:bg-rose-50 dark:hover:bg-rose-950/50"
-														: status === "warning"
-															? "bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-50 dark:hover:bg-amber-950/40"
-															: "hover:bg-slate-50 dark:hover:bg-slate-800/60"
-												}`}
-											>
-												<td
-													className="py-2 px-3 text-center sticky left-0 z-20 bg-white dark:bg-slate-900 w-14 font-mono text-slate-500"
-													title={reason}
+										{displayRows.map(({ row, index, status, reason }) => {
+											const smartItem = row[1]
+												? smartMap.get(String(row[1]).trim().toLowerCase())
+												: undefined;
+											return (
+												<tr
+													key={`preview-row-${row[0] ?? ""}-${row[1] ?? ""}-${index}`}
+													className={`transition-colors ${
+														status === "error"
+															? "bg-rose-50/60 dark:bg-rose-950/30 hover:bg-rose-50 dark:hover:bg-rose-950/50"
+															: status === "warning"
+																? "bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+																: "hover:bg-slate-50 dark:hover:bg-slate-800/60"
+													}`}
 												>
-													<div className="flex items-center justify-center gap-1">
-														{status === "error" && (
-															<AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-														)}
-														{status === "warning" && (
-															<AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-														)}
-														<span>{row[0] || index + 1}</span>
-													</div>
-												</td>
-												<td
-													className="py-2 px-3 sticky left-14 z-20 bg-white dark:bg-slate-900 min-w-[200px] font-bold text-slate-800 dark:text-slate-200 border-r-2 border-slate-300 dark:border-slate-700 shadow-xs"
-													title={reason}
-												>
-													<div className="flex items-center justify-between gap-1">
-														<span>{row[1]}</span>
-														{reason && (
-															<span className="text-[10px] font-normal text-amber-600 dark:text-amber-400 italic">
-																{reason}
-															</span>
-														)}
-													</div>
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[2])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[3])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[4])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[5])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[6])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[7])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[8])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[9])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[10])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[11])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[12])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[13])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[14])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[15])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[16])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[17])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[18])}
-												</td>
-												<td className="py-2 px-3 text-right tabular-nums">
-													{formatCell(row[19])}
-												</td>
-												<td className="py-2 px-3 text-slate-500">
-													{row[20] || "—"}
-												</td>
-											</tr>
-										))}
+													<td
+														className="py-2 px-3 text-center sticky left-0 z-20 bg-white dark:bg-slate-900 w-14 font-mono text-slate-500"
+														title={reason}
+													>
+														<div className="flex items-center justify-center gap-1">
+															{status === "error" && (
+																<AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+															)}
+															{status === "warning" && (
+																<AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+															)}
+															<span>{row[0] || index + 1}</span>
+														</div>
+													</td>
+													<td
+														className="py-2 px-3 sticky left-14 z-20 bg-white dark:bg-slate-900 min-w-[200px] font-bold text-slate-800 dark:text-slate-200 border-r-2 border-slate-300 dark:border-slate-700 shadow-xs"
+														title={reason}
+													>
+														<div className="flex items-center justify-between gap-1">
+															<div className="flex items-center gap-1.5 min-w-0">
+																<span className="truncate">{row[1]}</span>
+																{smartItem?.action === "create" && (
+																	<span className="shrink-0 px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+																		Tạo mới
+																	</span>
+																)}
+																{smartItem?.action === "update" && (
+																	<span className="shrink-0 px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+																		Ghi đè
+																	</span>
+																)}
+															</div>
+															{reason && (
+																<span className="text-[10px] font-normal text-amber-600 dark:text-amber-400 italic shrink-0">
+																	{reason}
+																</span>
+															)}
+														</div>
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[2])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[3])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[4])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[5])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[6])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[7])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[8])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[9])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[10])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[11])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[12])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[13])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[14])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[15])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[16])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[17])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[18])}
+													</td>
+													<td className="py-2 px-3 text-right tabular-nums">
+														{formatCell(row[19])}
+													</td>
+													<td className="py-2 px-3 text-slate-500">
+														{row[20] || "—"}
+													</td>
+												</tr>
+											);
+										})}
 										{displayRows.length === 0 && (
 											<tr>
 												<td

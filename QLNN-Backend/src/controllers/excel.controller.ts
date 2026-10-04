@@ -23,11 +23,21 @@ export interface SmartUpsertAnalysis {
  * .xlsx (ZIP): PK\x03\x04 (0x50 0x4B 0x03 0x04)
  * .xls (OLE2): 0xD0 0xCF 0x11 0xE0
  */
-export function validateExcelBuffer(buffer: Buffer): {
+export function validateExcelBuffer(
+	buffer: Buffer,
+	filename?: string,
+): {
 	valid: boolean;
 	error?: string;
 } {
-	if (!buffer || buffer.length < 4) {
+	if (!buffer || buffer.length === 0) {
+		return { valid: false, error: "Tệp tin rỗng hoặc không đúng định dạng" };
+	}
+	const isCsv = filename?.toLowerCase().endsWith(".csv");
+	if (isCsv) {
+		return { valid: true };
+	}
+	if (buffer.length < 4) {
 		return { valid: false, error: "Tệp tin rỗng hoặc không đúng định dạng" };
 	}
 	const isZip =
@@ -45,7 +55,7 @@ export function validateExcelBuffer(buffer: Buffer): {
 		return {
 			valid: false,
 			error:
-				"Định dạng tệp không hợp lệ: tệp tải lên không phải là tài liệu Excel (.xlsx / .xls) tiêu chuẩn (chữ ký nhị phân không khớp).",
+				"Định dạng tệp không hợp lệ: tệp tải lên không phải là tài liệu Excel hoặc CSV (.xlsx / .xls / .csv) tiêu chuẩn.",
 		};
 	}
 	return { valid: true };
@@ -123,7 +133,8 @@ export const importExcel = async (req: AuthRequest, res: Response) => {
 			return;
 		}
 
-		const validation = validateExcelBuffer(req.file.buffer);
+		const filename = req.file.originalname;
+		const validation = validateExcelBuffer(req.file.buffer, filename);
 		if (!validation.valid) {
 			res.status(400).json({ error: validation.error });
 			return;
@@ -145,8 +156,8 @@ export const importExcel = async (req: AuthRequest, res: Response) => {
 			return;
 		}
 
-		// Parse file Excel
-		const parseResult = await parseDakHaExcel(req.file.buffer);
+		// Parse file Excel / CSV
+		const parseResult = await parseDakHaExcel(req.file.buffer, filename);
 		const parsedRows = parseResult.rows;
 
 		if (parsedRows.length === 0) {
@@ -261,7 +272,8 @@ export const previewExcel = async (req: AuthRequest, res: Response) => {
 			return;
 		}
 
-		const validation = validateExcelBuffer(req.file.buffer);
+		const filename = req.file.originalname;
+		const validation = validateExcelBuffer(req.file.buffer, filename);
 		if (!validation.valid) {
 			res.status(400).json({ error: validation.error });
 			return;
@@ -283,8 +295,8 @@ export const previewExcel = async (req: AuthRequest, res: Response) => {
 			return;
 		}
 
-		// Parse file Excel
-		const parseResult = await parseDakHaExcel(req.file.buffer);
+		// Parse file Excel / CSV
+		const parseResult = await parseDakHaExcel(req.file.buffer, filename);
 		const parsedRows = parseResult.rows;
 
 		if (parsedRows.length === 0) {

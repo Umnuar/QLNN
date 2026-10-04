@@ -24,32 +24,6 @@ import { useDebounce } from "../hooks/useDebounce";
 import { useModal } from "../hooks/useModal";
 import type { HouseholdFlat } from "../types";
 
-const computeTotalCrops = (hh: HouseholdFlat): number => {
-	return (
-		(Number(hh.cafe_household) || 0) +
-		(Number(hh.cafe_contracted) || 0) +
-		(Number(hh.rubber_household) || 0) +
-		(Number(hh.rubber_contracted) || 0) +
-		(Number(hh.fruit_tree) || 0) +
-		(Number(hh.macadamia) || 0) +
-		(Number(hh.herb_dinh_lang) || 0) +
-		(Number(hh.herb_gung) || 0) +
-		(Number(hh.herb_nghe) || 0) +
-		(Number(hh.herb_sa) || 0) +
-		(Number(hh.wet_rice) || 0) +
-		(Number(hh.other_annual_crops) || 0)
-	);
-};
-
-const computeTotalLivestock = (hh: HouseholdFlat): number => {
-	return (
-		(Number(hh.buffalo) || 0) +
-		(Number(hh.cow) || 0) +
-		(Number(hh.pig) || 0) +
-		(Number(hh.poultry) || 0)
-	);
-};
-
 export const HouseholdsPage: React.FC = () => {
 	const {
 		user,
@@ -118,10 +92,15 @@ export const HouseholdsPage: React.FC = () => {
 		const file = e.target.files?.[0];
 		if (!file) return;
 
-		if (!file.name.endsWith(".xls") && !file.name.endsWith(".xlsx")) {
+		const lowerName = file.name.toLowerCase();
+		if (
+			!lowerName.endsWith(".xls") &&
+			!lowerName.endsWith(".xlsx") &&
+			!lowerName.endsWith(".csv")
+		) {
 			showModal({
 				title: "Lỗi",
-				message: "Chỉ chấp nhận file .xls hoặc .xlsx",
+				message: "Chỉ chấp nhận file định dạng .xlsx, .xls hoặc .csv",
 				type: "danger",
 			});
 			return;
@@ -225,23 +204,9 @@ export const HouseholdsPage: React.FC = () => {
 	);
 
 	const filteredAndSortedHouseholds = useMemo(() => {
-		// 1. Lọc theo Quy mô (Scale Filter) bổ sung ở client nếu cần
-		if (scaleFilter === "all") {
-			return households;
-		}
-
-		return households.filter((hh) => {
-			const totalCrops = computeTotalCrops(hh);
-			const totalLivestock = computeTotalLivestock(hh);
-			const isLarge = totalCrops >= 2.0 || totalLivestock >= 15;
-			const isMedium = !isLarge && (totalCrops >= 0.5 || totalLivestock >= 5);
-
-			if (scaleFilter === "large" && !isLarge) return false;
-			if (scaleFilter === "medium" && !isMedium) return false;
-			if (scaleFilter === "small" && (isLarge || isMedium)) return false;
-			return true;
-		});
-	}, [households, scaleFilter]);
+		// Dữ liệu đã được lọc theo Quy mô, Loại hình và Sắp xếp chuẩn xác từ API backend
+		return households;
+	}, [households]);
 
 	const onToggleSelect = (id: string) => {
 		setSelectedHouseholdIds((prev) =>
@@ -569,6 +534,9 @@ export const HouseholdsPage: React.FC = () => {
 					setImportData([]);
 				}}
 				file={importFile}
+				villageId={
+					user?.role === "admin" ? selectedVillageId : user?.village_id
+				}
 				parsedData={importData}
 				onConfirm={handleImportConfirm}
 				importing={importing}

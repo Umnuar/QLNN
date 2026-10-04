@@ -107,6 +107,59 @@ export const getHouseholds = async (req: AuthRequest, res: Response) => {
 			where.name_unaccented = { contains: searchNormalized };
 		}
 
+		// Hỗ trợ scaleFilter xuống database query
+		if (
+			scaleFilter &&
+			["large", "medium", "small"].includes(String(scaleFilter))
+		) {
+			const scale = String(scaleFilter);
+			let scaleCondition = "";
+			if (scale === "large") {
+				scaleCondition =
+					"(COALESCE(c.total_crops, 0) >= 2.0 OR COALESCE(l.total_livestock, 0) >= 15)";
+			} else if (scale === "medium") {
+				scaleCondition =
+					"(NOT (COALESCE(c.total_crops, 0) >= 2.0 OR COALESCE(l.total_livestock, 0) >= 15) AND (COALESCE(c.total_crops, 0) >= 0.5 OR COALESCE(l.total_livestock, 0) >= 5))";
+			} else if (scale === "small") {
+				scaleCondition =
+					"(COALESCE(c.total_crops, 0) < 0.5 AND COALESCE(l.total_livestock, 0) < 5)";
+			}
+
+			const targetVillage =
+				req.user?.role === "user"
+					? req.user.village_id
+					: villageId
+						? String(villageId)
+						: null;
+
+			const params: any[] = [];
+			let villageWhere = "";
+			if (targetVillage) {
+				params.push(targetVillage);
+				villageWhere = `AND h.village_id = $${params.length}::uuid`;
+			}
+
+			const matched: Array<{ id: string }> = await prisma.$queryRawUnsafe(
+				`
+				SELECT h.id FROM households h
+				LEFT JOIN (
+					SELECT household_id, SUM(area) AS total_crops 
+					FROM crop_items 
+					GROUP BY household_id
+				) c ON c.household_id = h.id
+				LEFT JOIN (
+					SELECT household_id, SUM(quantity) AS total_livestock 
+					FROM livestock_items 
+					GROUP BY household_id
+				) l ON l.household_id = h.id
+				WHERE h.is_deleted = false ${villageWhere} AND ${scaleCondition}
+			`,
+				...params,
+			);
+
+			where.id = { in: matched.map((m) => m.id) };
+		}
+
 		// Hỗ trợ typeFilter xuống database query
 		if (typeFilter === "contracted") {
 			where.crop_items = { some: { ownership_type: "contracted" } };
