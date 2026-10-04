@@ -1,8 +1,6 @@
 import {
 	ChevronRight,
 	Edit3,
-	Eye,
-	EyeOff,
 	Fish,
 	Flower2,
 	Layers,
@@ -67,7 +65,6 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 	const isDisconnected = !isOnline || !isBackendHealthy;
 	const [viewMode, setViewMode] = useState<ViewMode>("overview");
 	const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-	const [showMasked, setShowMasked] = useState<Record<string, boolean>>({});
 
 	React.useEffect(() => {
 		if (isAllExpanded !== undefined) {
@@ -85,10 +82,6 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 
 	const toggleRowExpand = (id: string) => {
 		setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
-	};
-
-	const toggleMask = (id: string) => {
-		setShowMasked((prev) => ({ ...prev, [id]: !prev[id] }));
 	};
 
 	// Helper tính toán tổng hợp cho từng hộ dân
@@ -183,34 +176,12 @@ export const HouseholdTable: React.FC<HouseholdTableProps> = ({
 			</div>
 			{hh.notes && (
 				<div
-					className={`flex items-center gap-1 mt-0.5 ${TABLE_STYLES.subText} ${
+					className={`truncate max-w-[220px] ${TABLE_STYLES.subText} ${
 						allowExpand ? "pl-6" : ""
 					}`}
+					title={hh.notes}
 				>
-					<button
-						type="button"
-						onClick={(e) => {
-							e.stopPropagation();
-							toggleMask(hh.id!);
-						}}
-						aria-label="Bật/Tắt che thông tin"
-						className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded cursor-pointer"
-						title={showMasked[hh.id!] ? "Che thông tin" : "Hiện thông tin"}
-					>
-						{showMasked[hh.id!] ? (
-							<EyeOff className="w-3 h-3" strokeWidth={1.5} />
-						) : (
-							<Eye className="w-3 h-3" strokeWidth={1.5} />
-						)}
-					</button>
-					<span className="truncate max-w-[200px]">
-						{showMasked[hh.id!]
-							? hh.notes
-							: hh.notes.replace(
-									/\d{4,}/g,
-									(match) => "••••" + match.slice(-3),
-								)}
-					</span>
+					{hh.notes}
 				</div>
 			)}
 		</td>
