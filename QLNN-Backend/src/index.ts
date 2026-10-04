@@ -21,15 +21,21 @@ import villageRoutes from "./routes/village.routes";
 import { startDashboard } from "./utils/dashboard";
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5001;
 
 // Bảo mật HTTP Headers
 app.use(helmet());
 
-// Cấu hình CORS (SEC-04-C: Không cho phép wildcard localhost trên production)
+// Cấu hình CORS (Hỗ trợ hệ sinh thái dulieudakha.vn, Cloudflare Tunnel và Local dev)
 const corsOrigins = process.env.CORS_ORIGIN
 	? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
-	: ["http://localhost:5174", "http://localhost:5173"];
+	: [
+			"https://qlnn.dulieudakha.vn",
+			"https://dulieudakha.vn",
+			"http://localhost:5174",
+			"http://localhost:5173",
+		];
 
 app.use(
 	cors({
@@ -38,6 +44,8 @@ app.use(
 			// Cho phép requests không có origin (Electron / Mobile / Postman) hoặc nằm trong danh sách
 			if (
 				!origin ||
+				origin === "https://qlnn.dulieudakha.vn" ||
+				origin.endsWith(".dulieudakha.vn") ||
 				corsOrigins.includes(origin) ||
 				(isDev && origin.startsWith("http://localhost:"))
 			) {
@@ -139,6 +147,10 @@ if (process.env.NODE_ENV !== "test") {
 		);
 		startDashboard();
 	});
+
+	// Giữ kết nối Cloudflare Tunnel luôn ấm (Keep-Alive)
+	server.keepAliveTimeout = 65000;
+	server.headersTimeout = 66000;
 
 	const gracefulShutdown = async (signal: string) => {
 		console.log(
