@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "enables default core, store, and http permissions",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "store:default",
+    "http:default"
+  ]
+}
