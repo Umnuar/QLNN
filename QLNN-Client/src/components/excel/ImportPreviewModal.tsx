@@ -185,67 +185,144 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
 
 			try {
 				setIsReading(true);
-				const XLSX = await import("xlsx");
 				const arrayBuffer = await selectedFile.arrayBuffer();
-				const wb = XLSX.read(arrayBuffer, { type: "array" });
 
-				if (!wb.SheetNames || wb.SheetNames.length === 0) {
-					setFileError("Tệp không chứa bảng tính (sheet) nào hợp lệ.");
-					setIsReading(false);
-					return;
-				}
+				const inlineProcess = async (buffer: ArrayBuffer) => {
+					try {
+						const XLSX = await import("xlsx");
+						const wb = XLSX.read(buffer, { type: "array" });
 
-				const ws = wb.Sheets[wb.SheetNames[0]];
-				const rawData = XLSX.utils.sheet_to_json<
-					(string | number | undefined)[]
-				>(ws, { header: 1 });
+						if (!wb.SheetNames || wb.SheetNames.length === 0) {
+							setFileError("Tệp không chứa bảng tính (sheet) nào hợp lệ.");
+							setIsReading(false);
+							return;
+						}
 
-				// Chuẩn hóa lấy dữ liệu từ dòng 10 trở đi (index 9) theo mẫu 21 cột Đăk Hà
-				let parsed = rawData
-					.slice(9)
-					.filter(
-						(row) =>
-							row &&
-							row[1] !== undefined &&
-							row[1] !== null &&
-							String(row[1]).trim() !== "",
-					);
+						const ws = wb.Sheets[wb.SheetNames[0]];
+						const rawData = XLSX.utils.sheet_to_json<
+							(string | number | undefined)[]
+						>(ws, { header: 1 });
 
-				// Fallback nếu người dùng nạp file không có 9 dòng tiêu đề mà có header ở dòng đầu
-				if (parsed.length === 0 && rawData.length > 1) {
-					parsed = rawData
-						.slice(1)
-						.filter(
-							(row) =>
-								row &&
-								row[1] !== undefined &&
-								row[1] !== null &&
-								String(row[1]).trim() !== "",
+						let parsed = rawData
+							.slice(9)
+							.filter(
+								(row) =>
+									row &&
+									row[1] !== undefined &&
+									row[1] !== null &&
+									String(row[1]).trim() !== "",
+							);
+
+						if (parsed.length === 0 && rawData.length > 1) {
+							parsed = rawData
+								.slice(1)
+								.filter(
+									(row) =>
+										row &&
+										row[1] !== undefined &&
+										row[1] !== null &&
+										String(row[1]).trim() !== "",
+								);
+						}
+
+						if (parsed.length === 0) {
+							setFileError(
+								"Không tìm thấy dòng dữ liệu hộ dân hợp lệ trong tệp (cột Họ và tên chủ hộ phải có giá trị).",
+							);
+							setIsReading(false);
+							return;
+						}
+
+						setCurrentFile(selectedFile);
+						setDataRows(parsed);
+						setImportPage(1);
+						setActiveStep("preview");
+
+						if (onFileSelected) {
+							onFileSelected(selectedFile, parsed);
+						}
+					} catch (err) {
+						console.error("Lỗi khi đọc file Excel:", err);
+						setFileError(
+							"Không thể đọc tệp dữ liệu. Vui lòng kiểm tra lại định dạng tệp.",
 						);
+					} finally {
+						setIsReading(false);
+					}
+				};
+
+				// Sử dụng Web Worker để bóc tách nền không làm nghẽn UI Thread
+				if (typeof Worker !== "undefined") {
+					try {
+						const worker = new Worker(
+							new URL("../../workers/excelImportWorker.ts", import.meta.url),
+							{ type: "module" },
+						);
+
+						worker.onmessage = (event: MessageEvent) => {
+							const res = event.data;
+							if (res.type === "error") {
+								setFileError(res.error || "Lỗi khi xử lý tệp dữ liệu.");
+								setIsReading(false);
+								worker.terminate();
+								return;
+							}
+
+							if (res.type === "done") {
+								setCurrentFile(selectedFile);
+								setDataRows(res.rawRows);
+								setImportPage(1);
+								setActiveStep("preview");
+
+								if (res.analyzedRows) {
+									setSmartPreview({
+										status: "ok",
+										villageName: "",
+										totalRowsParsed: res.totalCount,
+										createCount: res.createCount,
+										updateCount: res.updateCount,
+										previewList: res.analyzedRows.map((item: any) => ({
+											stt: item.row.stt,
+											full_name: item.row.full_name,
+											action: item.action,
+											existingId: item.existingHousehold?.id || null,
+											cropCount: item.row.crop_items?.length || 0,
+											livestockCount: item.row.livestock_items?.length || 0,
+											aquaCount: item.row.aquaculture_items?.length || 0,
+											notes: item.row.notes,
+										})),
+									});
+								}
+
+								if (onFileSelected) {
+									onFileSelected(selectedFile, res.rawRows);
+								}
+								setIsReading(false);
+								worker.terminate();
+							}
+						};
+
+						worker.onerror = (err) => {
+							console.warn("Worker error, fallback to inline processing:", err);
+							worker.terminate();
+							inlineProcess(arrayBuffer);
+						};
+
+						worker.postMessage({ arrayBuffer });
+						return;
+					} catch (workerErr) {
+						console.warn("Worker instantiation failed, fallback:", workerErr);
+						await inlineProcess(arrayBuffer);
+						return;
+					}
 				}
 
-				if (parsed.length === 0) {
-					setFileError(
-						"Không tìm thấy dòng dữ liệu hộ dân hợp lệ trong tệp (cột Họ và tên chủ hộ phải có giá trị).",
-					);
-					setIsReading(false);
-					return;
-				}
-
-				setCurrentFile(selectedFile);
-				setDataRows(parsed);
-				setImportPage(1);
-				setActiveStep("preview");
-
-				if (onFileSelected) {
-					onFileSelected(selectedFile, parsed);
-				}
+				await inlineProcess(arrayBuffer);
 			} catch (err) {
 				console.error("Lỗi khi đọc file Excel:", err);
 				setFileError(
 					"Không thể đọc tệp dữ liệu. Vui lòng kiểm tra lại định dạng tệp.",
 				);
-			} finally {
 				setIsReading(false);
 			}
 		},

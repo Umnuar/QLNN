@@ -6,7 +6,7 @@ export function useInactivityTimeout(
 	onTimeout: () => void,
 	isEnabled: boolean = true,
 ) {
-	const timerRef = useRef<NodeJS.Timeout | null>(null);
+	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const onTimeoutRef = useRef(onTimeout);
 	const lastActivityRef = useRef(0);
 

@@ -25,7 +25,9 @@ model households {
   stt             Int?
   full_name       String    @db.VarChar(255)
   name_unaccented String?   @db.VarChar(255)
-  phone           String?   @db.VarChar(20)
+  phone           String?   @db.Text
+  phone_hash      String?   @db.VarChar(64)
+  phone_last4     String?   @db.VarChar(4)
   address         String?   @db.VarChar(255)
   notes           String?   @default("")
   
@@ -44,6 +46,8 @@ model households {
   @@index([village_id, full_name], map: "idx_households_village_name")
   @@index([is_deleted], map: "idx_households_is_deleted")
   @@index([name_unaccented], map: "idx_households_name_unaccented")
+  @@index([phone_hash], map: "idx_households_phone_hash")
+  @@index([phone_last4], map: "idx_households_phone_last4")
 }
 
 model crop_items {

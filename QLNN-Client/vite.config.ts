@@ -1,54 +1,32 @@
 import { defineConfig } from 'vite'
 import path from 'node:path'
-import electron from 'vite-plugin-electron/simple'
+import { realpathSync } from 'node:fs'
 import react from '@vitejs/plugin-react'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  root: realpathSync(process.cwd()),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  clearScreen: false,
   server: {
     port: 5174,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5001',
-        changeOrigin: true,
-      },
+    strictPort: true,
+    watch: {
+      ignored: ["**/src-tauri/**"],
     },
   },
+  envPrefix: ['VITE_', 'TAURI_'],
   plugins: [
-    nodePolyfills({
-      include: ['stream', 'buffer', 'util', 'events', 'process'],
-      globals: {
-        Buffer: true,
-        global: true,
-        process: true,
-      },
-    }),
     react(),
-    electron({
-      main: {
-        entry: 'electron/main.ts',
-        vite: {
-          build: {
-            rollupOptions: {
-            },
-          },
-        },
-      },
-      preload: {
-        input: path.join(__dirname, 'electron/preload.ts'),
-      },
-      renderer: process.env.NODE_ENV === 'test'
-        ? undefined
-        : {},
-    }),
   ],
   build: {
+    target: process.env.TAURI_ENV_PLATFORM == 'windows' ? 'chrome105' : 'safari13',
+    minify: !process.env.TAURI_ENV_DEBUG ? 'esbuild' : false,
+    sourcemap: !!process.env.TAURI_ENV_DEBUG,
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {

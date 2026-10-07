@@ -106,36 +106,9 @@ export const HouseholdsPage: React.FC = () => {
 			return;
 		}
 
-		const reader = new FileReader();
-		reader.onload = async (evt) => {
-			try {
-				const XLSX = await import("xlsx");
-				const wb = XLSX.read(evt.target?.result, { type: "binary" });
-				const ws = wb.Sheets[wb.SheetNames[0]];
-				const rawData = XLSX.utils.sheet_to_json<
-					(string | number | undefined)[]
-				>(ws, { header: 1 });
-				const parsedRows = rawData
-					.slice(9)
-					.filter(
-						(row) =>
-							row[1] &&
-							typeof row[1] === "string" &&
-							(row[1] as string).trim() !== "",
-					);
-
-				setImportData(parsedRows);
-				setImportFile(file);
-				setIsImportModalOpen(true);
-			} catch (_err) {
-				showModal({
-					title: "Lỗi",
-					message: "Không thể đọc file.",
-					type: "danger",
-				});
-			}
-		};
-		reader.readAsBinaryString(file);
+		setImportFile(file);
+		setImportData([]);
+		setIsImportModalOpen(true);
 		if (fileInputRef.current) fileInputRef.current.value = "";
 	};
 

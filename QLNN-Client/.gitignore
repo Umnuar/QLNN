@@ -12,3 +12,5 @@ dist-electron
 GRAPH_REPORT.md
 .codegraph/
 *.codegraph.db
+src-tauri/target/
+src-tauri/gen/

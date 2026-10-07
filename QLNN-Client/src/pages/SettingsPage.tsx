@@ -1230,7 +1230,7 @@ export const SettingsPage: React.FC = () => {
 									Công nghệ nền tảng:
 								</span>
 								<span className="font-mono text-slate-600 dark:text-slate-300">
-									Vite 5 • React 18 • Tailwind CSS • Electron
+									Vite 5 • React 18 • Tailwind CSS • Tauri v2
 								</span>
 							</div>
 							<div className="flex items-center justify-between py-1.5">

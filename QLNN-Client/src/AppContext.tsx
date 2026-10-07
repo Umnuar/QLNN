@@ -140,7 +140,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 	});
 
 	useEffect(() => {
-		// Zoom qua IPC của Electron
+		// Hỗ trợ Zoom trên WebView2 / Web
+		if (typeof document !== "undefined") {
+			(document.documentElement.style as unknown as { zoom: string }).zoom = `${zoomLevel}%`;
+		}
 		if (window.api?.app?.setZoom) {
 			window.api.app.setZoom(zoomLevel);
 		}

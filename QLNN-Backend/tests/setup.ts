@@ -1,14 +1,16 @@
 // tests/setup.ts
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
-jest.setTimeout(30000);
+process.env.ENCRYPTION_KEY ||=
+	"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+process.env.PHONE_HASH_PEPPER ||= "dakha_qlnn_test_pepper";
 
 const prisma = new PrismaClient();
 
 beforeAll(async () => {
-  // Setup logic for tests (e.g., connect to a test database if needed)
+	// Setup logic for tests
 });
 
 afterAll(async () => {
-  await prisma.$disconnect();
+	await prisma.$disconnect();
 });

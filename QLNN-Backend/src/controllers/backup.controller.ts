@@ -124,18 +124,19 @@ export const runAutoBackup = async (): Promise<void> => {
 		fs.writeFileSync(filepath, JSON.stringify(backupData, null, 2));
 		console.log(`[AutoBackup] Đã tạo bản sao lưu thành công tại: ${filename}`);
 
-		// Cleanup cũ (chỉ giữ 3 ngày trên máy chủ để chống đầy ổ cứng)
+		// Cleanup cũ (xoay vòng 7 ngày: BACKUP_RETENTION_DAYS = 7)
 		const files = fs.readdirSync(backupDir);
 		const now = Date.now();
-		const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+		const BACKUP_RETENTION_DAYS = 7;
+		const RETENTION_MS = BACKUP_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
 		for (const file of files) {
 			if (file.startsWith("auto_backup_")) {
 				const fullPath = path.join(backupDir, file);
 				const stats = fs.statSync(fullPath);
-				if (now - stats.mtimeMs > THREE_DAYS) {
+				if (now - stats.mtimeMs > RETENTION_MS) {
 					fs.unlinkSync(fullPath);
-					console.log(`[AutoBackup] Đã xoá bản sao lưu cũ quá 3 ngày: ${file}`);
+					console.log(`[AutoBackup] Đã xoá bản sao lưu cũ quá 7 ngày: ${file}`);
 				}
 			}
 		}

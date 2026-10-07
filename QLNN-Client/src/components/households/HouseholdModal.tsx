@@ -14,6 +14,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useApp } from "../../AppContext";
 import { householdApi } from "../../api/householdApi";
+import { useAutoSaveDraft } from "../../hooks/useAutoSaveDraft";
 import { useModal } from "../../hooks/useModal";
 import type { HouseholdFlat } from "../../types";
 import { cryptoHelper } from "../../utils/cryptoHelper";
@@ -135,6 +136,25 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
 		number | undefined | null
 	>(household?.version);
 
+	const formId = household?.id
+		? `household_edit_${household.id}`
+		: `household_new_${user?.village_id || selectedVillageId || "default"}`;
+
+	const isFormDirty = Boolean(
+		formData.fullName.trim() ||
+			formData.phone.trim() ||
+			formData.address.trim() ||
+			formData.notes.trim() ||
+			formData.cafeHousehold !== "0" ||
+			formData.cow !== "0",
+	);
+
+	const { lastSaved, discardDraft, loadDraft } = useAutoSaveDraft(
+		isOpen ? formId : "",
+		formData,
+		isFormDirty,
+	);
+
 	const handleChange =
 		(field: keyof typeof INITIAL_FORM_DATA) =>
 		(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -179,11 +199,16 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
 							? user.village_id
 							: selectedVillageId || villages[0]?.id || "",
 				});
+				loadDraft().then((draft) => {
+					if (draft && draft.fullName) {
+						setFormData(draft);
+					}
+				});
 			}
 			setActiveTab("crops");
 			setError(null);
 		}
-	}, [isOpen, household, user, villages, selectedVillageId]);
+	}, [isOpen, household, user, villages, selectedVillageId, loadDraft]);
 
 	// Live Subtotal Calculations
 	const totalCropsArea = useMemo(() => {
@@ -336,6 +361,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
 			} else {
 				await householdApi.create(payload as unknown as HouseholdFlat);
 			}
+			await discardDraft();
 			onSuccess();
 			onClose();
 		} catch (err: unknown) {
@@ -375,6 +401,7 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
 								existingId,
 								payload as unknown as Partial<HouseholdFlat>,
 							);
+							await discardDraft();
 							onSuccess();
 							onClose();
 						} catch (uErr: unknown) {
@@ -1212,13 +1239,20 @@ export const HouseholdModal: React.FC<HouseholdModalProps> = ({
 
 					{/* Fixed Bottom Action Bar */}
 					<div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between shrink-0">
-						<button
-							type="button"
-							onClick={onClose}
-							className="h-10 px-4 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs transition-colors cursor-pointer active:scale-95"
-						>
-							Hủy
-						</button>
+						<div className="flex items-center gap-3">
+							<button
+								type="button"
+								onClick={onClose}
+								className="h-10 px-4 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs transition-colors cursor-pointer active:scale-95"
+							>
+								Hủy
+							</button>
+							{lastSaved && (
+								<span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+									✓ Đã lưu nháp lúc {new Date(lastSaved).toLocaleTimeString("vi-VN")}
+								</span>
+							)}
+						</div>
 						<button
 							type="submit"
 							disabled={loading}

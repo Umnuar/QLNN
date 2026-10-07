@@ -43,6 +43,7 @@ export function serializeHousehold(hh: any) {
 		full_name: hh.full_name,
 		name_unaccented: hh.name_unaccented,
 		phone: hh.phone,
+		phone_last4: hh.phone_last4 || (hh.phone ? hh.phone.slice(-4) : null),
 		address: hh.address,
 		notes: hh.notes,
 		version: hh.version,
@@ -515,7 +516,9 @@ export const updateHousehold = async (req: AuthRequest, res: Response) => {
 		}
 
 		// Optimistic locking check
-		if (version !== undefined && existing.version !== version) {
+		const parsedVersion =
+			version !== undefined && version !== null ? Number(version) : undefined;
+		if (parsedVersion !== undefined && existing.version !== parsedVersion) {
 			res.status(409).json({
 				error: "Dữ liệu đã bị thay đổi bởi người khác. Vui lòng tải lại.",
 			});
@@ -556,7 +559,7 @@ export const updateHousehold = async (req: AuthRequest, res: Response) => {
 
 		const updatedHh = await prisma.$transaction(async (tx) => {
 			// Atomic OCC check
-			if (version !== undefined && existing.version !== undefined) {
+			if (parsedVersion !== undefined && existing.version !== undefined) {
 				const check = await tx.households.updateMany({
 					where: { id, version: existing.version, is_deleted: false },
 					data: { version: { increment: 1 } },
@@ -612,7 +615,7 @@ export const updateHousehold = async (req: AuthRequest, res: Response) => {
 							: existing.address,
 					notes: notes !== undefined ? String(notes).trim() : existing.notes,
 					version:
-						version !== undefined && existing.version !== undefined
+						parsedVersion !== undefined && existing.version !== undefined
 							? undefined
 							: { increment: 1 },
 					crop_items: { create: crop_items },
