@@ -14,3 +14,5 @@ GRAPH_REPORT.md
 *.codegraph.db
 src-tauri/target/
 src-tauri/gen/
+playwright-report/
+test-results/

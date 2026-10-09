@@ -10,7 +10,8 @@
     "build:vite": "tsc && vite build",
     "tauri": "tauri",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:crawler": "playwright test tests/e2e/crawler.spec.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.2.0",
@@ -30,6 +31,7 @@
     "tar": "^7.5.21"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4.2.4",
     "@tauri-apps/cli": "^2.2.0",
     "@testing-library/jest-dom": "^7.0.1",

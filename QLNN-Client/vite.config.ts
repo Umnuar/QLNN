@@ -1,7 +1,16 @@
 import { defineConfig } from 'vite'
 import path from 'node:path'
-import { realpathSync } from 'node:fs'
+import { realpathSync, existsSync } from 'node:fs'
 import react from '@vitejs/plugin-react'
+
+if (existsSync(process.cwd())) {
+  const realCwd = realpathSync(process.cwd());
+  if (realCwd.toLowerCase() !== process.cwd().toLowerCase()) {
+    try {
+      process.chdir(realCwd);
+    } catch {}
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
