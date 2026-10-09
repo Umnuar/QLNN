@@ -24,37 +24,94 @@ const app = express();
 app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5001;
 
-// Bảo mật HTTP Headers
-app.use(helmet());
+// Ultra-low latency Ping — zero middleware overhead.
+// Đặt TRƯỚC toàn bộ middleware (helmet, cors, logger)
+// để request được phản hồi 204 ngay lập tức và không bao giờ bị nghẽn CORS.
+app.all("/api/ping", (req: express.Request, res: express.Response) => {
+	const origin = req.headers.origin;
+	if (origin) {
+		res.setHeader("Access-Control-Allow-Origin", origin);
+		res.setHeader("Access-Control-Allow-Credentials", "true");
+	}
+	res.setHeader(
+		"Cache-Control",
+		"no-store, no-cache, must-revalidate, proxy-revalidate",
+	);
+	res.setHeader("Pragma", "no-cache");
+	res.setHeader("Expires", "0");
 
-// Cấu hình CORS (Hỗ trợ hệ sinh thái dulieudakha.vn, Cloudflare Tunnel và Local dev)
-const corsOrigins = process.env.CORS_ORIGIN
-	? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
-	: [
-			"https://qlnn.dulieudakha.vn",
-			"https://dulieudakha.vn",
-			"http://localhost:5174",
-			"http://localhost:5173",
-		];
+	if (req.method === "OPTIONS") {
+		res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+		res.setHeader(
+			"Access-Control-Allow-Headers",
+			"Content-Type, Authorization, Cache-Control, Pragma, Expires, X-Requested-With",
+		);
+		res.status(204).end();
+		return;
+	}
+
+	res.status(204).end();
+});
+
+// Bảo mật HTTP Headers
+app.use(
+	helmet({
+		contentSecurityPolicy: {
+			directives: {
+				defaultSrc: ["'none'"],
+				frameAncestors: ["'none'"],
+			},
+		},
+		frameguard: { action: "deny" },
+		crossOriginResourcePolicy: { policy: "cross-origin" },
+	}),
+);
+
+// SEC-04-02: Cấu hình CORS Whitelist - hỗ trợ Web, Tauri Desktop (tauri.localhost), Cloudflare Tunnel và Local dev
+const envCorsOrigins = process.env.CORS_ORIGIN
+	? process.env.CORS_ORIGIN.split(",").map((o) => o.trim()).filter(Boolean)
+	: [];
+
+export const isOriginAllowed = (origin: string | undefined): boolean => {
+	if (!origin || origin === "null") return true; // Hỗ trợ Desktop (file://, custom protocols), mobile, cURL
+	if (
+		origin === "https://qlnn.dulieudakha.vn" ||
+		origin.endsWith(".dulieudakha.vn") ||
+		origin === "https://dulieudakha.vn" ||
+		origin === "http://tauri.localhost" ||
+		origin === "https://tauri.localhost" ||
+		origin.startsWith("tauri://") ||
+		origin.endsWith(".localhost") ||
+		origin.startsWith("http://localhost:") ||
+		origin.startsWith("http://127.0.0.1:") ||
+		origin.startsWith("https://localhost:") ||
+		origin.startsWith("https://127.0.0.1:") ||
+		envCorsOrigins.includes(origin)
+	) {
+		return true;
+	}
+	return false;
+};
 
 app.use(
 	cors({
 		origin: (origin, callback) => {
-			const isDev = process.env.NODE_ENV !== "production";
-			// Cho phép requests không có origin (Electron / Mobile / Postman) hoặc nằm trong danh sách
-			if (
-				!origin ||
-				origin === "https://qlnn.dulieudakha.vn" ||
-				origin.endsWith(".dulieudakha.vn") ||
-				corsOrigins.includes(origin) ||
-				(isDev && origin.startsWith("http://localhost:"))
-			) {
+			if (isOriginAllowed(origin)) {
 				callback(null, true);
 			} else {
 				callback(new Error("Blocked by CORS"));
 			}
 		},
 		credentials: true,
+		methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+		allowedHeaders: [
+			"Content-Type",
+			"Authorization",
+			"Cache-Control",
+			"Pragma",
+			"Expires",
+			"X-Requested-With",
+		],
 	}),
 );
 
@@ -68,11 +125,6 @@ app.use(requestLogger);
 
 // Health Check Endpoint (Bắt buộc theo quy chuẩn hệ sinh thái Đăk Hà)
 app.use("/api/health", healthRoutes);
-
-// Lightweight Ping Endpoint for EMA Latency Monitoring (204 No Content)
-app.get("/api/ping", (_req, res) => {
-	res.status(204).end();
-});
 
 // Test Authenticated Route (Verify Shared SSO Auth)
 app.get(
@@ -116,6 +168,14 @@ app.use(
 		res: express.Response,
 		_next: express.NextFunction,
 	) => {
+		if (err.message === "Blocked by CORS") {
+			logger.error(403, "Yêu cầu bị từ chối bởi chính sách bảo mật CORS");
+			res.status(403).json({
+				error: "Yêu cầu bị từ chối bởi chính sách bảo mật CORS.",
+			});
+			return;
+		}
+
 		const status = err.status || 500;
 		logger.error(status, err.message || "Lỗi máy chủ nội bộ");
 		if (err.type === "entity.too.large" || err.status === 413) {
