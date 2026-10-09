@@ -18,7 +18,7 @@ import healthRoutes from "./routes/health.routes";
 import householdRoutes from "./routes/household.routes";
 import userRoutes from "./routes/user.routes";
 import villageRoutes from "./routes/village.routes";
-import { startDashboard } from "./utils/dashboard";
+import { logger, parseDbInfo } from "./utils/logger";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -116,14 +116,14 @@ app.use(
 		res: express.Response,
 		_next: express.NextFunction,
 	) => {
-		console.error("[Error]", err);
+		const status = err.status || 500;
+		logger.error(status, err.message || "Lỗi máy chủ nội bộ");
 		if (err.type === "entity.too.large" || err.status === 413) {
 			res.status(413).json({
 				error: "Dung lượng dữ liệu gửi lên vượt quá giới hạn cho phép.",
 			});
 			return;
 		}
-		const status = err.status || 500;
 		if (process.env.NODE_ENV === "production" && status === 500) {
 			res.status(500).json({
 				error: "Đã xảy ra lỗi trên hệ thống. Vui lòng liên hệ quản trị viên.",
@@ -140,12 +140,17 @@ if (process.env.NODE_ENV !== "test") {
 	// Khởi chạy các tác vụ nền
 	initBackupCron();
 
-	const server = app.listen(PORT, () => {
-		console.log(`[QLNN-Backend] Server running on http://localhost:${PORT}`);
-		console.log(
-			`[QLNN-Backend] Health check available at http://localhost:${PORT}/api/health`,
-		);
-		startDashboard();
+	const server = app.listen(PORT, async () => {
+		try {
+			const { prisma } = await import("./config/prisma");
+			await prisma.$connect();
+			const dbInfo = parseDbInfo();
+			logger.db(dbInfo.host, dbInfo.port, dbInfo.database);
+			logger.start(PORT, true, process.env.NODE_ENV || "development");
+		} catch (err: any) {
+			logger.error(500, `Database connection failed: ${err.message}`);
+			logger.start(PORT, false, process.env.NODE_ENV || "development");
+		}
 	});
 
 	// Giữ kết nối Cloudflare Tunnel luôn ấm (Keep-Alive)
@@ -153,26 +158,18 @@ if (process.env.NODE_ENV !== "test") {
 	server.headersTimeout = 66000;
 
 	const gracefulShutdown = async (signal: string) => {
-		console.log(
-			`[QLNN-Backend] Nhận tín hiệu ${signal}. Đang đóng server và giải phóng kết nối...`,
-		);
 		server.close(async () => {
 			try {
 				const { prisma } = await import("./config/prisma");
 				await prisma.$disconnect();
-				console.log(
-					"[QLNN-Backend] Đã ngắt kết nối Prisma an toàn. Tắt server.",
-				);
 				process.exit(0);
-			} catch (e) {
-				console.error("[QLNN-Backend] Lỗi khi ngắt kết nối Prisma:", e);
+			} catch (e: any) {
+				logger.error("DB_DISCONNECT", e?.message || "Failed to disconnect Prisma");
 				process.exit(1);
 			}
 		});
 		setTimeout(() => {
-			console.error(
-				"[QLNN-Backend] Quá thời gian chờ shutdown, ép buộc dừng tiến trình.",
-			);
+			logger.error("SHUTDOWN_TIMEOUT", "Forced process exit on timeout");
 			process.exit(1);
 		}, 10000);
 	};

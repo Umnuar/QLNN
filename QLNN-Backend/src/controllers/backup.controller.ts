@@ -4,6 +4,7 @@ import path from "path";
 import bcrypt from "bcryptjs";
 import { prisma } from "../config/prisma";
 import type { AuthRequest } from "../middlewares/auth.middleware";
+import { logger } from "../utils/logger";
 
 export const exportDatabase = async (
 	req: Request,
@@ -67,8 +68,6 @@ export const exportDatabase = async (
 
 export const runAutoBackup = async (): Promise<void> => {
 	try {
-		console.log("[AutoBackup] Đang tiến hành sao lưu dữ liệu...");
-
 		const [
 			villages,
 			users,
@@ -122,7 +121,7 @@ export const runAutoBackup = async (): Promise<void> => {
 		const filepath = path.join(backupDir, filename);
 
 		fs.writeFileSync(filepath, JSON.stringify(backupData, null, 2));
-		console.log(`[AutoBackup] Đã tạo bản sao lưu thành công tại: ${filename}`);
+		logger.cron("AutoBackup", `Completed (Snapshot: ${filename})`);
 
 		// Cleanup cũ (xoay vòng 7 ngày: BACKUP_RETENTION_DAYS = 7)
 		const files = fs.readdirSync(backupDir);
@@ -136,12 +135,12 @@ export const runAutoBackup = async (): Promise<void> => {
 				const stats = fs.statSync(fullPath);
 				if (now - stats.mtimeMs > RETENTION_MS) {
 					fs.unlinkSync(fullPath);
-					console.log(`[AutoBackup] Đã xoá bản sao lưu cũ quá 7 ngày: ${file}`);
+					logger.cron("AutoBackup", `Purged old snapshot: ${file}`);
 				}
 			}
 		}
-	} catch (error) {
-		console.error("[AutoBackup] Lỗi nghiêm trọng khi sao lưu tự động:", error);
+	} catch (error: any) {
+		logger.cron("AutoBackup", `Failed: ${error?.message || "Unknown error"}`);
 	}
 };
 
