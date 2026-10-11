@@ -1,79 +1,174 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
-	// Mảng lưu trữ nhật ký lỗi giám sát thời gian thực
-	const apiErrors: {
-		method: string;
-		url: string;
-		status: number;
-		body: string;
-	}[] = [];
-	const consoleErrors: string[] = [];
-	const unhandledErrors: string[] = [];
+interface CapturedError {
+	type: "HTTP" | "CONSOLE" | "PAGE_EXCEPTION" | "REACT_CRASH";
+	url: string;
+	lastAction: string;
+	status?: number;
+	method?: string;
+	details: string;
+	timestamp: string;
+}
+
+test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3)", () => {
+	const allIssues: CapturedError[] = [];
+	const apiErrors: CapturedError[] = [];
+	const unhandledErrors: CapturedError[] = [];
+	const consoleErrors: CapturedError[] = [];
 	const visitedRoutes: string[] = [];
 	let interactionCount = 0;
+	let currentAction = "Khởi tạo kiểm thử";
 
-	test.beforeEach(async ({ page }) => {
-		// 1. Lắng nghe Network: Ghi nhận mọi HTTP status >= 400 từ endpoint /api/*
+	// --------------------------------------------------------------------------
+	// TRỤ CỘT 1: KIẾN TRÚC BẪY LỖI & GIÁM SÁT TOÀN DIỆN (setupErrorTraps)
+	// --------------------------------------------------------------------------
+	const setupErrorTraps = (page: Page) => {
+		// 1. Lắng nghe Network: Bắt HTTP status >= 400 (bỏ qua favicon, chrome-extension)
 		page.on("response", async (response) => {
 			const url = response.url();
 			const status = response.status();
-			if (url.includes("/api/") && status >= 400) {
+
+			if (url.includes("favicon.ico") || url.includes("chrome-extension://")) {
+				return;
+			}
+
+			if (status >= 400 && (url.includes("/api/") || url.includes(":5001"))) {
 				let body = "";
 				try {
 					body = await response.text();
 				} catch {
-					body = "(cannot read body)";
+					body = "[Không thể trích xuất body response]";
 				}
-				apiErrors.push({
+
+				const issue: CapturedError = {
+					type: "HTTP",
 					method: response.request().method(),
 					url,
 					status,
-					body: body.slice(0, 300),
-				});
+					lastAction: currentAction,
+					details: `[HTTP ${status}] ${response.statusText()} | Body: ${body.slice(0, 300)}`,
+					timestamp: new Date().toLocaleTimeString("vi-VN"),
+				};
+
+				apiErrors.push(issue);
+				allIssues.push(issue);
 			}
 		});
 
-		// 2. Lắng nghe Browser Console: Phát hiện lỗi runtime JS, crash UI, component render loop
+		// 2. Lắng nghe Browser Console: Lọc sạch noise và bắt trọn lỗi crash React
 		page.on("console", (msg) => {
 			if (msg.type() === "error") {
 				const text = msg.text();
-				// Tự động bỏ qua lỗi font/ảnh ngoài hoặc lỗi không thuộc runtime ứng dụng
+
+				// Bộ lọc noise: favicon, fonts, extension, vite-babel, net::ERR_CONNECTION_REFUSED
 				if (
 					text.includes("favicon.ico") ||
 					text.includes("ERR_CONNECTION_REFUSED") ||
 					text.includes("fonts.googleapis.com") ||
 					text.includes("fonts.gstatic.com") ||
-					text.includes("chrome-extension://")
+					text.includes("chrome-extension://") ||
+					text.includes("vite:react-babel") ||
+					text.includes("vite-babel") ||
+					text.includes("esbuild") ||
+					text.includes("optimizeDeps")
 				) {
 					return;
 				}
-				consoleErrors.push(text);
+
+				const isReactCrash =
+					text.includes("Invariant Violation") ||
+					text.includes("Minified React error") ||
+					text.includes("Uncaught Error");
+
+				const issue: CapturedError = {
+					type: isReactCrash ? "REACT_CRASH" : "CONSOLE",
+					url: page.url(),
+					lastAction: currentAction,
+					details: text.slice(0, 300),
+					timestamp: new Date().toLocaleTimeString("vi-VN"),
+				};
+
+				if (isReactCrash) {
+					unhandledErrors.push(issue);
+				} else {
+					consoleErrors.push(issue);
+				}
+				allIssues.push(issue);
 			}
 		});
 
-		// 3. Lắng nghe Unhandled Exceptions / Page Errors
+		// 3. Lắng nghe Unhandled Runtime Exceptions (pageerror)
 		page.on("pageerror", (err) => {
-			unhandledErrors.push(err.message || String(err));
+			const issue: CapturedError = {
+				type: "PAGE_EXCEPTION",
+				url: page.url(),
+				lastAction: currentAction,
+				details: `${err.name || "Error"}: ${err.message || String(err)}`,
+				timestamp: new Date().toLocaleTimeString("vi-VN"),
+			};
+
+			unhandledErrors.push(issue);
+			allIssues.push(issue);
 		});
-	});
+	};
+
+	// --------------------------------------------------------------------------
+	// TRỤ CỘT 2: CƠ CHẾ BẢO VỆ DỮ LIỆU & TỰ MÒ NÚT AN TOÀN (Safe Guard & Button Spider)
+	// --------------------------------------------------------------------------
+	const isDangerous = (text: string): boolean => {
+		const dangerousRegex =
+			/xóa vĩnh viễn|xóa hàng loạt|hard delete|reset|xóa thôn|xóa dữ liệu|khôi phục dữ liệu|đăng xuất|logout/i;
+		return dangerousRegex.test(text);
+	};
+
+	const crawlSafeButtons = async (page: Page, screenName: string) => {
+		const buttons = await page.locator("button").all();
+		for (const btn of buttons) {
+			const isVisible = await btn.isVisible().catch(() => false);
+			if (!isVisible) continue;
+
+			const text = (await btn.innerText().catch(() => "")) || "";
+			const ariaLabel = (await btn.getAttribute("aria-label").catch(() => "")) || "";
+			const title = (await btn.getAttribute("title").catch(() => "")) || "";
+			const fullLabel = `${text} ${ariaLabel} ${title}`.trim();
+
+			if (!fullLabel || isDangerous(fullLabel)) continue;
+
+			// Bỏ qua nút thanh bên hoặc modal để không làm lệch giao diện
+			if (fullLabel.includes("thanh bên") || fullLabel.includes("chẩn đoán")) continue;
+
+			// Tự động tương tác với các nút tiện ích an toàn theo đặc tả ("Đổi thôn", "Làm mới", "Thu gọn", "Mở rộng")
+			if (
+				fullLabel.includes("Đổi thôn") ||
+				fullLabel.includes("Làm mới") ||
+				fullLabel.includes("Thu gọn") ||
+				fullLabel.includes("Mở rộng")
+			) {
+				currentAction = `[Spider] Click nút an toàn trên ${screenName}: ${fullLabel}`;
+				await btn.click({ timeout: 1000 }).catch(() => {});
+				interactionCount++;
+				await page.waitForTimeout(200);
+			}
+		}
+	};
 
 	test("Smart Crawler: Tự duyệt toàn bộ phân hệ QLNN, click tương tác nông nghiệp & kiểm chứng Backend", async ({
 		page,
 	}) => {
 		test.setTimeout(120000);
+		setupErrorTraps(page);
 
-		console.log("\n=======================================================");
-		console.log("🚀 BẮT ĐẦU SMART CRAWLER QUÉT TOÀN DIỆN PHÂN HỆ QLNN");
-		console.log("=======================================================\n");
+		console.log("\n================================================================================");
+		console.log("🚀 BẮT ĐẦU SMART CRAWLER TOÀN DIỆN PHÂN HỆ QLNN (BEST OF 3 ARCHITECTURE)");
+		console.log("================================================================================\n");
 
-		// -------------------------------------------------------------
-		// GIAI ĐOẠN 1: TỰ ĐỘNG ĐĂNG NHẬP (ADMIN / ADMIN123)
-		// -------------------------------------------------------------
-		console.log("📍 [1/7] Khởi động và Đăng nhập hệ thống...");
+		// ----------------------------------------------------------------------
+		// GIAI ĐOẠN 1: ĐIỀU HƯỚNG & TỰ ĐỘNG ĐĂNG NHẬP (ADMIN / ADMIN123)
+		// ----------------------------------------------------------------------
+		currentAction = "Điều hướng & Đăng nhập hệ thống";
+		console.log("🔑 [GIAI ĐOẠN 1] Khởi động và Đăng nhập hệ thống...");
 		await page.goto("/", { waitUntil: "networkidle" });
 
-		// Xác nhận hiển thị form đăng nhập
 		const usernameInput = page.locator("input#login-username");
 		const passwordInput = page.locator("input#login-password");
 		const loginBtn = page.locator('button[type="submit"]:has-text("ĐĂNG NHẬP")');
@@ -84,19 +179,18 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
 		await loginBtn.click();
 		interactionCount++;
 
-		// Chờ phiên làm việc khởi tạo thành công và xuất hiện giao diện AppLayout
 		const sidebar = page.locator("aside");
 		await expect(sidebar).toBeVisible({ timeout: 20000 });
 		visitedRoutes.push("Login -> Dashboard");
 		console.log("   ✓ Đăng nhập thành công với tài khoản Quản trị viên (Admin)");
 
-		// -------------------------------------------------------------
-		// GIAI ĐOẠN 2: QUẢN LÝ THÔN (VILLAGES PAGE)
-		// -------------------------------------------------------------
-		console.log("📍 [2/7] Quét trang Quản Lý Thôn (Villages Page)...");
+		// ----------------------------------------------------------------------
+		// GIAI ĐOẠN 2: DÒ QUÉT QUẢN LÝ THÔN (VILLAGES PAGE)
+		// ----------------------------------------------------------------------
+		currentAction = "Quét trang Quản Lý Thôn";
+		console.log("\n📍 [GIAI ĐOẠN 2] Quét trang Quản Lý Thôn (Villages Page)...");
 		visitedRoutes.push("Quản Lý Thôn");
 
-		// Kiểm tra Hero Banner và các thẻ thống kê tổng quan
 		const heroBanner = page.locator("text=Tổng Quan Nông Nghiệp & Nông Thôn Mới Toàn Xã");
 		await expect(heroBanner).toBeVisible({ timeout: 10000 });
 
@@ -110,37 +204,44 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
 			console.log("   ✓ Đã thử tương tác bộ lọc tìm kiếm thôn");
 		}
 
-		// Xác nhận các thẻ thôn xuất hiện (không bị trắng màn hình)
-		const villageCards = page.locator('div[role="button"][aria-label*="hộ nông nghiệp"], div[role="button"][aria-label*="Thôn"]');
+		// Xác nhận các thẻ thôn hiển thị
+		const villageCards = page.locator(
+			'div[role="button"][aria-label*="hộ nông nghiệp"], div[role="button"][aria-label*="Thôn"]',
+		);
 		const villageCount = await villageCards.count();
 		expect(villageCount).toBeGreaterThan(0);
 		console.log(`   ✓ Phát hiện ${villageCount} thẻ thôn/làng bản trên địa bàn`);
 
-		// -------------------------------------------------------------
+		// Button Spider trên Quản Lý Thôn
+		await crawlSafeButtons(page, "Quản Lý Thôn");
+
+		// ----------------------------------------------------------------------
 		// GIAI ĐOẠN 3: THỐNG KÊ SẢN LƯỢNG & PHÂN TÍCH (ANALYTICS PAGE)
-		// -------------------------------------------------------------
-		console.log("📍 [3/7] Quét trang Thống Kê Sản Lượng Toàn Xã (Analytics Page)...");
-		// Chuyển sang Analytics qua nút Hero Banner trên VillagesPage
+		// ----------------------------------------------------------------------
+		currentAction = "Quét trang Thống Kê Sản Lượng Toàn Xã";
+		console.log("\n📊 [GIAI ĐOẠN 3] Quét trang Thống Kê Sản Lượng Toàn Xã (Analytics Page)...");
 		const viewAllStatsBtn = page.locator('button:has-text("Xem Thống Kê Toàn Xã")').first();
 		await viewAllStatsBtn.click();
 		interactionCount++;
 		visitedRoutes.push("Thống Kê Sản Lượng");
 
-		// Kiểm tra Dashboard phân tích tải thành công
 		await page.waitForTimeout(1000);
 		await expect(page.locator("text=Thống Kê Nông Nghiệp & Nông Thôn Mới")).toBeVisible({ timeout: 10000 });
 		await expect(page.locator("text=TỔNG DIỆN TÍCH CÂY TRỒNG")).toBeVisible({ timeout: 10000 });
 		await expect(page.locator("body")).not.toHaveText("Đang tải dữ liệu...");
 
-		// Kiểm tra bảng đối soát thôn hiển thị
 		const comparisonTable = page.locator("table").first();
 		await expect(comparisonTable).toBeVisible({ timeout: 10000 });
 		console.log("   ✓ Thống kê sản lượng và bảng tổng hợp 7 thôn hiển thị ổn định");
 
-		// -------------------------------------------------------------
+		// Button Spider trên Thống Kê Sản Lượng
+		await crawlSafeButtons(page, "Thống Kê Sản Lượng");
+
+		// ----------------------------------------------------------------------
 		// GIAI ĐOẠN 4: HỘ NÔNG NGHIỆP & 18 CHỈ SỐ (HOUSEHOLDS PAGE)
-		// -------------------------------------------------------------
-		console.log("📍 [4/7] Quét trang Hộ Nông Nghiệp & 18 Chỉ Số (Households Page)...");
+		// ----------------------------------------------------------------------
+		currentAction = "Quét trang Hộ Nông Nghiệp & 18 Chỉ Số";
+		console.log("\n👨‍🌾 [GIAI ĐOẠN 4] Quét trang Hộ Nông Nghiệp & 18 Chỉ Số (Households Page)...");
 
 		// Quay lại Quản Lý Thôn
 		const villagesNav = sidebar.locator('button:has-text("Quản Lý Thôn")').first();
@@ -153,14 +254,13 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
 		interactionCount++;
 		await page.waitForTimeout(500);
 
-		// Nhấn nút Hộ Nông Nghiệp trên Sidebar
+		// Vào Hộ Nông Nghiệp qua Sidebar
 		const householdsNav = sidebar.locator('button:has-text("Hộ Nông Nghiệp")').first();
 		await householdsNav.click();
 		interactionCount++;
 		visitedRoutes.push("Hộ Nông Nghiệp");
 		await page.waitForTimeout(1000);
 
-		// Xác nhận tiêu đề và nội dung bảng
 		await expect(page.locator("text=Danh Sách Hộ Nông Nghiệp").first()).toBeVisible({ timeout: 10000 });
 		const householdsTable = page.locator("table").first();
 		await expect(householdsTable).toBeVisible({ timeout: 10000 });
@@ -202,12 +302,11 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
 			interactionCount++;
 		}
 
-		// Thử mở dropdown Quy mô
+		// Dropdown Quy mô (CustomSelect)
 		const scaleTrigger = page.locator('button:has-text("Tất cả quy mô")').first();
 		if (await scaleTrigger.isVisible()) {
 			await scaleTrigger.click();
 			await page.waitForTimeout(200);
-			// Chọn một tùy chọn rồi reset lại
 			const largeOption = page.locator('[role="option"]:has-text("Lớn")').first();
 			if (await largeOption.isVisible()) {
 				await largeOption.click();
@@ -216,8 +315,10 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
 			}
 		}
 
-		// Thử nút Bung / Thu gọn tất cả chỉ số
-		const toggleExpandBtn = page.locator('button:has-text("Bung tất cả"), button:has-text("Thu gọn tất cả")').first();
+		// Nút Bung / Thu gọn tất cả chi tiết
+		const toggleExpandBtn = page.locator(
+			'button:has-text("Bung tất cả"), button:has-text("Thu gọn tất cả")',
+		).first();
 		if (await toggleExpandBtn.isVisible()) {
 			await toggleExpandBtn.click();
 			await page.waitForTimeout(200);
@@ -244,7 +345,6 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
 			await expect(modalTitle).toBeVisible({ timeout: 5000 });
 			console.log("      ✓ Modal thêm mới hộ dân đã mở");
 
-			// Nhập thông tin cơ bản
 			const fullNameInput = page.locator("input#household-full-name");
 			if (await fullNameInput.isVisible()) {
 				await fullNameInput.fill("Hộ Khảo Sát Tự Động (Crawler Test)");
@@ -254,7 +354,7 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
 				await phoneInput.fill("0912345678");
 			}
 
-			// Thử chuyển đổi các tab danh mục nông nghiệp trong Modal
+			// Chuyển 3 tab chỉ số nông nghiệp và điền số liệu mẫu
 			const modalTabs = [
 				{ label: "Cây Trồng", inputId: "#field-cafe-household", inputVal: "2.5" },
 				{ label: "Vật Nuôi", inputId: "#field-buffalo", inputVal: "10" },
@@ -275,7 +375,7 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
 				}
 			}
 
-			// Đóng modal bằng nút Đóng / Hủy an toàn
+			// Đóng modal bằng nút Đóng / Hủy an toàn (Bảo vệ CSDL)
 			const closeBtn = page.locator('button[aria-label="Đóng cửa sổ"]').first();
 			if (await closeBtn.isVisible()) {
 				await closeBtn.click();
@@ -307,10 +407,14 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
 			console.log("      ✓ Đã đóng modal chỉnh sửa an toàn");
 		}
 
-		// -------------------------------------------------------------
+		// Button Spider trên Hộ Nông Nghiệp
+		await crawlSafeButtons(page, "Hộ Nông Nghiệp");
+
+		// ----------------------------------------------------------------------
 		// GIAI ĐOẠN 5: NHẬT KÝ HOẠT ĐỘNG (AUDIT LOG PAGE)
-		// -------------------------------------------------------------
-		console.log("📍 [5/7] Quét trang Nhật Ký Hoạt Động (Audit Log View)...");
+		// ----------------------------------------------------------------------
+		currentAction = "Quét trang Nhật Ký Hoạt Động";
+		console.log("\n📜 [GIAI ĐOẠN 5] Quét trang Nhật Ký Hoạt Động (Audit Log View)...");
 		const auditNav = sidebar.locator('button:has-text("Nhật Ký")').first();
 		await auditNav.click();
 		interactionCount++;
@@ -331,32 +435,38 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
 		}
 		console.log("   ✓ Các bộ lọc biến động dữ liệu hoạt động mượt mà");
 
-		// -------------------------------------------------------------
+		// Button Spider trên Nhật Ký Hoạt Động
+		await crawlSafeButtons(page, "Nhật Ký Hoạt Động");
+
+		// ----------------------------------------------------------------------
 		// GIAI ĐOẠN 6: THÙNG RÁC (RECYCLE BIN PAGE)
-		// -------------------------------------------------------------
-		console.log("📍 [6/7] Quét trang Thùng Rác (Recycle Bin)...");
+		// ----------------------------------------------------------------------
+		currentAction = "Quét trang Thùng Rác";
+		console.log("\n🗑️ [GIAI ĐOẠN 6] Quét trang Thùng Rác (Recycle Bin)...");
 		const recycleNav = sidebar.locator('button:has-text("Thùng Rác")').first();
 		await recycleNav.click();
 		interactionCount++;
 		visitedRoutes.push("Thùng Rác");
 		await page.waitForTimeout(800);
 
-		// Kiểm tra bảng thùng rác (xác nhận render dữ liệu hoặc thông báo trống)
 		const recycleTable = page.locator("table").first();
 		await expect(recycleTable).toBeVisible({ timeout: 5000 });
 		console.log("   ✓ Bảng Thùng rác tải thành công (bỏ qua nút Xóa vĩnh viễn theo chỉ dẫn an toàn)");
 
-		// -------------------------------------------------------------
-		// GIAI ĐOẠN 7: CÀI ĐẶT HỆ THỐNG (SETTINGS PAGE)
-		// -------------------------------------------------------------
-		console.log("📍 [7/7] Quét trang Cài Đặt Hệ Thống (Settings Page)...");
+		// Button Spider trên Thùng Rác (Safe Guard loại trừ nút Xóa vĩnh viễn)
+		await crawlSafeButtons(page, "Thùng Rác");
+
+		// ----------------------------------------------------------------------
+		// GIAI ĐOẠN 7: CÀI ĐẶT HỆ THỐNG (SETTINGS PAGE - 4 TABS)
+		// ----------------------------------------------------------------------
+		currentAction = "Quét trang Cài Đặt Hệ Thống";
+		console.log("\n⚙️ [GIAI ĐOẠN 7] Quét trang Cài Đặt Hệ Thống (Settings Page)...");
 		const settingsNav = sidebar.locator('button:has-text("Cài Đặt")').first();
 		await settingsNav.click();
 		interactionCount++;
 		visitedRoutes.push("Cài Đặt Hệ Thống");
 		await page.waitForTimeout(800);
 
-		// Chuyển đổi 4 tabs cài đặt
 		const settingsTabs = [
 			"Tài Khoản Của Tôi",
 			"Quản Lý Cán Bộ",
@@ -370,39 +480,66 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite", () => {
 				await page.waitForTimeout(250);
 				interactionCount++;
 				console.log(`   ✓ Đã kiểm tra tab: [${sTab}]`);
+
+				// Nếu là tab Quản Lý Cán Bộ, kiểm tra thử modal thêm cán bộ
+				if (sTab === "Quản Lý Cán Bộ") {
+					const addUserBtn = page.locator('button:has-text("Thêm Cán Bộ")').first();
+					if (await addUserBtn.isVisible()) {
+						await addUserBtn.click();
+						await page.waitForTimeout(200);
+						const cancelUserBtn = page.locator('button:has-text("Hủy")').first();
+						if (await cancelUserBtn.isVisible()) {
+							await cancelUserBtn.click();
+						} else {
+							await page.keyboard.press("Escape");
+						}
+						interactionCount += 2;
+						await page.waitForTimeout(200);
+					}
+				}
 			}
 		}
 
-		// -------------------------------------------------------------
-		// TỔNG KẾT & BÁO CÁO GIÁM SÁT
-		// -------------------------------------------------------------
-		console.log("\n=======================================================");
-		console.log("📊 KẾT QUẢ GIÁM SÁT VÀ KIỂM ĐỊNH SMART CRAWLER:");
-		console.log("=======================================================");
-		console.log(`• Tổng số route đã duyệt: ${visitedRoutes.length} (${visitedRoutes.join(" -> ")})`);
-		console.log(`• Tổng số tương tác đã thực hiện: ${interactionCount} actions`);
-		console.log(`• Lỗi Unhandled JS Exceptions: ${unhandledErrors.length}`);
-		console.log(`• Lỗi Browser Console Runtime: ${consoleErrors.length}`);
-		console.log(`• Lỗi HTTP API (code >= 400): ${apiErrors.length}`);
+		// Button Spider trên Cài Đặt Hệ Thống
+		await crawlSafeButtons(page, "Cài Đặt Hệ Thống");
 
-		if (apiErrors.length > 0) {
-			console.log("\n⚠️ DANH SÁCH LỖI API PHÁT HIỆN:");
-			apiErrors.forEach((e) => console.log(`   - [${e.status}] ${e.method} ${e.url} | Body: ${e.body}`));
+		// ----------------------------------------------------------------------
+		// TRỤ CỘT 4: TỔNG KẾT & TIÊU CHÍ NGHIỆM THU (Assertions & Summary Table)
+		// ----------------------------------------------------------------------
+		console.log("\n================================================================================");
+		console.log("🏁 BÁO CÁO TỔNG HỢP KIỂM ĐỊNH SMART CRAWLER TOÀN DIỆN (QLNN)");
+		console.log("================================================================================");
+		console.log(`• Tổng số route đã duyệt      : ${visitedRoutes.length} (${visitedRoutes.join(" -> ")})`);
+		console.log(`• Tổng số thao tác thực hiện  : ${interactionCount} actions`);
+		console.log(`• Lỗi Unhandled Exceptions    : ${unhandledErrors.length}`);
+		console.log(`• Lỗi Browser Console         : ${consoleErrors.length}`);
+		console.log(`• Lỗi HTTP API (code >= 400)  : ${apiErrors.length}`);
+		console.log("================================================================================");
+
+		if (allIssues.length > 0) {
+			console.log(`\n⚠️ BẢNG CHI TIẾT CÁC LỖI GHI NHẬN (${allIssues.length} mục):`);
+			console.table(
+				allIssues.map((item, index) => ({
+					STT: index + 1,
+					Loại: item.type,
+					ThaoTác: item.lastAction,
+					Mã_ChiTiết: item.status ? `HTTP ${item.status}` : item.details.slice(0, 70),
+					URL: item.url.slice(-40),
+					ThờiGian: item.timestamp,
+				})),
+			);
+		} else {
+			console.log("\n🎉 XUẤT SẮC: 0 LỖI RUNTIME, 0 LỖI CONSOLE, 0 LỖI HTTP API (CODE >= 400)!");
+			console.log("✅ Phân hệ QLNN đạt chuẩn đồng bộ kiến trúc cao nhất (Best of 3) từ QLCS, QLNN, QLHK.");
 		}
+		console.log("================================================================================\n");
 
-		if (consoleErrors.length > 0) {
-			console.log("\n⚠️ DANH SÁCH LỖI CONSOLE PHÁT HIỆN:");
-			consoleErrors.forEach((e) => console.log(`   - ${e}`));
-		}
-
-		// Khẳng định chất lượng phần mềm
-		expect(unhandledErrors, "Không được có unhandled exception gây crash UI").toEqual([]);
-		expect(apiErrors, "Không được có lỗi HTTP >= 400 từ Backend").toEqual([]);
+		// Tiêu chí nghiệm thu chuẩn
+		expect(unhandledErrors, "Không được có Unhandled Exception hoặc React crash").toEqual([]);
+		expect(apiErrors, "Không được có bất kỳ lỗi HTTP >= 400 từ Backend").toEqual([]);
 		expect(
-			consoleErrors.filter((e) => e.includes("Invariant Violation") || e.includes("Minified React error")),
-			"Không được có lỗi crash React",
+			consoleErrors.filter((e) => e.type === "REACT_CRASH"),
+			"Không được có lỗi crash React Component",
 		).toEqual([]);
-
-		console.log("\n✅ TẤT CẢ CÁC TRANG VÀ TÍNH NĂNG ĐÃ VƯỢT QUA KIỂM THỬ SMART CRAWLER 100%!\n");
 	});
 });
