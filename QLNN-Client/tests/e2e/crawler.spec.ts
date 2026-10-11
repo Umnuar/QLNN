@@ -10,7 +10,7 @@ interface CapturedError {
 	timestamp: string;
 }
 
-test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3)", () => {
+test.describe("QLNN Smart Crawler - E2E Full Scan & CRUD Lifecycle Suite (Best of 3)", () => {
 	const allIssues: CapturedError[] = [];
 	const apiErrors: CapturedError[] = [];
 	const unhandledErrors: CapturedError[] = [];
@@ -134,7 +134,7 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 
 			if (!fullLabel || isDangerous(fullLabel)) continue;
 
-			// Bỏ qua nút thanh bên hoặc modal để không làm lệch giao diện
+			// Bỏ qua nút thanh bên hoặc modal để không làm lệch luồng crawler
 			if (fullLabel.includes("thanh bên") || fullLabel.includes("chẩn đoán")) continue;
 
 			// Tự động tương tác với các nút tiện ích an toàn theo đặc tả ("Đổi thôn", "Làm mới", "Thu gọn", "Mở rộng")
@@ -152,10 +152,10 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 		}
 	};
 
-	test("Smart Crawler: Tự duyệt toàn bộ phân hệ QLNN, click tương tác nông nghiệp & kiểm chứng Backend", async ({
+	test("Smart Crawler: Quét cạn Filter/Pill & Vòng đời CRUD THẬT [TEST-CRAWLER] an toàn 100%", async ({
 		page,
 	}) => {
-		test.setTimeout(120000);
+		test.setTimeout(180000);
 		setupErrorTraps(page);
 
 		console.log("\n================================================================================");
@@ -185,16 +185,33 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 		console.log("   ✓ Đăng nhập thành công với tài khoản Quản trị viên (Admin)");
 
 		// ----------------------------------------------------------------------
-		// GIAI ĐOẠN 2: DÒ QUÉT QUẢN LÝ THÔN (VILLAGES PAGE)
+		// GIAI ĐOẠN 2: DÒ QUÉT CẠN TOÀN XÃ & 7 THÔN (VILLAGES PAGE)
 		// ----------------------------------------------------------------------
-		currentAction = "Quét trang Quản Lý Thôn";
-		console.log("\n📍 [GIAI ĐOẠN 2] Quét trang Quản Lý Thôn (Villages Page)...");
+		currentAction = "Quét trang Quản Lý Thôn & Quét cạn 7 thôn Đăk Hà";
+		console.log("\n📍 [GIAI ĐOẠN 2] Quét trang Quản Lý Thôn & Quét cạn Toàn Xã + 7 Thôn...");
 		visitedRoutes.push("Quản Lý Thôn");
 
 		const heroBanner = page.locator("text=Tổng Quan Nông Nghiệp & Nông Thôn Mới Toàn Xã");
 		await expect(heroBanner).toBeVisible({ timeout: 10000 });
 
-		// Thử tìm kiếm thôn
+		// 2.1. Thử nghiệm xem thống kê toàn xã từ Hero Banner
+		console.log("   -> Thử nghiệm xem Thống Kê Toàn Xã từ Hero Banner...");
+		const viewAllStatsBtn = page.locator('button:has-text("Xem Thống Kê Toàn Xã")').first();
+		if (await viewAllStatsBtn.isVisible()) {
+			await viewAllStatsBtn.click();
+			interactionCount++;
+			await page.waitForTimeout(600);
+			await expect(page.locator("text=Thống Kê Nông Nghiệp & Nông Thôn Mới")).toBeVisible({ timeout: 10000 });
+			console.log("      ✓ Đã xác nhận màn hình thống kê toàn xã");
+
+			// Quay lại Quản Lý Thôn
+			const villagesNavBtn = sidebar.locator('button:has-text("Quản Lý Thôn")').first();
+			await villagesNavBtn.click();
+			await page.waitForTimeout(500);
+			await expect(heroBanner).toBeVisible({ timeout: 10000 });
+		}
+
+		// 2.2. Tìm kiếm thôn
 		const searchVillageInput = page.locator('input[placeholder*="Tìm kiếm thôn"]');
 		if (await searchVillageInput.isVisible()) {
 			await searchVillageInput.fill("Thôn 1");
@@ -204,13 +221,40 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 			console.log("   ✓ Đã thử tương tác bộ lọc tìm kiếm thôn");
 		}
 
-		// Xác nhận các thẻ thôn hiển thị
+		// 2.3. Quét cạn tất cả các thẻ thôn (7 thôn Đăk Hà)
+		console.log("   -> Quét cạn toàn bộ các thẻ thôn trên địa bàn...");
 		const villageCards = page.locator(
 			'div[role="button"][aria-label*="hộ nông nghiệp"], div[role="button"][aria-label*="Thôn"]',
 		);
 		const villageCount = await villageCards.count();
 		expect(villageCount).toBeGreaterThan(0);
 		console.log(`   ✓ Phát hiện ${villageCount} thẻ thôn/làng bản trên địa bàn`);
+
+		for (let i = 0; i < villageCount; i++) {
+			const targetCard = villageCards.nth(i);
+			const cardLabel = (await targetCard.getAttribute("aria-label").catch(() => "")) || `Thôn ${i + 1}`;
+			currentAction = `Click chọn thôn [${cardLabel}]`;
+			console.log(`      ✓ Quét thôn ${i + 1}/${villageCount}: ${cardLabel}`);
+
+			await targetCard.click();
+			interactionCount++;
+			await page.waitForLoadState("networkidle").catch(() => {});
+			await page.waitForTimeout(300);
+
+			// Xác nhận màn hình thống kê thôn nạp thành công không bị crash
+			await expect(page.locator("text=Thống Kê Nông Nghiệp & Nông Thôn Mới")).toBeVisible({ timeout: 8000 });
+
+			// Quay lại trang Quản Lý Thôn để tiếp tục quét thôn kế tiếp
+			const backToVillages = page.locator('button:has-text("Quay lại danh sách thôn")').first();
+			if (await backToVillages.isVisible()) {
+				await backToVillages.click();
+			} else {
+				const villagesNav = sidebar.locator('button:has-text("Quản Lý Thôn")').first();
+				await villagesNav.click();
+			}
+			await page.waitForTimeout(300);
+		}
+		console.log("   ✓ Đã quét cạn thành công toàn bộ các thôn trên địa bàn Đăk Hà!");
 
 		// Button Spider trên Quản Lý Thôn
 		await crawlSafeButtons(page, "Quản Lý Thôn");
@@ -220,12 +264,11 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 		// ----------------------------------------------------------------------
 		currentAction = "Quét trang Thống Kê Sản Lượng Toàn Xã";
 		console.log("\n📊 [GIAI ĐOẠN 3] Quét trang Thống Kê Sản Lượng Toàn Xã (Analytics Page)...");
-		const viewAllStatsBtn = page.locator('button:has-text("Xem Thống Kê Toàn Xã")').first();
 		await viewAllStatsBtn.click();
 		interactionCount++;
 		visitedRoutes.push("Thống Kê Sản Lượng");
 
-		await page.waitForTimeout(1000);
+		await page.waitForTimeout(600);
 		await expect(page.locator("text=Thống Kê Nông Nghiệp & Nông Thôn Mới")).toBeVisible({ timeout: 10000 });
 		await expect(page.locator("text=TỔNG DIỆN TÍCH CÂY TRỒNG")).toBeVisible({ timeout: 10000 });
 		await expect(page.locator("body")).not.toHaveText("Đang tải dữ liệu...");
@@ -234,40 +277,51 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 		await expect(comparisonTable).toBeVisible({ timeout: 10000 });
 		console.log("   ✓ Thống kê sản lượng và bảng tổng hợp 7 thôn hiển thị ổn định");
 
+		// Nút Làm mới thống kê
+		const refreshStatsBtn = page.locator('button[aria-label="Làm mới số liệu"]').first();
+		if (await refreshStatsBtn.isVisible()) {
+			await refreshStatsBtn.click();
+			interactionCount++;
+			await page.waitForTimeout(300);
+			console.log("   ✓ Đã làm mới số liệu thống kê thành công");
+		}
+
 		// Button Spider trên Thống Kê Sản Lượng
 		await crawlSafeButtons(page, "Thống Kê Sản Lượng");
 
 		// ----------------------------------------------------------------------
-		// GIAI ĐOẠN 4: HỘ NÔNG NGHIỆP & 18 CHỈ SỐ (HOUSEHOLDS PAGE)
+		// GIAI ĐOẠN 4: HỘ NÔNG NGHIỆP, QUÉT CẠN BỘ LỌC & CRUD THẬT (HOUSEHOLDS PAGE)
 		// ----------------------------------------------------------------------
 		currentAction = "Quét trang Hộ Nông Nghiệp & 18 Chỉ Số";
 		console.log("\n👨‍🌾 [GIAI ĐOẠN 4] Quét trang Hộ Nông Nghiệp & 18 Chỉ Số (Households Page)...");
 
-		// Quay lại Quản Lý Thôn
+		// Quay lại Quản Lý Thôn và chọn Thôn 1 để vào Hộ Nông Nghiệp
 		const villagesNav = sidebar.locator('button:has-text("Quản Lý Thôn")').first();
 		await villagesNav.click();
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(400);
 
-		// Chọn thẻ thôn đầu tiên để kích hoạt phạm vi thôn và mở danh sách hộ
 		const firstVillageCard = page.locator('div[role="button"][aria-label*="hộ nông nghiệp"]').first();
 		await firstVillageCard.click();
 		interactionCount++;
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(400);
 
 		// Vào Hộ Nông Nghiệp qua Sidebar
 		const householdsNav = sidebar.locator('button:has-text("Hộ Nông Nghiệp")').first();
 		await householdsNav.click();
 		interactionCount++;
 		visitedRoutes.push("Hộ Nông Nghiệp");
-		await page.waitForTimeout(1000);
+		await page.waitForLoadState("networkidle").catch(() => {});
+		await page.waitForTimeout(600);
 
 		await expect(page.locator("text=Danh Sách Hộ Nông Nghiệp").first()).toBeVisible({ timeout: 10000 });
 		const householdsTable = page.locator("table").first();
 		await expect(householdsTable).toBeVisible({ timeout: 10000 });
 		console.log("   ✓ Danh sách hộ nông nghiệp đã nạp thành công");
 
-		// 4.1. Kiểm tra 6 Tab View Mode trong bảng 18 chỉ số
-		console.log("   -> Thử nghiệm chuyển đổi 6 View Mode Tabs...");
+		// ----------------------------------------------------------------------
+		// 4.1. QUÉT CẠN 6 VIEW MODE TABS
+		// ----------------------------------------------------------------------
+		console.log("   -> Quét cạn 6 Tab View Mode trong bảng 18 chỉ số...");
 		const tabs = [
 			{ name: "Tổng Hợp", label: "Tổng Hợp" },
 			{ name: "Cây Trồng", label: "Cây Trồng" },
@@ -278,44 +332,95 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 		];
 
 		for (const t of tabs) {
+			currentAction = `Chuyển View Mode tab [${t.label}]`;
 			const tabBtn = page.locator(`button:has-text("${t.label}")`).first();
 			if (await tabBtn.isVisible()) {
 				await tabBtn.click();
 				await page.waitForTimeout(200);
 				interactionCount++;
+				await expect(householdsTable).toBeVisible({ timeout: 5000 });
 				console.log(`      ✓ Đã chuyển View Mode tab: [${t.label}]`);
 			}
 		}
 
-		// 4.2. Thử nghiệm bộ lọc FilterBar
-		console.log("   -> Thử nghiệm tìm kiếm & bộ lọc nông nghiệp...");
-		const searchHousehold = page.locator("input#household-search-input");
-		if (await searchHousehold.isVisible()) {
-			await searchHousehold.fill("Nguyễn");
-			await page.waitForTimeout(300);
-			const clearSearchBtn = page.locator('button[aria-label="Xóa tìm kiếm"]');
-			if (await clearSearchBtn.isVisible()) {
-				await clearSearchBtn.click();
-			} else {
-				await searchHousehold.fill("");
-			}
-			interactionCount++;
-		}
+		// ----------------------------------------------------------------------
+		// 4.2. QUÉT CẠN CÁC DROPDOWN FILTER & BỘ LỌC NÔNG NGHIỆP
+		// ----------------------------------------------------------------------
+		console.log("   -> Quét cạn toàn bộ dropdown bộ lọc nông nghiệp (Quy mô, Loại hình, Sắp xếp)...");
 
-		// Dropdown Quy mô (CustomSelect)
-		const scaleTrigger = page.locator('button:has-text("Tất cả quy mô")').first();
-		if (await scaleTrigger.isVisible()) {
-			await scaleTrigger.click();
-			await page.waitForTimeout(200);
-			const largeOption = page.locator('[role="option"]:has-text("Lớn")').first();
-			if (await largeOption.isVisible()) {
-				await largeOption.click();
-				await page.waitForTimeout(200);
-				interactionCount++;
+		// 4.2.1. Quét cạn Bộ lọc Quy mô
+		const scaleOptions = ["Lớn", "Vừa", "Nhỏ lẻ", "Tất cả quy mô"];
+		for (const opt of scaleOptions) {
+			currentAction = `Lọc theo quy mô: [${opt}]`;
+			const scaleTrigger = page.locator('div.w-44 button[aria-haspopup="listbox"]').first();
+			if (await scaleTrigger.isVisible()) {
+				await scaleTrigger.click();
+				await page.waitForTimeout(150);
+				const targetOption = page.locator(`[role="option"]:has-text("${opt}")`).first();
+				if (await targetOption.isVisible()) {
+					await targetOption.click();
+					interactionCount++;
+					await page.waitForLoadState("networkidle").catch(() => {});
+					await page.waitForTimeout(200);
+					await expect(householdsTable).toBeVisible({ timeout: 5000 });
+					console.log(`      ✓ Đã chọn bộ lọc Quy mô: [${opt}]`);
+				}
 			}
 		}
 
-		// Nút Bung / Thu gọn tất cả chi tiết
+		// 4.2.2. Quét cạn Bộ lọc Loại hình sản xuất
+		const typeOptions = [
+			"Có nhận khoán",
+			"Trồng dược liệu",
+			"Chăn nuôi gia súc",
+			"Nuôi trồng thủy sản",
+			"Tất cả loại hình",
+		];
+		for (const opt of typeOptions) {
+			currentAction = `Lọc theo loại hình: [${opt}]`;
+			const typeTrigger = page.locator('div.w-44 button[aria-haspopup="listbox"]').nth(1);
+			if (await typeTrigger.isVisible()) {
+				await typeTrigger.click();
+				await page.waitForTimeout(150);
+				const targetOption = page.locator(`[role="option"]:has-text("${opt}")`).first();
+				if (await targetOption.isVisible()) {
+					await targetOption.click();
+					interactionCount++;
+					await page.waitForLoadState("networkidle").catch(() => {});
+					await page.waitForTimeout(200);
+					await expect(householdsTable).toBeVisible({ timeout: 5000 });
+					console.log(`      ✓ Đã chọn bộ lọc Loại hình: [${opt}]`);
+				}
+			}
+		}
+
+		// 4.2.3. Quét cạn Bộ lọc Sắp xếp
+		const sortOptions = [
+			"Diện tích cây trồng",
+			"Tổng đàn vật nuôi",
+			"Tên chủ hộ A → Z",
+			"Tên chủ hộ Z → A",
+			"Mặc định",
+		];
+		for (const opt of sortOptions) {
+			currentAction = `Sắp xếp danh sách: [${opt}]`;
+			const sortTrigger = page.locator('div.w-42 button[aria-haspopup="listbox"]').first();
+			if (await sortTrigger.isVisible()) {
+				await sortTrigger.click();
+				await page.waitForTimeout(150);
+				const targetOption = page.locator(`[role="option"]:has-text("${opt}")`).first();
+				if (await targetOption.isVisible()) {
+					await targetOption.click();
+					interactionCount++;
+					await page.waitForLoadState("networkidle").catch(() => {});
+					await page.waitForTimeout(200);
+					await expect(householdsTable).toBeVisible({ timeout: 5000 });
+					console.log(`      ✓ Đã chọn thứ tự Sắp xếp: [${opt}]`);
+				}
+			}
+		}
+
+		// Accordion Bung / Thu gọn tất cả chi tiết
 		const toggleExpandBtn = page.locator(
 			'button:has-text("Bung tất cả"), button:has-text("Thu gọn tất cả")',
 		).first();
@@ -327,85 +432,186 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 			console.log("      ✓ Đã thử tương tác Accordion Bung/Thu gọn 18 chỉ số");
 		}
 
-		// Nút Xóa lọc nếu có
+		// Nút Xóa lọc nếu đang hiển thị
 		const resetFiltersBtn = page.locator('button:has-text("Xóa lọc")').first();
 		if (await resetFiltersBtn.isVisible()) {
 			await resetFiltersBtn.click();
 			interactionCount++;
+			await page.waitForTimeout(300);
 		}
 
-		// 4.3. Mở Modal Thêm Hộ Dân & Thử nghiệm nhập số liệu 18 chỉ số hợp lệ
-		console.log("   -> Mở Modal Thêm Hộ Dân & Thử nghiệm nhập số liệu form...");
+		// ----------------------------------------------------------------------
+		// 4.3. VÒNG ĐỜI CRUD THẬT (Thêm -> Lưu -> Sửa -> Xóa) VỚI [TEST-CRAWLER]
+		// ----------------------------------------------------------------------
+		const TEST_NAME = "[TEST-CRAWLER] Nguyễn Văn Test";
+		console.log(`\n🔄 [GIAI ĐOẠN 4.3] Thực hiện vòng đời CRUD THẬT với bản ghi: ${TEST_NAME}...`);
+
+		const searchHousehold = page.locator("input#household-search-input");
+
+		// Dọn dẹp bản ghi cũ nếu còn tồn dư từ lần chạy trước
+		await searchHousehold.fill("[TEST-CRAWLER]");
+		await page.waitForTimeout(400);
+		const oldTestRow = page.locator('tr:has-text("[TEST-CRAWLER]")');
+		if ((await oldTestRow.count()) > 0) {
+			console.log("   ⚠️ Phát hiện bản ghi cũ còn sót lại từ lần chạy trước, dọn dẹp trước khi bắt đầu...");
+			const oldDelBtn = oldTestRow
+				.first()
+				.locator('button[aria-label*="Xóa hộ"], button[title*="Xóa"]')
+				.first();
+			await oldDelBtn.click();
+			const confirmDelBtn = page.locator('button:has-text("Xác Nhận Xóa")');
+			await confirmDelBtn.click();
+			await page.waitForTimeout(500);
+		}
+		const clearSearchInit = page.locator('button[aria-label="Xóa tìm kiếm"]');
+		if (await clearSearchInit.isVisible()) {
+			await clearSearchInit.click();
+		} else {
+			await searchHousehold.fill("");
+		}
+		await page.waitForTimeout(300);
+
+		// --- BƯỚC 1: THÊM MỚI & LƯU THẬT ---
+		currentAction = `Thêm mới & Lưu thật hộ dân [${TEST_NAME}]`;
+		console.log("   ➕ [BƯỚC 1: CREATE] Mở modal và tạo bản ghi mới...");
 		const addHouseholdBtn = page.locator('button:has-text("Thêm Hộ Dân")').first();
-		if (await addHouseholdBtn.isVisible()) {
-			await addHouseholdBtn.click();
-			interactionCount++;
+		await addHouseholdBtn.click();
+		interactionCount++;
 
-			const modalTitle = page.locator("#household-modal-title");
-			await expect(modalTitle).toBeVisible({ timeout: 5000 });
-			console.log("      ✓ Modal thêm mới hộ dân đã mở");
+		const modalTitle = page.locator("#household-modal-title");
+		await expect(modalTitle).toBeVisible({ timeout: 5000 });
 
-			const fullNameInput = page.locator("input#household-full-name");
-			if (await fullNameInput.isVisible()) {
-				await fullNameInput.fill("Hộ Khảo Sát Tự Động (Crawler Test)");
-			}
-			const phoneInput = page.locator("input#household-phone");
-			if (await phoneInput.isVisible()) {
-				await phoneInput.fill("0912345678");
-			}
+		// Nhập thông tin chung
+		await page.locator("input#household-full-name").fill(TEST_NAME);
+		await page.locator("input#household-phone").fill("0987654321");
+		await page.locator("input#household-address").fill("Thôn 1, Xã Đăk Hà, Huyện Đăk Hà");
+		await page.locator("input#household-notes").fill("Khởi tạo tự động bởi Playwright Smart Crawler");
 
-			// Chuyển 3 tab chỉ số nông nghiệp và điền số liệu mẫu
-			const modalTabs = [
-				{ label: "Cây Trồng", inputId: "#field-cafe-household", inputVal: "2.5" },
-				{ label: "Vật Nuôi", inputId: "#field-buffalo", inputVal: "10" },
-				{ label: "Thủy Sản", inputId: "#field-fish-pond", inputVal: "0.5" },
-			];
-			for (const mTab of modalTabs) {
-				const mTabBtn = page.locator(`button[role="tab"]:has-text("${mTab.label}")`).first();
-				if (await mTabBtn.isVisible()) {
-					await mTabBtn.click();
-					await page.waitForTimeout(150);
-					interactionCount++;
+		// Điền các chỉ số nông nghiệp
+		// Tab Cây Trồng
+		await page.locator("#field-cafe-household").fill("2.5");
+		// Tab Vật Nuôi
+		const livestockTab = page.locator('button[role="tab"]:has-text("Vật Nuôi")').first();
+		await livestockTab.click();
+		await page.waitForTimeout(150);
+		await page.locator("#field-cow").fill("8");
+		// Tab Thủy Sản
+		const aquaTab = page.locator('button[role="tab"]:has-text("Thủy Sản")').first();
+		await aquaTab.click();
+		await page.waitForTimeout(150);
+		await page.locator("#field-fish-pond").fill("0.6");
 
-					const targetInput = page.locator(mTab.inputId);
-					if (await targetInput.isVisible()) {
-						await targetInput.fill(mTab.inputVal);
-					}
-					console.log(`      ✓ Đã nhập chỉ số mẫu tab [${mTab.label}]`);
-				}
-			}
+		// BẤM LƯU THẬT & BẮT RESPONSE POST 200/201
+		console.log("      -> Nhấn nút [Lưu hộ mới] thật...");
+		const saveBtn = page.locator('button[type="submit"]:has-text("Lưu hộ mới")');
+		const [createResponse] = await Promise.all([
+			page.waitForResponse(
+				(res) => res.url().includes("/api/households") && res.request().method() === "POST",
+				{ timeout: 15000 },
+			),
+			saveBtn.click(),
+		]);
+		interactionCount++;
+		expect([200, 201]).toContain(createResponse.status());
+		console.log(`      ✓ Bắt response POST /api/households thành công (Status ${createResponse.status()})`);
 
-			// Đóng modal bằng nút Đóng / Hủy an toàn (Bảo vệ CSDL)
-			const closeBtn = page.locator('button[aria-label="Đóng cửa sổ"]').first();
-			if (await closeBtn.isVisible()) {
-				await closeBtn.click();
-			} else {
-				await page.keyboard.press("Escape");
-			}
-			interactionCount++;
-			await expect(modalTitle).not.toBeVisible({ timeout: 5000 });
-			console.log("      ✓ Đã đóng modal thêm hộ dân an toàn, bảo tồn toàn vẹn dữ liệu");
+		// Kiểm tra modal tự động đóng
+		await expect(modalTitle).not.toBeVisible({ timeout: 10000 });
+
+		// Xác nhận dòng [TEST-CRAWLER] xuất hiện trên bảng dữ liệu
+		await searchHousehold.fill("[TEST-CRAWLER]");
+		await page.waitForTimeout(500);
+		const createdRow = page.locator('tr:has-text("[TEST-CRAWLER]")');
+		await expect(createdRow.first()).toBeVisible({ timeout: 10000 });
+		console.log("   ✓ Xác nhận: Hàng dữ liệu [TEST-CRAWLER] đã hiển thị trên bảng!");
+
+		// --- BƯỚC 2: SỬA BẢN GHI & LƯU THẬT ---
+		currentAction = `Sửa bản ghi & Lưu cập nhật [${TEST_NAME}]`;
+		console.log("   ✏️ [BƯỚC 2: UPDATE] Mở modal chỉnh sửa và cập nhật bản ghi...");
+		const editBtn = createdRow
+			.first()
+			.locator('button[aria-label*="Sửa số liệu"], button[title*="Sửa"]')
+			.first();
+		await editBtn.click();
+		interactionCount++;
+
+		await expect(modalTitle).toBeVisible({ timeout: 5000 });
+
+		// Đổi ghi chú và số điện thoại
+		const notesInput = page.locator("input#household-notes");
+		await notesInput.fill("Đã cập nhật số liệu E2E Smart Crawler (PUT Verified)");
+		const phoneInput = page.locator("input#household-phone");
+		await phoneInput.fill("0912345678");
+
+		// BẤM LƯU SỬA & BẮT RESPONSE PUT 200
+		console.log("      -> Nhấn nút [Cập nhật hồ sơ] thật...");
+		const updateBtn = page.locator('button[type="submit"]:has-text("Cập nhật hồ sơ")');
+		const [updateResponse] = await Promise.all([
+			page.waitForResponse(
+				(res) =>
+					res.url().includes("/api/households") &&
+					(res.request().method() === "PUT" || res.request().method() === "PATCH"),
+				{ timeout: 15000 },
+			),
+			updateBtn.click(),
+		]);
+		interactionCount++;
+		expect(updateResponse.status()).toBe(200);
+		console.log(`      ✓ Bắt response PUT /api/households thành công (Status ${updateResponse.status()})`);
+
+		// Kiểm tra modal tự động đóng
+		await expect(modalTitle).not.toBeVisible({ timeout: 10000 });
+		await page.waitForTimeout(500);
+		await expect(page.locator('tr:has-text("[TEST-CRAWLER]")').first()).toBeVisible();
+		console.log("   ✓ Xác nhận: Hồ sơ [TEST-CRAWLER] đã được cập nhật thành công!");
+
+		// --- BƯỚC 3: XÓA DỌN DẸP BẢN GHI AN TOÀN ---
+		currentAction = `Xóa dọn dẹp bản ghi [${TEST_NAME}]`;
+		console.log("   🗑️ [BƯỚC 3: DELETE] Xóa dọn dẹp bản ghi test (Bảo vệ dữ liệu thật 100%)...");
+
+		const deleteRow = page.locator('tr:has-text("[TEST-CRAWLER]")').first();
+		const rowContent = (await deleteRow.innerText().catch(() => "")) || "";
+
+		// TIÊU CHÍ BẢO VỆ DỮ LIỆU THẬT: Chỉ xóa khi dòng chứa chính xác tag [TEST-CRAWLER]
+		expect(
+			rowContent.includes("[TEST-CRAWLER]"),
+			"TUYỆT ĐỐI KHÔNG XÓA dòng dữ liệu không mang tiền tố [TEST-CRAWLER]",
+		).toBe(true);
+
+		const deleteBtn = deleteRow
+			.locator('button[aria-label*="Xóa hộ"], button[title*="Xóa"]')
+			.first();
+		await deleteBtn.click();
+		interactionCount++;
+
+		// Modal xác nhận Chuyển vào Thùng Rác
+		const confirmModalTitle = page.locator("#generic-modal-title").first();
+		await expect(confirmModalTitle).toBeVisible({ timeout: 5000 });
+		const confirmDeleteBtn = page.locator('button:has-text("Xác Nhận Xóa")');
+
+		const [deleteResponse] = await Promise.all([
+			page.waitForResponse(
+				(res) => res.url().includes("/api/households") && res.request().method() === "DELETE",
+				{ timeout: 15000 },
+			),
+			confirmDeleteBtn.click(),
+		]);
+		interactionCount++;
+		expect(deleteResponse.status()).toBe(200);
+		console.log(`      ✓ Bắt response DELETE /api/households thành công (Status ${deleteResponse.status()})`);
+
+		// Kiểm tra dòng biến mất khỏi bảng dữ liệu
+		await expect(page.locator('tr:has-text("[TEST-CRAWLER]")')).not.toBeVisible({ timeout: 10000 });
+		console.log("   ✓ Xác nhận: Bản ghi [TEST-CRAWLER] đã được dọn sạch khỏi danh sách hộ!");
+
+		// Xóa tìm kiếm để phục hồi trạng thái bảng
+		const clearSearchFinal = page.locator('button[aria-label="Xóa tìm kiếm"]');
+		if (await clearSearchFinal.isVisible()) {
+			await clearSearchFinal.click();
+		} else {
+			await searchHousehold.fill("");
 		}
-
-		// 4.4. Thử mở Modal Chỉnh Sửa nếu có hộ dân trong bảng
-		const editBtn = page.locator('button[aria-label*="Sửa số liệu"], button[title*="Chỉnh sửa"]').first();
-		if (await editBtn.isVisible()) {
-			await editBtn.click();
-			interactionCount++;
-			const editModalTitle = page.locator("#household-modal-title");
-			await expect(editModalTitle).toBeVisible({ timeout: 5000 });
-			console.log("      ✓ Đã kiểm tra mở modal chỉnh sửa hộ dân");
-
-			const closeEditBtn = page.locator('button[aria-label="Đóng cửa sổ"]').first();
-			if (await closeEditBtn.isVisible()) {
-				await closeEditBtn.click();
-			} else {
-				await page.keyboard.press("Escape");
-			}
-			interactionCount++;
-			await expect(editModalTitle).not.toBeVisible({ timeout: 5000 });
-			console.log("      ✓ Đã đóng modal chỉnh sửa an toàn");
-		}
+		await page.waitForTimeout(300);
 
 		// Button Spider trên Hộ Nông Nghiệp
 		await crawlSafeButtons(page, "Hộ Nông Nghiệp");
@@ -413,59 +619,91 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 		// ----------------------------------------------------------------------
 		// GIAI ĐOẠN 5: NHẬT KÝ HOẠT ĐỘNG (AUDIT LOG PAGE)
 		// ----------------------------------------------------------------------
-		currentAction = "Quét trang Nhật Ký Hoạt Động";
+		currentAction = "Quét trang Nhật Ký Hoạt Động & Quét cạn Pill sự kiện";
 		console.log("\n📜 [GIAI ĐOẠN 5] Quét trang Nhật Ký Hoạt Động (Audit Log View)...");
 		const auditNav = sidebar.locator('button:has-text("Nhật Ký")').first();
 		await auditNav.click();
 		interactionCount++;
 		visitedRoutes.push("Nhật Ký Hoạt Động");
-		await page.waitForTimeout(800);
+		await page.waitForLoadState("networkidle").catch(() => {});
+		await page.waitForTimeout(600);
 
 		await expect(page.locator("text=Nhật Ký Hoạt Động & Biến Động Dữ Liệu").first()).toBeVisible({ timeout: 10000 });
 
-		// Thử các nút pill lọc sự kiện
+		// Quét cạn toàn bộ các pill lọc sự kiện
+		console.log("   -> Quét cạn các pill lọc sự kiện (Tất Cả, Thêm Mới, Cập Nhật, Xóa, Khôi Phục, Nhập Excel)...");
 		const auditPills = ["Tất Cả", "Thêm Mới", "Cập Nhật", "Xóa", "Khôi Phục", "Nhập Excel"];
 		for (const pill of auditPills) {
-			const pillBtn = page.locator(`div:has-text("Sự kiện:") button:has-text("${pill}")`).first();
+			currentAction = `Lọc sự kiện nhật ký: [${pill}]`;
+			const pillBtn = page.locator(`button:has-text("${pill}")`).first();
 			if (await pillBtn.isVisible()) {
 				await pillBtn.click();
-				await page.waitForTimeout(150);
+				await page.waitForTimeout(200);
 				interactionCount++;
+				console.log(`      ✓ Đã chọn pill sự kiện: [${pill}]`);
 			}
 		}
-		console.log("   ✓ Các bộ lọc biến động dữ liệu hoạt động mượt mà");
+
+		// Nút Xem Toàn Xã trong Nhật Ký nếu có
+		const viewAllVillageAudit = page.locator('button:has-text("Xem Toàn Xã")').first();
+		if (await viewAllVillageAudit.isVisible()) {
+			await viewAllVillageAudit.click();
+			interactionCount++;
+			await page.waitForTimeout(300);
+			console.log("      ✓ Đã chuyển bộ lọc nhật ký về Toàn Xã");
+		}
 
 		// Button Spider trên Nhật Ký Hoạt Động
 		await crawlSafeButtons(page, "Nhật Ký Hoạt Động");
 
 		// ----------------------------------------------------------------------
-		// GIAI ĐOẠN 6: THÙNG RÁC (RECYCLE BIN PAGE)
+		// GIAI ĐOẠN 6: THÙNG RÁC (RECYCLE BIN PAGE) & DỌN DẸP VĨNH VIỄN [TEST-CRAWLER]
 		// ----------------------------------------------------------------------
-		currentAction = "Quét trang Thùng Rác";
+		currentAction = "Quét trang Thùng Rác & Dọn dẹp vĩnh viễn test data";
 		console.log("\n🗑️ [GIAI ĐOẠN 6] Quét trang Thùng Rác (Recycle Bin)...");
 		const recycleNav = sidebar.locator('button:has-text("Thùng Rác")').first();
 		await recycleNav.click();
 		interactionCount++;
 		visitedRoutes.push("Thùng Rác");
-		await page.waitForTimeout(800);
+		await page.waitForLoadState("networkidle").catch(() => {});
+		await page.waitForTimeout(600);
 
 		const recycleTable = page.locator("table").first();
 		await expect(recycleTable).toBeVisible({ timeout: 5000 });
-		console.log("   ✓ Bảng Thùng rác tải thành công (bỏ qua nút Xóa vĩnh viễn theo chỉ dẫn an toàn)");
+		console.log("   ✓ Bảng Thùng rác tải thành công");
 
-		// Button Spider trên Thùng Rác (Safe Guard loại trừ nút Xóa vĩnh viễn)
+		// DỌN SẠCH TRIỆT ĐỂ: Nếu tìm thấy dòng [TEST-CRAWLER] trong Thùng rác -> Hard delete
+		const recycleTestRow = page.locator('tr:has-text("[TEST-CRAWLER]")');
+		if ((await recycleTestRow.count()) > 0) {
+			console.log("   🧹 Dọn dẹp vĩnh viễn bản ghi [TEST-CRAWLER] khỏi Thùng rác để làm sạch triệt để CSDL...");
+			page.once("dialog", async (dialog) => {
+				await dialog.accept();
+			});
+			const hardDelBtn = recycleTestRow
+				.first()
+				.locator('button[aria-label*="Xóa hộ"], button[title*="Xóa vĩnh viễn"]')
+				.first();
+			if (await hardDelBtn.isVisible()) {
+				await hardDelBtn.click();
+				interactionCount++;
+				await page.waitForTimeout(500);
+				console.log("   ✓ Đã hoàn tất xóa vĩnh viễn [TEST-CRAWLER], CSDL hoàn toàn sạch!");
+			}
+		}
+
+		// Button Spider trên Thùng Rác (Safe Guard loại trừ nút Xóa vĩnh viễn các hộ thật)
 		await crawlSafeButtons(page, "Thùng Rác");
 
 		// ----------------------------------------------------------------------
 		// GIAI ĐOẠN 7: CÀI ĐẶT HỆ THỐNG (SETTINGS PAGE - 4 TABS)
 		// ----------------------------------------------------------------------
 		currentAction = "Quét trang Cài Đặt Hệ Thống";
-		console.log("\n⚙️ [GIAI ĐOẠN 7] Quét trang Cài Đặt Hệ Thống (Settings Page)...");
+		console.log("\n⚙️ [GIAI ĐOẠN 7] Quét trang Cài Đặt Hệ Thống (Settings Page - 4 Tabs)...");
 		const settingsNav = sidebar.locator('button:has-text("Cài Đặt")').first();
 		await settingsNav.click();
 		interactionCount++;
 		visitedRoutes.push("Cài Đặt Hệ Thống");
-		await page.waitForTimeout(800);
+		await page.waitForTimeout(600);
 
 		const settingsTabs = [
 			"Tài Khoản Của Tôi",
@@ -474,6 +712,7 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 			"Thông Tin Đơn Vị",
 		];
 		for (const sTab of settingsTabs) {
+			currentAction = `Quét tab Cài Đặt: [${sTab}]`;
 			const sTabBtn = page.locator(`button:has-text("${sTab}")`).first();
 			if (await sTabBtn.isVisible()) {
 				await sTabBtn.click();
@@ -481,7 +720,7 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 				interactionCount++;
 				console.log(`   ✓ Đã kiểm tra tab: [${sTab}]`);
 
-				// Nếu là tab Quản Lý Cán Bộ, kiểm tra thử modal thêm cán bộ
+				// Nếu là tab Quản Lý Cán Bộ, kiểm tra thử modal thêm cán bộ (Đóng an toàn)
 				if (sTab === "Quản Lý Cán Bộ") {
 					const addUserBtn = page.locator('button:has-text("Thêm Cán Bộ")').first();
 					if (await addUserBtn.isVisible()) {
@@ -530,7 +769,8 @@ test.describe("QLNN Smart Crawler - E2E Full Scan & Interaction Suite (Best of 3
 			);
 		} else {
 			console.log("\n🎉 XUẤT SẮC: 0 LỖI RUNTIME, 0 LỖI CONSOLE, 0 LỖI HTTP API (CODE >= 400)!");
-			console.log("✅ Phân hệ QLNN đạt chuẩn đồng bộ kiến trúc cao nhất (Best of 3) từ QLCS, QLNN, QLHK.");
+			console.log("✅ VÒNG ĐỜI CRUD THẬT [TEST-CRAWLER] HOÀN TẤT 100% AN TOÀN & SẠCH SẼ!");
+			console.log("✅ TOÀN BỘ BỘ LỌC/PILLS TRÊN TẤT CẢ MÀN HÌNH ĐÃ ĐƯỢC QUÉT BẤM CẠN THÀNH CÔNG.");
 		}
 		console.log("================================================================================\n");
 
