@@ -12,7 +12,7 @@ Hệ thống số hóa, quản lý và đối soát 18 chỉ số nông nghiệp
 
 Cán bộ xã và các trưởng thôn tải bộ cài đặt Windows Desktop mới nhất tại mục **Releases**:
 
-👉 **[Tải bộ cài đặt QLNN Desktop v2.2.0 (Windows)](https://github.com/Umnuar/QLNN/releases/latest)**
+👉 **[Tải bộ cài đặt QLNN Desktop v1 (Windows)](https://github.com/Umnuar/QLNN/releases/latest)**
 
 *Gói cài đặt MSI / Setup Executable được đóng gói chuẩn Tauri v2, hỗ trợ tự động kiểm tra và nâng cấp phiên bản (Auto-Updater).*
 
