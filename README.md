@@ -2,7 +2,7 @@
 
 Hệ thống số hóa, quản lý và đối soát 18 chỉ số nông nghiệp, cơ cấu cây trồng, đàn vật nuôi và diện tích nuôi trồng thủy sản phục vụ công tác chỉ đạo điều hành tại Xã Đăk Hà, Huyện Đăk Hà, Tỉnh Kon Tum.
 
-![Phiên bản](https://img.shields.io/badge/Phi%C3%AAn_b%E1%BA%A3n-v2.2.0-emerald?style=flat-square)
+![Phiên bản](https://img.shields.io/badge/Phi%C3%AAn_b%E1%BA%A3n-v1-emerald?style=flat-square)
 ![Nền tảng](https://img.shields.io/badge/N%E1%BB%81n_t%E1%BA%A3ng-Windows_Desktop_(Tauri_v2)-blue?style=flat-square)
 ![Bản quyền](https://img.shields.io/badge/B%E1%BA%A3n_quy%E1%BB%81n-UBND_X%C3%A3_%C4%90%C4%83k_H%C3%A0-red?style=flat-square)
 
